@@ -25,6 +25,8 @@ const CreateTrip = () => {
   const [endDate, setEndDate] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [accommodation, setAccommodation] = useState("");
+  const [originCity, setOriginCity] = useState("");
+  const [originCountry, setOriginCountry] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handlePlaceSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
@@ -54,6 +56,8 @@ const CreateTrip = () => {
           accommodation: accommodation || null,
           latitude,
           longitude,
+          origin_city: originCity || null,
+          origin_country: originCountry || null,
         } as any)
         .select()
         .single();
@@ -88,14 +92,33 @@ const CreateTrip = () => {
           </motion.div>
 
           <motion.form initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">City</label>
-                <PlacesAutocomplete value={destination} onChange={setDestination} onSelect={handlePlaceSelect} />
+            {/* Travelling From */}
+            <div>
+              <p className="text-xs tracking-[0.15em] uppercase text-primary mb-3 font-body">Travelling From</p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">City</label>
+                  <Input value={originCity} onChange={(e) => setOriginCity(e.target.value)} placeholder="Cape Town" className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+                </div>
+                <div>
+                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Country</label>
+                  <Input value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} placeholder="South Africa" className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+                </div>
               </div>
-              <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Country</label>
-                <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="France" className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+            </div>
+
+            {/* Destination */}
+            <div>
+              <p className="text-xs tracking-[0.15em] uppercase text-primary mb-3 font-body">Destination</p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">City</label>
+                  <PlacesAutocomplete value={destination} onChange={setDestination} onSelect={handlePlaceSelect} />
+                </div>
+                <div>
+                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Country</label>
+                  <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="France" className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+                </div>
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-4">

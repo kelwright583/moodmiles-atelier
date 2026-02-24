@@ -26,6 +26,8 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
   const [endDate, setEndDate] = useState(trip.end_date);
   const [selectedType, setSelectedType] = useState(trip.trip_type || "");
   const [accommodation, setAccommodation] = useState(trip.accommodation || "");
+  const [originCity, setOriginCity] = useState((trip as any).origin_city || "");
+  const [originCountry, setOriginCountry] = useState((trip as any).origin_country || "");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -37,6 +39,8 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
     setEndDate(trip.end_date);
     setSelectedType(trip.trip_type || "");
     setAccommodation(trip.accommodation || "");
+    setOriginCity((trip as any).origin_city || "");
+    setOriginCountry((trip as any).origin_country || "");
   }, [trip, open]);
 
   const handlePlaceSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
@@ -64,7 +68,9 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
           accommodation: accommodation || null,
           latitude,
           longitude,
-        })
+          origin_city: originCity || null,
+          origin_country: originCountry || null,
+        } as any)
         .eq("id", trip.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["trip", trip.id] });
@@ -85,14 +91,32 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
           <DialogTitle className="font-heading text-xl">Edit Journey</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 pt-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">City</label>
-              <PlacesAutocomplete value={destination} onChange={setDestination} onSelect={handlePlaceSelect} />
+          {/* Origin */}
+          <div>
+            <p className="text-xs tracking-[0.15em] uppercase text-primary mb-2 font-body">Travelling From</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">City</label>
+                <Input value={originCity} onChange={(e) => setOriginCity(e.target.value)} placeholder="Cape Town" className="bg-secondary border-border h-11 text-foreground font-body" />
+              </div>
+              <div>
+                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">Country</label>
+                <Input value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} placeholder="South Africa" className="bg-secondary border-border h-11 text-foreground font-body" />
+              </div>
             </div>
-            <div>
-              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">Country</label>
-              <Input value={country} onChange={(e) => setCountry(e.target.value)} className="bg-secondary border-border h-11 text-foreground font-body" />
+          </div>
+          {/* Destination */}
+          <div>
+            <p className="text-xs tracking-[0.15em] uppercase text-primary mb-2 font-body">Destination</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">City</label>
+                <PlacesAutocomplete value={destination} onChange={setDestination} onSelect={handlePlaceSelect} />
+              </div>
+              <div>
+                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">Country</label>
+                <Input value={country} onChange={(e) => setCountry(e.target.value)} className="bg-secondary border-border h-11 text-foreground font-body" />
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

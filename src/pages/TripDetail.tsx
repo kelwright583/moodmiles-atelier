@@ -99,7 +99,7 @@ const TripDetail = () => {
           {activeTab === "Overview" && <OverviewTab tripId={trip.id} trip={{ latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
           {activeTab === "Things to Do" && <ThingsToDoTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude }} />}
           {activeTab === "Inspiration" && <InspirationTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
-          {activeTab === "Packing" && <PackingTab tripId={trip.id} />}
+          {activeTab === "Packing" && <PackingTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, origin_city: (trip as any).origin_city, origin_country: (trip as any).origin_country, start_date: trip.start_date, end_date: trip.end_date, trip_type: trip.trip_type }} />}
           {activeTab === "Board" && <BoardTab tripId={trip.id} />}
         </div>
       </main>

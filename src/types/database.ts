@@ -23,6 +23,8 @@ export interface Trip {
   accommodation: string | null;
   latitude: number | null;
   longitude: number | null;
+  origin_city: string | null;
+  origin_country: string | null;
   created_at: string;
 }
 

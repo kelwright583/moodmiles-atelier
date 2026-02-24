@@ -1,22 +1,38 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PackingItem } from "@/types/database";
-import { Briefcase, Plus, Trash2, Check, Minus } from "lucide-react";
+import { Briefcase, Plus, Trash2, Check, Minus, Sparkles, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 
-const packingCategories = ["Tops", "Bottoms", "Dresses", "Outerwear", "Shoes", "Accessories", "Toiletries", "Tech", "Documents"];
+const packingCategories = ["Tops", "Bottoms", "Dresses", "Outerwear", "Shoes", "Accessories", "Underwear", "Sleepwear", "Swimwear", "Toiletries", "Tech", "Documents", "Flight Comfort", "Layering"];
 
-const PackingTab = ({ tripId }: { tripId: string }) => {
+interface PackingTabProps {
+  tripId: string;
+  trip?: {
+    destination: string;
+    country: string | null;
+    origin_city: string | null;
+    origin_country: string | null;
+    start_date: string;
+    end_date: string;
+    trip_type: string | null;
+  };
+}
+
+const PackingTab = ({ tripId, trip }: PackingTabProps) => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [generating, setGenerating] = useState(false);
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
 
   const { data: items = [] } = useQuery({
     queryKey: ["packing-items", tripId],
@@ -26,6 +42,23 @@ const PackingTab = ({ tripId }: { tripId: string }) => {
       return data as PackingItem[];
     },
   });
+
+  const generateSuggestions = async () => {
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-packing", {
+        body: { trip_id: tripId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      queryClient.invalidateQueries({ queryKey: ["packing-items", tripId] });
+      toast({ title: "Packing list generated", description: `${data.count} smart suggestions based on your trip context.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const addItem = async () => {
     if (!name) return;
@@ -52,8 +85,17 @@ const PackingTab = ({ tripId }: { tripId: string }) => {
     queryClient.invalidateQueries({ queryKey: ["packing-items", tripId] });
   };
 
+  const toggleCategory = (cat: string) => {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      return next;
+    });
+  };
+
   const packedCount = items.filter((i) => i.is_packed).length;
   const totalCount = items.length;
+  const progress = totalCount > 0 ? (packedCount / totalCount) * 100 : 0;
 
   // Group by category
   const grouped = items.reduce((acc, item) => {
@@ -63,21 +105,33 @@ const PackingTab = ({ tripId }: { tripId: string }) => {
     return acc;
   }, {} as Record<string, PackingItem[]>);
 
+  // Sort categories: Documents first, then alphabetically
+  const sortedCategories = Object.keys(grouped).sort((a, b) => {
+    if (a === "Documents") return -1;
+    if (b === "Documents") return 1;
+    if (a === "Flight Comfort") return -1;
+    if (b === "Flight Comfort") return 1;
+    return a.localeCompare(b);
+  });
+
+  // Calculate days
+  const days = trip ? Math.ceil((new Date(trip.end_date).getTime() - new Date(trip.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1 : 0;
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="flex items-center justify-between mb-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
           <Briefcase size={14} className="text-primary" /> Packing List
         </h2>
-        <div className="flex items-center gap-3">
-          {totalCount > 0 && (
-            <div className="glass-card rounded-full px-4 py-1.5">
-              <span className="text-xs font-body text-primary">{packedCount} / {totalCount} packed</span>
-            </div>
-          )}
+        <div className="flex items-center gap-2">
+          <Button variant="champagne-outline" size="sm" onClick={generateSuggestions} disabled={generating}>
+            {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+            {generating ? "Generating…" : "Smart Suggest"}
+          </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button variant="champagne-outline" size="sm"><Plus size={14} /> Add Item</Button>
+              <Button variant="champagne-outline" size="sm"><Plus size={14} /> Add</Button>
             </DialogTrigger>
             <DialogContent className="bg-card border-border">
               <DialogHeader><DialogTitle className="font-heading">Add Packing Item</DialogTitle></DialogHeader>
@@ -106,40 +160,83 @@ const PackingTab = ({ tripId }: { tripId: string }) => {
         </div>
       </div>
 
+      {/* Trip context banner */}
+      {trip && (
+        <div className="glass-card rounded-xl p-4 mb-6 flex flex-wrap gap-x-6 gap-y-2 text-xs font-body text-muted-foreground">
+          {trip.origin_city && (
+            <span>From: <span className="text-foreground">{trip.origin_city}{trip.origin_country ? `, ${trip.origin_country}` : ""}</span></span>
+          )}
+          <span>To: <span className="text-foreground">{trip.destination}{trip.country ? `, ${trip.country}` : ""}</span></span>
+          <span>Duration: <span className="text-foreground">{days} days</span></span>
+          {trip.trip_type && <span>Type: <span className="text-foreground">{trip.trip_type}</span></span>}
+        </div>
+      )}
+
+      {/* Progress bar */}
+      {totalCount > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-body text-muted-foreground">{packedCount} of {totalCount} packed</span>
+            <span className="text-xs font-body text-primary">{Math.round(progress)}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+      )}
+
       {totalCount === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <Briefcase size={32} className="mx-auto text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground font-body text-sm">Your packing list is empty. Add items to start organising.</p>
+          <Sparkles size={32} className="mx-auto text-muted-foreground/30 mb-4" />
+          <p className="text-muted-foreground font-body text-sm mb-4">
+            Your packing list is empty. Hit <span className="text-primary">Smart Suggest</span> to generate a contextual list based on your weather, events, and trip type.
+          </p>
+          <Button variant="champagne" onClick={generateSuggestions} disabled={generating}>
+            {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+            {generating ? "Generating…" : "Generate Smart Packing List"}
+          </Button>
         </div>
       ) : (
-        <div className="space-y-8">
-          {Object.entries(grouped).map(([cat, catItems]) => (
-            <div key={cat}>
-              <h3 className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-3">{cat}</h3>
-              <div className="space-y-2">
-                {catItems.map((item) => (
-                  <div key={item.id} className={`glass-card rounded-xl px-5 py-4 flex items-center justify-between transition-all duration-300 ${item.is_packed ? "opacity-60" : "hover:shadow-champagne"}`}>
-                    <div className="flex items-center gap-4">
-                      <button onClick={() => togglePacked(item)} className={`w-6 h-6 rounded-md border flex items-center justify-center transition-all ${item.is_packed ? "bg-gradient-champagne border-transparent" : "border-border hover:border-primary"}`}>
-                        {item.is_packed && <Check size={14} className="text-primary-foreground" />}
-                      </button>
-                      <span className={`text-sm font-body ${item.is_packed ? "line-through text-muted-foreground" : "text-foreground"}`}>{item.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => updateQuantity(item, -1)} className="w-6 h-6 rounded flex items-center justify-center hover:bg-secondary"><Minus size={12} className="text-muted-foreground" /></button>
-                        <span className="text-sm font-heading w-6 text-center text-gradient-champagne">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item, 1)} className="w-6 h-6 rounded flex items-center justify-center hover:bg-secondary"><Plus size={12} className="text-muted-foreground" /></button>
-                      </div>
-                      <button onClick={() => deleteItem(item.id)} className="p-1.5 rounded-lg hover:bg-secondary">
-                        <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+        <div className="space-y-6">
+          {sortedCategories.map((cat) => {
+            const catItems = grouped[cat];
+            const catPacked = catItems.filter(i => i.is_packed).length;
+            const isCollapsed = collapsedCategories.has(cat);
+
+            return (
+              <div key={cat}>
+                <button onClick={() => toggleCategory(cat)} className="flex items-center gap-2 w-full text-left mb-3 group">
+                  {isCollapsed ? <ChevronRight size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
+                  <h3 className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body">{cat}</h3>
+                  <span className="text-xs text-primary font-body ml-auto">{catPacked}/{catItems.length}</span>
+                </button>
+                <AnimatePresence>
+                  {!isCollapsed && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden">
+                      {catItems.map((item) => (
+                        <div key={item.id} className={`glass-card rounded-xl px-5 py-4 flex items-center justify-between transition-all duration-300 ${item.is_packed ? "opacity-50" : "hover:shadow-champagne"}`}>
+                          <div className="flex items-center gap-4 min-w-0">
+                            <button onClick={() => togglePacked(item)} className={`w-6 h-6 rounded-md border flex items-center justify-center transition-all shrink-0 ${item.is_packed ? "bg-gradient-champagne border-transparent" : "border-border hover:border-primary"}`}>
+                              {item.is_packed && <Check size={14} className="text-primary-foreground" />}
+                            </button>
+                            <span className={`text-sm font-body truncate ${item.is_packed ? "line-through text-muted-foreground" : "text-foreground"}`}>{item.name}</span>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => updateQuantity(item, -1)} className="w-6 h-6 rounded flex items-center justify-center hover:bg-secondary"><Minus size={12} className="text-muted-foreground" /></button>
+                              <span className="text-sm font-heading w-6 text-center text-gradient-champagne">{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item, 1)} className="w-6 h-6 rounded flex items-center justify-center hover:bg-secondary"><Plus size={12} className="text-muted-foreground" /></button>
+                            </div>
+                            <button onClick={() => deleteItem(item.id)} className="p-1.5 rounded-lg hover:bg-secondary">
+                              <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </motion.div>
