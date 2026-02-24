@@ -1,5 +1,4 @@
 // Local type definitions for database tables
-// These mirror the database schema until types.ts auto-regenerates
 
 export interface Profile {
   id: string;
@@ -81,5 +80,38 @@ export interface BoardItem {
   description: string | null;
   notes: string | null;
   order_index: number;
+  created_at: string;
+}
+
+export interface OutfitItem {
+  category: string;
+  name: string;
+  color: string;
+  brand_suggestion?: string;
+  search_terms: string;
+}
+
+export interface OutfitSuggestion {
+  id: string;
+  trip_id: string;
+  title: string;
+  occasion: string | null;
+  description: string | null;
+  items: OutfitItem[];
+  pinned: boolean;
+  created_at: string;
+}
+
+export interface ActivitySuggestion {
+  id: string;
+  trip_id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  location: string | null;
+  rating: number | null;
+  price_level: string | null;
+  image_url: string | null;
+  source_url: string | null;
   created_at: string;
 }

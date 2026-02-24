@@ -102,4 +102,12 @@
     backdrop-filter: blur(20px);
     border: 1px solid hsl(220 10% 18% / 0.5);
   }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
