@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { decode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -159,14 +160,70 @@ serve(async (req) => {
 
     const { outfits } = JSON.parse(toolCall.function.arguments);
 
+    // Generate images for each outfit using the extracted image_prompt
+    const generateImage = async (imagePrompt: string, index: number): Promise<string | null> => {
+      try {
+        const imgResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-image",
+            messages: [{ role: "user", content: imagePrompt }],
+            modalities: ["image", "text"],
+          }),
+        });
+
+        if (!imgResponse.ok) {
+          console.error(`Image gen failed for web outfit ${index}:`, imgResponse.status);
+          return null;
+        }
+
+        const imgData = await imgResponse.json();
+        const base64Url = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        if (!base64Url) return null;
+
+        const base64Data = base64Url.replace(/^data:image\/\w+;base64,/, "");
+        const imageBytes = decode(base64Data);
+        const fileName = `${trip_id}/web-outfit-${index}-${Date.now()}.png`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("outfit-images")
+          .upload(fileName, imageBytes, { contentType: "image/png", upsert: true });
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          return null;
+        }
+
+        const { data: urlData } = supabase.storage.from("outfit-images").getPublicUrl(fileName);
+        return urlData.publicUrl;
+      } catch (e) {
+        console.error(`Image gen error for web outfit ${index}:`, e);
+        return null;
+      }
+    };
+
+    // Generate images in batches of 3
+    const imageUrls: (string | null)[] = [];
+    for (let i = 0; i < outfits.length; i += 3) {
+      const batch = outfits.slice(i, i + 3);
+      const results = await Promise.all(
+        batch.map((o: any, j: number) => generateImage(o.image_prompt, i + j))
+      );
+      imageUrls.push(...results);
+    }
+
     // Insert as outfit_suggestions (appending, not replacing)
-    const rows = outfits.map((o: any) => ({
+    const rows = outfits.map((o: any, i: number) => ({
       trip_id,
       title: o.title,
       occasion: o.occasion,
       description: `${o.description}\n\n📎 Source: ${o.source_name || "Web"}`,
       items: o.items,
-      image_url: null, // Will be populated later or by generate-outfits
+      image_url: imageUrls[i] || null,
       pinned: false,
     }));
 
