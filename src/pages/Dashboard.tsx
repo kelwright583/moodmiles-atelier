@@ -44,14 +44,14 @@ const Dashboard = () => {
             className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-10 md:mb-16"
           >
             <div>
-              <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">Your Trips</p>
-              <h1 className="text-3xl md:text-5xl font-heading">Good evening</h1>
+              <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">My Suite</p>
+              <h1 className="text-3xl md:text-5xl font-heading">Welcome back</h1>
             </div>
           </motion.div>
 
           {/* Trips */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-20">
-            <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground mb-8 font-body">Your Trips</h2>
+            <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground mb-8 font-body">Upcoming Journeys</h2>
             {isLoading ? (
               <div className="grid md:grid-cols-2 gap-6">
                 {[1, 2].map((i) => (

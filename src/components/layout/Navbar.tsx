@@ -56,7 +56,7 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-8">
           {user && (
-            <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors tracking-wide">Trips</Link>
+            <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors tracking-[0.15em] uppercase">My Suite</Link>
           )}
           {isLanding && !user ? (
             <Link to="/auth">
@@ -119,7 +119,7 @@ const Navbar = () => {
           <div className="flex flex-col gap-4">
             {user ? (
               <>
-                <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setOpen(false)}>Trips</Link>
+                <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setOpen(false)}>My Suite</Link>
                 <Link to="/settings" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setOpen(false)}>Settings</Link>
               </>
             ) : (
