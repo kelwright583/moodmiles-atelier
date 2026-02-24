@@ -49,12 +49,34 @@ serve(async (req) => {
       throw new Error("Missing trip_id, latitude, or longitude");
     }
 
+    // Clamp dates to Open-Meteo's 16-day forecast window
+    const today = new Date();
+    const maxForecast = new Date(today);
+    maxForecast.setDate(today.getDate() + 15);
+    
+    const reqStart = new Date(start_date);
+    const reqEnd = new Date(end_date);
+    
+    const clampedStart = reqStart < today ? today : reqStart;
+    const clampedEnd = reqEnd > maxForecast ? maxForecast : reqEnd;
+    
+    if (clampedStart > clampedEnd) {
+      // Trip is too far in the future for forecasts — return empty success
+      return new Response(JSON.stringify({ success: true, days: 0, message: "Trip dates are outside forecast range" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const fmtDate = (d: Date) => d.toISOString().split("T")[0];
+
     // Fetch weather from Open-Meteo
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code&timezone=auto&start_date=${start_date}&end_date=${end_date}`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code&timezone=auto&start_date=${fmtDate(clampedStart)}&end_date=${fmtDate(clampedEnd)}`;
+    console.log("Fetching weather:", url);
     const weatherRes = await fetch(url);
     const weatherData = await weatherRes.json();
 
     if (!weatherData.daily) {
+      console.error("Open-Meteo response:", JSON.stringify(weatherData));
       throw new Error("No weather data returned");
     }
 
