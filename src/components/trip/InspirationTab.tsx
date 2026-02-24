@@ -286,7 +286,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
             </div>
 
             {/* Feed */}
-            <div className="max-w-lg mx-auto pb-20">
+            <div className="max-w-lg mx-auto pb-20 pt-4">
               {outfits.slice(startIndex).concat(outfits.slice(0, startIndex)).map((outfit) => (
                 <FeedCard
                   key={outfit.id}
@@ -338,7 +338,7 @@ const FeedCard = ({
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      className="border-b border-border"
+      className="rounded-2xl overflow-hidden bg-card mx-4 mb-5"
     >
       {/* Image */}
       {outfit.image_url ? (
