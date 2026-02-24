@@ -2,20 +2,32 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { TripEvent } from "@/types/database";
-import { Calendar, MapPin, Plus, Pin, PinOff, Trash2 } from "lucide-react";
+import { TripEvent, WeatherData } from "@/types/database";
+import { Calendar, MapPin, Plus, Pin, PinOff, Trash2, CloudSun, Droplets, Wind, RefreshCw, Sun, Cloud, CloudRain, Snowflake, CloudLightning, CloudFog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 
-const OverviewTab = ({ tripId }: { tripId: string }) => {
+const getWeatherIcon = (code: number) => {
+  if (code === 0 || code === 1) return Sun;
+  if (code === 2 || code === 3) return Cloud;
+  if (code >= 45 && code <= 48) return CloudFog;
+  if (code >= 51 && code <= 65) return CloudRain;
+  if (code >= 71 && code <= 77) return Snowflake;
+  if (code >= 80 && code <= 82) return CloudRain;
+  if (code >= 95) return CloudLightning;
+  return CloudSun;
+};
+
+const OverviewTab = ({ tripId, trip }: { tripId: string; trip?: { latitude?: number; longitude?: number; start_date: string; end_date: string } }) => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
+  const [refreshingWeather, setRefreshingWeather] = useState(false);
 
   const { data: events = [] } = useQuery({
     queryKey: ["trip-events", tripId],
@@ -25,6 +37,35 @@ const OverviewTab = ({ tripId }: { tripId: string }) => {
       return data as TripEvent[];
     },
   });
+
+  const { data: weather = [] } = useQuery({
+    queryKey: ["weather", tripId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("weather_data").select("*").eq("trip_id", tripId).order("date", { ascending: true });
+      if (error) throw error;
+      return data as WeatherData[];
+    },
+  });
+
+  const refreshWeather = async () => {
+    if (!trip?.latitude || !trip?.longitude) {
+      toast({ title: "No coordinates", description: "This trip doesn't have location coordinates for weather data.", variant: "destructive" });
+      return;
+    }
+    setRefreshingWeather(true);
+    try {
+      const { error } = await supabase.functions.invoke("fetch-weather", {
+        body: { trip_id: tripId, latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date },
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["weather", tripId] });
+      toast({ title: "Weather updated" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setRefreshingWeather(false);
+    }
+  };
 
   const addEvent = async () => {
     if (!name) return;
@@ -49,7 +90,53 @@ const OverviewTab = ({ tripId }: { tripId: string }) => {
   const otherEvents = events.filter((e) => !e.is_pinned);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 md:space-y-12">
+      {/* Weather Section */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+            <CloudSun size={14} className="text-primary" /> Weather Forecast
+          </h2>
+          <Button variant="champagne-outline" size="sm" onClick={refreshWeather} disabled={refreshingWeather}>
+            <RefreshCw size={14} className={refreshingWeather ? "animate-spin" : ""} />
+            {refreshingWeather ? "Updating..." : "Refresh"}
+          </Button>
+        </div>
+        {weather.length === 0 ? (
+          <div className="glass-card rounded-xl p-6 text-center">
+            <p className="text-muted-foreground font-body text-sm">
+              {trip?.latitude ? "No weather data yet. Click Refresh to fetch forecast." : "Add coordinates to your destination to see weather data."}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            {weather.slice(0, 14).map((w) => {
+              const Icon = getWeatherIcon(w.weather_code || 0);
+              return (
+                <div key={w.id} className="glass-card rounded-xl p-3 md:p-4 text-center hover:shadow-champagne transition-all duration-300">
+                  <p className="text-xs text-muted-foreground font-body mb-2">
+                    {new Date(w.date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric" })}
+                  </p>
+                  <Icon size={24} className="mx-auto text-primary mb-2" />
+                  <div className="flex items-center justify-center gap-1 text-sm font-body">
+                    <span className="text-foreground font-medium">{Math.round(w.temperature_high || 0)}°</span>
+                    <span className="text-muted-foreground">{Math.round(w.temperature_low || 0)}°</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mt-1.5 text-xs text-muted-foreground">
+                    <Droplets size={10} className="text-blue-400" />
+                    <span>{w.rain_probability || 0}%</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mt-0.5 text-xs text-muted-foreground">
+                    <Wind size={10} />
+                    <span>{Math.round(w.wind_speed || 0)} km/h</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       {/* Pinned Events */}
       {pinnedEvents.length > 0 && (
         <section>
@@ -103,16 +190,16 @@ const OverviewTab = ({ tripId }: { tripId: string }) => {
 };
 
 const EventRow = ({ event, onTogglePin, onDelete }: { event: TripEvent; onTogglePin: (e: TripEvent) => void; onDelete: (id: string) => void }) => (
-  <div className="glass-card rounded-xl p-5 flex items-center justify-between hover:shadow-champagne transition-all duration-300">
-    <div>
-      <h3 className="font-heading text-base">{event.event_name}</h3>
+  <div className="glass-card rounded-xl p-4 md:p-5 flex items-center justify-between hover:shadow-champagne transition-all duration-300">
+    <div className="min-w-0 flex-1">
+      <h3 className="font-heading text-base truncate">{event.event_name}</h3>
       <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-body">
         {event.event_date && <span>{new Date(event.event_date).toLocaleDateString("en-GB", { month: "short", day: "numeric" })}</span>}
-        {event.location && <span className="flex items-center gap-1"><MapPin size={10} />{event.location}</span>}
+        {event.location && <span className="flex items-center gap-1 truncate"><MapPin size={10} />{event.location}</span>}
       </div>
     </div>
-    <div className="flex items-center gap-2">
-      {event.event_type && <span className="text-xs tracking-[0.15em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
+    <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
+      {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.15em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
       <button onClick={() => onTogglePin(event)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
         {event.is_pinned ? <PinOff size={14} className="text-primary" /> : <Pin size={14} className="text-muted-foreground" />}
       </button>

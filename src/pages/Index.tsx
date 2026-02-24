@@ -61,7 +61,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-5xl md:text-7xl font-heading font-medium leading-tight mb-8"
+            className="text-3xl sm:text-5xl md:text-7xl font-heading font-medium leading-tight mb-6 md:mb-8"
           >
             Arrive Impeccably
             <br />
@@ -102,7 +102,7 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section className="py-32 px-6">
+      <section className="py-16 md:py-32 px-4 md:px-6">
         <div className="max-w-5xl mx-auto">
           <motion.p
             initial={{ opacity: 0 }}
@@ -147,7 +147,7 @@ const Index = () => {
       </section>
 
       {/* Destinations */}
-      <section className="py-32 px-6">
+      <section className="py-16 md:py-32 px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
           <motion.p
             initial={{ opacity: 0 }}
@@ -166,7 +166,7 @@ const Index = () => {
             Featured Destinations
           </motion.h2>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {destinations.map((d, i) => (
               <motion.div
                 key={d.name}
@@ -193,7 +193,7 @@ const Index = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-32 px-6 text-center">
+      <section className="py-16 md:py-32 px-4 md:px-6 text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
