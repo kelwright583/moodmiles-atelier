@@ -7,6 +7,9 @@ const DEV_ORIGINS = [
   "http://localhost:3000",
 ];
 
+/** Patterns like *.netlify.app - origin must end with the part after * */
+const WILDCARD_PATTERNS = [".netlify.app", ".vercel.app"];
+
 function getAllowedOrigins(): string[] {
   const envOrigins = Deno.env.get("ALLOWED_ORIGINS");
   const origins = envOrigins
@@ -15,10 +18,15 @@ function getAllowedOrigins(): string[] {
   return [...origins, ...DEV_ORIGINS];
 }
 
+function isOriginAllowed(origin: string, allowed: string[]): boolean {
+  if (allowed.includes(origin)) return true;
+  return WILDCARD_PATTERNS.some((pattern) => origin.endsWith(pattern));
+}
+
 export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("Origin") || "";
   const allowed = getAllowedOrigins();
-  const matchedOrigin = allowed.includes(origin) ? origin : allowed[0] || "";
+  const matchedOrigin = isOriginAllowed(origin, allowed) ? origin : allowed[0] || "";
 
   return {
     "Access-Control-Allow-Origin": matchedOrigin,
