@@ -246,7 +246,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
               </button>
             </div>
 
-            <div className="max-w-lg mx-auto pb-20">
+            <div className="max-w-lg mx-auto pb-20 pt-4">
               {activities.slice(startIndex).concat(activities.slice(0, startIndex)).map((activity) => (
                 <ActivityFeedCard
                   key={activity.id}
@@ -334,7 +334,7 @@ const ActivityFeedCard = ({
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      className="border-b border-border"
+      className="rounded-2xl overflow-hidden bg-card mx-4 mb-5"
     >
       {activity.image_url ? (
         <div className="w-full aspect-[4/5] bg-secondary overflow-hidden">
