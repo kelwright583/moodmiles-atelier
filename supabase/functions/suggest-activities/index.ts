@@ -17,6 +17,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
+    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -25,18 +26,74 @@ serve(async (req) => {
     const { trip_id, destination, country, trip_type, latitude, longitude } = await req.json();
     if (!trip_id || !destination) throw new Error("Missing trip_id or destination");
 
-    // Step 1: AI generates activity suggestions
-    const prompt = `You are a luxury travel concierge. Suggest 10 must-do activities for a ${trip_type || "leisure"} trip to ${destination}${country ? `, ${country}` : ""}.
+    const locationStr = `${destination}${country ? `, ${country}` : ""}`;
+
+    // Step 1: Search for real experiences via Firecrawl
+    let webExperiences: any[] = [];
+    if (FIRECRAWL_API_KEY) {
+      try {
+        const searches = [
+          `best ${trip_type || "luxury"} experiences ${locationStr} 2025 2026 booking`,
+          `top things to do ${locationStr} tours activities book online`,
+          `${locationStr} restaurant reservations fine dining booking`,
+        ];
+
+        for (const query of searches) {
+          const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              query,
+              limit: 5,
+              scrapeOptions: { formats: ["markdown"] },
+            }),
+          });
+
+          if (searchRes.ok) {
+            const searchData = await searchRes.json();
+            if (searchData.data) {
+              webExperiences.push(...searchData.data);
+            }
+          }
+        }
+        console.log(`Firecrawl returned ${webExperiences.length} results`);
+      } catch (e) {
+        console.error("Firecrawl search failed:", e);
+      }
+    }
+
+    // Step 2: AI processes web results + generates structured suggestions
+    const webContext = webExperiences.length > 0
+      ? `\n\nHere are REAL experiences found online. Extract and prioritize these, keeping their source URLs and booking links:\n${webExperiences
+          .slice(0, 12)
+          .map((r: any) => `- Title: ${r.title || "Unknown"}\n  URL: ${r.url || ""}\n  Content: ${(r.markdown || r.description || "").slice(0, 500)}`)
+          .join("\n\n")}`
+      : "";
+
+    const prompt = `You are a luxury travel concierge for ${locationStr}. Suggest 12 REAL, bookable experiences for a ${trip_type || "leisure"} trip.
+
+CRITICAL: These must be REAL places and experiences that actually exist. Include actual venue/tour names, real addresses, and real booking or website URLs.
 
 Include a mix of:
-- Cultural experiences (museums, galleries, historic sites)
-- Food & dining (restaurants, food tours, markets)
+- Cultural experiences (museums, galleries, historic sites, tours)
+- Fine dining & restaurants (with reservation links if possible)
 - Nightlife & entertainment
-- Shopping districts and boutiques
+- Shopping (boutiques, markets, designer stores)
 - Outdoor activities and day trips
-- Hidden gems and local favorites
+- Unique local experiences (cooking classes, wine tastings, etc.)
 
-For each, provide: name, description (2 sentences), category (one of: Culture, Dining, Nightlife, Shopping, Outdoor, Experience), location (specific area/address if known), and price_level (Free, $, $$, $$$).`;
+For each, provide:
+- name: The actual name of the venue/experience
+- description: 2-3 sentences about what makes it special
+- category: One of Culture, Dining, Nightlife, Shopping, Outdoor, Experience
+- location: Real address or area
+- price_level: Free, $, $$, $$$
+- source_url: The website URL where more info can be found
+- booking_url: Direct booking/reservation URL if available (or website URL)
+${webContext}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -47,7 +104,7 @@ For each, provide: name, description (2 sentences), category (one of: Culture, D
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are a luxury travel concierge. Return structured activity suggestions." },
+          { role: "system", content: "You are a luxury travel concierge. Return REAL, verifiable experiences with actual URLs." },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -55,7 +112,7 @@ For each, provide: name, description (2 sentences), category (one of: Culture, D
             type: "function",
             function: {
               name: "save_activities",
-              description: "Save activity suggestions",
+              description: "Save real activity suggestions with booking links",
               parameters: {
                 type: "object",
                 properties: {
@@ -69,6 +126,8 @@ For each, provide: name, description (2 sentences), category (one of: Culture, D
                         category: { type: "string" },
                         location: { type: "string" },
                         price_level: { type: "string" },
+                        source_url: { type: "string", description: "Website URL for more info" },
+                        booking_url: { type: "string", description: "Direct booking/reservation URL" },
                       },
                       required: ["name", "description", "category", "location"],
                     },
@@ -104,25 +163,31 @@ For each, provide: name, description (2 sentences), category (one of: Culture, D
 
     const { activities } = JSON.parse(toolCall.function.arguments);
 
-    // Step 2: Optionally enrich with Google Places ratings
+    // Step 3: Enrich with Google Places for ratings and images
     let enrichedActivities = activities;
     if (GOOGLE_MAPS_API_KEY && latitude && longitude) {
       try {
         enrichedActivities = await Promise.all(
           activities.map(async (activity: any) => {
-            const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(activity.name + " " + destination)}&inputtype=textquery&fields=rating,photos,formatted_address&locationbias=circle:5000@${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`;
+            const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(activity.name + " " + destination)}&inputtype=textquery&fields=rating,photos,formatted_address,place_id&locationbias=circle:5000@${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`;
             const res = await fetch(searchUrl);
             const data = await res.json();
             const candidate = data.candidates?.[0];
             let imageUrl = null;
             if (candidate?.photos?.[0]?.photo_reference) {
-              imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${candidate.photos[0].photo_reference}&key=${GOOGLE_MAPS_API_KEY}`;
+              imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=600&photo_reference=${candidate.photos[0].photo_reference}&key=${GOOGLE_MAPS_API_KEY}`;
             }
+            // Use Google Maps URL as fallback source
+            const googleMapsUrl = candidate?.place_id
+              ? `https://www.google.com/maps/place/?q=place_id:${candidate.place_id}`
+              : null;
             return {
               ...activity,
               rating: candidate?.rating || null,
               image_url: imageUrl,
               location: candidate?.formatted_address || activity.location,
+              source_url: activity.source_url || googleMapsUrl,
+              booking_url: activity.booking_url || activity.source_url || googleMapsUrl,
             };
           })
         );
@@ -143,6 +208,8 @@ For each, provide: name, description (2 sentences), category (one of: Culture, D
       rating: a.rating || null,
       price_level: a.price_level || null,
       image_url: a.image_url || null,
+      source_url: a.source_url || null,
+      booking_url: a.booking_url || null,
     }));
 
     const { error: insertError } = await supabase.from("activity_suggestions").insert(rows);

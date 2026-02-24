@@ -6,6 +6,7 @@ import { ActivitySuggestion, TripEvent } from "@/types/database";
 import {
   RefreshCw, Star, MapPin, ChevronLeft, ChevronRight,
   Plus, Pin, PinOff, Trash2, Calendar, X, ExternalLink,
+  Bookmark, BookmarkCheck, Send, Ticket, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,7 +73,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
       });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["activity-suggestions", tripId] });
-      toast({ title: "Activities found!" });
+      toast({ title: "Real experiences found!" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -87,6 +88,27 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
     queryClient.invalidateQueries({ queryKey: ["trip-events", tripId] });
     setOpen(false);
     setName(""); setType(""); setDate(""); setLocation("");
+  };
+
+  const addActivityToEvents = async (activity: ActivitySuggestion) => {
+    const existing = events.find((e) => e.event_name === activity.name);
+    if (existing) {
+      toast({ title: "Already added", description: `${activity.name} is already in your events.` });
+      return;
+    }
+    const { error } = await supabase.from("trip_events").insert({
+      trip_id: tripId,
+      event_name: activity.name,
+      event_type: activity.category || null,
+      location: activity.location || null,
+      notes: activity.booking_url ? `Book: ${activity.booking_url}` : (activity.source_url || null),
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      queryClient.invalidateQueries({ queryKey: ["trip-events", tripId] });
+      toast({ title: "Added to your events", description: activity.name });
+    }
   };
 
   const togglePin = async (event: TripEvent) => {
@@ -105,6 +127,8 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
     }
   };
 
+  const isInEvents = (activityName: string) => events.some((e) => e.event_name === activityName);
+
   const pinnedEvents = events.filter((e) => e.is_pinned);
   const otherEvents = events.filter((e) => !e.is_pinned);
 
@@ -114,7 +138,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
-            <MapPin size={14} className="text-primary" /> Suggested Experiences
+            <MapPin size={14} className="text-primary" /> Curated Experiences
           </h2>
           <div className="flex items-center gap-2">
             {activities.length > 0 && (
@@ -136,12 +160,15 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
 
         {activities.length === 0 ? (
           <div className="glass-card rounded-xl p-8 text-center">
-            <MapPin size={32} className="text-primary mx-auto mb-3 opacity-50" />
-            <p className="text-muted-foreground font-body text-sm mb-4">
-              Discover curated experiences, restaurants, and hidden gems in {trip.destination}.
+            <Globe size={32} className="text-primary mx-auto mb-3 opacity-50" />
+            <p className="text-muted-foreground font-body text-sm mb-1">
+              Discover real, bookable experiences in {trip.destination}.
+            </p>
+            <p className="text-muted-foreground/60 font-body text-xs mb-4">
+              Powered by web search & local intelligence
             </p>
             <Button variant="champagne" size="sm" onClick={generateActivities} disabled={generatingActivities}>
-              {generatingActivities ? "Discovering..." : "Find Things to Do"}
+              {generatingActivities ? "Discovering..." : "Find Experiences"}
             </Button>
           </div>
         ) : (
@@ -154,20 +181,30 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
               {activities.map((activity, i) => (
                 <div
                   key={activity.id}
-                  onClick={() => { setStartIndex(i); setFeedOpen(true); }}
-                  className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-champagne transition-all duration-500"
+                  className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden group hover:shadow-champagne transition-all duration-500"
                   style={{ scrollSnapAlign: "start" }}
                 >
-                  {activity.image_url ? (
-                    <div className="aspect-[4/5] bg-secondary overflow-hidden">
-                      <img src={activity.image_url} alt={activity.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                    </div>
-                  ) : (
-                    <div className="aspect-[4/5] bg-secondary flex items-center justify-center">
-                      <MapPin size={32} className="text-muted-foreground/20" />
+                  <div
+                    onClick={() => { setStartIndex(i); setFeedOpen(true); }}
+                    className="cursor-pointer"
+                  >
+                    {activity.image_url ? (
+                      <div className="aspect-[4/5] bg-secondary overflow-hidden">
+                        <img src={activity.image_url} alt={activity.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      </div>
+                    ) : (
+                      <div className="aspect-[4/5] bg-secondary flex items-center justify-center">
+                        <MapPin size={32} className="text-muted-foreground/20" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                  {/* Promoted badge */}
+                  {activity.is_promoted && (
+                    <div className="absolute top-3 left-3">
+                      <span className="text-[9px] tracking-[0.15em] uppercase bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full font-body">Promoted</span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
@@ -184,14 +221,14 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
                 </div>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground/50 font-body text-center">
+            <p className="text-xs text-muted-foreground/50 font-body text-center mt-2">
               Tap to explore · Scroll for more
             </p>
           </>
         )}
       </section>
 
-      {/* Instagram-style Vertical Feed Overlay */}
+      {/* Full-screen Vertical Feed Overlay */}
       <AnimatePresence>
         {feedOpen && (
           <motion.div
@@ -202,7 +239,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
           >
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
               <h3 className="text-sm tracking-[0.15em] uppercase text-muted-foreground font-body flex items-center gap-2">
-                <MapPin size={12} className="text-primary" /> Experiences
+                <MapPin size={12} className="text-primary" /> Experiences in {trip.destination}
               </h3>
               <button onClick={() => setFeedOpen(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">
                 <X size={18} className="text-foreground" />
@@ -211,7 +248,12 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
 
             <div className="max-w-lg mx-auto pb-20">
               {activities.slice(startIndex).concat(activities.slice(0, startIndex)).map((activity) => (
-                <ActivityFeedCard key={activity.id} activity={activity} />
+                <ActivityFeedCard
+                  key={activity.id}
+                  activity={activity}
+                  isInEvents={isInEvents(activity.name)}
+                  onAddToEvents={() => addActivityToEvents(activity)}
+                />
               ))}
             </div>
           </motion.div>
@@ -256,7 +298,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
         </div>
         {otherEvents.length === 0 && pinnedEvents.length === 0 ? (
           <div className="glass-card rounded-xl p-8 text-center">
-            <p className="text-muted-foreground font-body text-sm">No events yet. Add your own events or discover suggestions above.</p>
+            <p className="text-muted-foreground font-body text-sm">No events yet. Discover experiences above or add your own.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -270,59 +312,112 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
   );
 };
 
-/* ── Activity Feed Card ── */
+/* ── Activity Feed Card (enhanced with actions) ── */
 
-const ActivityFeedCard = ({ activity }: { activity: ActivitySuggestion }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-50px" }}
-    className="border-b border-border"
-  >
-    {activity.image_url ? (
-      <div className="w-full aspect-[4/5] bg-secondary overflow-hidden">
-        <img src={activity.image_url} alt={activity.name} className="w-full h-full object-cover" />
-      </div>
-    ) : (
-      <div className="w-full aspect-[4/5] bg-secondary flex items-center justify-center">
-        <MapPin size={40} className="text-muted-foreground/20" />
-      </div>
-    )}
+const ActivityFeedCard = ({
+  activity,
+  isInEvents,
+  onAddToEvents,
+}: {
+  activity: ActivitySuggestion;
+  isInEvents: boolean;
+  onAddToEvents: () => void;
+}) => {
+  const handleEnquire = () => {
+    const subject = encodeURIComponent(`Enquiry about ${activity.name}`);
+    const body = encodeURIComponent(`Hi,\n\nI'm interested in "${activity.name}" located at ${activity.location || "your venue"}.\n\nCould you provide more information about availability and booking?\n\nThank you`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+  };
 
-    <div className="px-4 py-4">
-      <div className="flex items-center gap-2 mb-1">
-        <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
-          {activity.category}
-        </span>
-        {activity.rating && (
-          <span className="flex items-center gap-0.5 text-xs text-primary">
-            <Star size={10} className="fill-primary" /> {activity.rating.toFixed(1)}
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      className="border-b border-border"
+    >
+      {activity.image_url ? (
+        <div className="w-full aspect-[4/5] bg-secondary overflow-hidden">
+          <img src={activity.image_url} alt={activity.name} className="w-full h-full object-cover" />
+        </div>
+      ) : (
+        <div className="w-full aspect-[4/5] bg-secondary flex items-center justify-center">
+          <MapPin size={40} className="text-muted-foreground/20" />
+        </div>
+      )}
+
+      {/* Action bar */}
+      <div className="flex items-center justify-between px-4 pt-3">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onAddToEvents}
+            className={`p-2.5 rounded-xl transition-colors ${isInEvents ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
+            title={isInEvents ? "Added to events" : "Add to your events"}
+          >
+            {isInEvents ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
+          </button>
+          <button
+            onClick={handleEnquire}
+            className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            title="Enquire"
+          >
+            <Send size={18} />
+          </button>
+        </div>
+        <div className="flex items-center gap-1">
+          {activity.booking_url && (
+            <a
+              href={activity.booking_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-champagne text-primary-foreground text-xs font-body tracking-wide hover:opacity-90 transition-opacity"
+            >
+              <Ticket size={12} /> Book
+            </a>
+          )}
+        </div>
+      </div>
+
+      <div className="px-4 py-3">
+        <div className="flex items-center gap-2 mb-1">
+          <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
+            {activity.category}
           </span>
+          {activity.rating && (
+            <span className="flex items-center gap-0.5 text-xs text-primary">
+              <Star size={10} className="fill-primary" /> {activity.rating.toFixed(1)}
+            </span>
+          )}
+          {activity.price_level && (
+            <span className="text-xs text-muted-foreground font-body">{activity.price_level}</span>
+          )}
+          {activity.is_promoted && (
+            <span className="text-[9px] tracking-[0.15em] uppercase text-primary font-body bg-primary/10 px-2 py-0.5 rounded-full">Promoted</span>
+          )}
+        </div>
+        <h3 className="font-heading text-xl leading-tight mb-1">{activity.name}</h3>
+        <p className="text-sm text-muted-foreground font-body leading-relaxed">{activity.description}</p>
+        {activity.location && (
+          <p className="text-xs text-muted-foreground/70 font-body mt-2 flex items-center gap-1">
+            <MapPin size={10} /> {activity.location}
+          </p>
         )}
-        {activity.price_level && (
-          <span className="text-xs text-muted-foreground font-body">{activity.price_level}</span>
-        )}
+        <div className="flex items-center gap-3 mt-3">
+          {activity.source_url && (
+            <a
+              href={activity.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-primary font-body hover:underline"
+            >
+              <ExternalLink size={12} /> View more
+            </a>
+          )}
+        </div>
       </div>
-      <h3 className="font-heading text-xl leading-tight mb-1">{activity.name}</h3>
-      <p className="text-sm text-muted-foreground font-body leading-relaxed">{activity.description}</p>
-      {activity.location && (
-        <p className="text-xs text-muted-foreground/70 font-body mt-2 flex items-center gap-1">
-          <MapPin size={10} /> {activity.location}
-        </p>
-      )}
-      {activity.source_url && (
-        <a
-          href={activity.source_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 mt-3 text-xs text-primary font-body hover:underline"
-        >
-          <ExternalLink size={12} /> Explore this
-        </a>
-      )}
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 /* ── Event Row ── */
 
@@ -334,6 +429,11 @@ const EventRow = ({ event, onTogglePin, onDelete }: { event: TripEvent; onToggle
         {event.event_date && <span>{new Date(event.event_date).toLocaleDateString("en-GB", { month: "short", day: "numeric" })}</span>}
         {event.location && <span className="flex items-center gap-1 truncate"><MapPin size={10} />{event.location}</span>}
       </div>
+      {event.notes && event.notes.startsWith("Book:") && (
+        <a href={event.notes.replace("Book: ", "")} target="_blank" rel="noopener noreferrer" className="text-xs text-primary font-body hover:underline flex items-center gap-1 mt-1">
+          <Ticket size={10} /> Booking link
+        </a>
+      )}
     </div>
     <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
       {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.15em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
