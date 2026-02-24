@@ -2,3 +2,6 @@ project_id = "rasfikgdqoofpabfmbzv"
 
 [functions.suggest-packing]
 verify_jwt = false
+
+[functions.fetch-trends]
+verify_jwt = false
