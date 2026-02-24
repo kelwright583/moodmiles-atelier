@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Plus, CloudSun, Calendar, ArrowRight, TrendingUp, MapPin } from "lucide-react";
+import { Calendar, ArrowRight, TrendingUp, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Trip } from "@/types/database";
@@ -18,7 +17,6 @@ const trending = [
 ];
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
 
   const { data: trips = [], isLoading } = useQuery({
     queryKey: ["trips"],
@@ -46,19 +44,8 @@ const Dashboard = () => {
             className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-10 md:mb-16"
           >
             <div>
-              <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">Dashboard</p>
+              <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">Your Trips</p>
               <h1 className="text-3xl md:text-5xl font-heading">Good evening</h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link to="/create-trip">
-                <Button variant="champagne" size="lg">
-                  <Plus size={18} />
-                  New Trip
-                </Button>
-              </Link>
-              <Button variant="ghost" size="sm" onClick={signOut} className="text-muted-foreground text-xs">
-                Sign out
-              </Button>
             </div>
           </motion.div>
 
