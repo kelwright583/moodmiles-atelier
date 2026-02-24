@@ -27,6 +27,11 @@ const CreateTrip = () => {
   const [accommodation, setAccommodation] = useState("");
   const [originCity, setOriginCity] = useState("");
   const [originCountry, setOriginCountry] = useState("");
+
+  const handleOriginSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
+    setOriginCity(place.city);
+    setOriginCountry(place.country);
+  };
   const [loading, setLoading] = useState(false);
 
   const handlePlaceSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
@@ -98,7 +103,7 @@ const CreateTrip = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">City</label>
-                  <Input value={originCity} onChange={(e) => setOriginCity(e.target.value)} placeholder="Cape Town" className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+                  <PlacesAutocomplete value={originCity} onChange={setOriginCity} onSelect={handleOriginSelect} />
                 </div>
                 <div>
                   <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Country</label>

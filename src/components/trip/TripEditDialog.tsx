@@ -28,6 +28,11 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
   const [accommodation, setAccommodation] = useState(trip.accommodation || "");
   const [originCity, setOriginCity] = useState((trip as any).origin_city || "");
   const [originCountry, setOriginCountry] = useState((trip as any).origin_country || "");
+
+  const handleOriginSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
+    setOriginCity(place.city);
+    setOriginCountry(place.country);
+  };
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -97,7 +102,7 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">City</label>
-                <Input value={originCity} onChange={(e) => setOriginCity(e.target.value)} placeholder="Cape Town" className="bg-secondary border-border h-11 text-foreground font-body" />
+                <PlacesAutocomplete value={originCity} onChange={setOriginCity} onSelect={handleOriginSelect} />
               </div>
               <div>
                 <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">Country</label>
