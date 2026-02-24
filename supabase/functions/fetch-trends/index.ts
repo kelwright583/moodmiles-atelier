@@ -6,6 +6,39 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const fallbackTrends = [
+  { city: "Milan", trend: "Quiet luxury & structured tailoring", category: "Fashion", image_url: null },
+  { city: "Paris", trend: "Layered neutrals & statement coats", category: "Style", image_url: null },
+  { city: "Amalfi", trend: "Linen resort & gold accessories", category: "Destination", image_url: null },
+  { city: "Tokyo", trend: "Streetwear meets minimalist travel", category: "Style", image_url: null },
+  { city: "Marrakech", trend: "Earthy tones & artisan textiles", category: "Experience", image_url: null },
+  { city: "Santorini", trend: "Breezy whites & statement swim", category: "Destination", image_url: null },
+];
+
+const allowedCategories = new Set(["Style", "Destination", "Experience", "Fashion"]);
+
+const jsonResponse = (body: unknown) =>
+  new Response(JSON.stringify(body), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+const parseTrends = (content: string) => {
+  try {
+    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.slice(0, 6).map((item: any) => ({
+      city: (item?.city || "Unknown").toString().trim(),
+      trend: (item?.trend || "Travel style trend").toString().trim().slice(0, 120),
+      category: allowedCategories.has(item?.category) ? item.category : "Style",
+      image_url: null,
+    }));
+  } catch {
+    return [];
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -13,12 +46,14 @@ serve(async (req) => {
 
   try {
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
-    if (!firecrawlKey) throw new Error("FIRECRAWL_API_KEY not configured");
-
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableKey) throw new Error("LOVABLE_API_KEY not configured");
+    const googleMapsKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
 
-    // Search for trending travel + fashion content
+    if (!lovableKey) {
+      console.error("LOVABLE_API_KEY not configured");
+      return jsonResponse({ trends: fallbackTrends });
+    }
+
     const searches = [
       "trending travel destinations this week 2026 fashion style",
       "luxury travel trends what to wear 2026",
@@ -26,95 +61,112 @@ serve(async (req) => {
 
     const searchResults: string[] = [];
 
-    for (const query of searches) {
-      try {
-        const res = await fetch("https://api.firecrawl.dev/v1/search", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${firecrawlKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query,
-            limit: 5,
-            tbs: "qdr:w", // last week
-          }),
-        });
-        const data = await res.json();
-        if (data.data) {
-          for (const r of data.data) {
-            searchResults.push(`${r.title || ""}: ${r.description || ""}`);
+    if (firecrawlKey) {
+      for (const query of searches) {
+        try {
+          const res = await fetch("https://api.firecrawl.dev/v1/search", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${firecrawlKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              query,
+              limit: 5,
+              tbs: "qdr:w",
+            }),
+          });
+
+          if (!res.ok) {
+            console.error("Firecrawl search failed:", res.status);
+            continue;
           }
+
+          const data = await res.json();
+          if (Array.isArray(data?.data)) {
+            for (const r of data.data) {
+              searchResults.push(`${r.title || ""}: ${r.description || ""}`);
+            }
+          }
+        } catch (e) {
+          console.error("Search error:", e);
         }
-      } catch (e) {
-        console.error("Search error:", e);
       }
     }
 
-    // Use AI to curate into structured trending items
-    const aiRes = await fetch("https://api.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You curate travel & fashion trends. Given web search results, produce exactly 6 trending items as a JSON array. Each item has: "city" (destination name), "trend" (one-line fashion/travel insight, max 15 words), "category" (one of: "Style", "Destination", "Experience", "Fashion"). Only output the raw JSON array, no markdown fences, no explanation.`,
-          },
-          {
-            role: "user",
-            content: `Here are this week's search results:\n\n${searchResults.join("\n\n")}\n\nProduce 6 curated trending items as a JSON array.`,
-          },
-        ],
-        temperature: 0.7,
-      }),
-    });
+    let trends = fallbackTrends;
 
-    const aiText = await aiRes.text();
-    console.log("AI raw response:", aiText.substring(0, 500));
-    
-    let aiData;
     try {
-      aiData = JSON.parse(aiText);
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            {
+              role: "system",
+              content:
+                'You curate travel and fashion trends. Return exactly 6 items as JSON array with fields: city, trend, category. category must be one of "Style", "Destination", "Experience", "Fashion". No markdown.',
+            },
+            {
+              role: "user",
+              content: `Curate this week's trends from:\n\n${searchResults.join("\n\n") || "Global luxury travel and fashion trends."}`,
+            },
+          ],
+          temperature: 0.7,
+        }),
+      });
+
+      if (aiRes.ok) {
+        const aiData = await aiRes.json();
+        const content = aiData?.choices?.[0]?.message?.content || "[]";
+        const parsed = parseTrends(content);
+        if (parsed.length > 0) {
+          trends = parsed;
+        }
+      } else {
+        const text = await aiRes.text();
+        console.error("AI trends request failed:", aiRes.status, text.slice(0, 250));
+      }
     } catch (e) {
-      console.error("Failed to parse AI response as JSON:", e);
-      // Return fallback
-      return new Response(JSON.stringify({ trends: [
-        { city: "Milan", trend: "Quiet luxury & structured tailoring", category: "Fashion" },
-        { city: "Paris", trend: "Layered neutrals & statement coats", category: "Style" },
-        { city: "Amalfi", trend: "Linen resort & gold accessories", category: "Destination" },
-        { city: "Tokyo", trend: "Streetwear meets minimalist travel", category: "Style" },
-        { city: "Marrakech", trend: "Earthy tones & artisan textiles", category: "Experience" },
-        { city: "Santorini", trend: "Breezy whites & statement swim", category: "Destination" },
-      ]}), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    let trends = [];
-    try {
-      const content = aiData.choices?.[0]?.message?.content || "[]";
-      // Strip markdown code fences if present
-      const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-      trends = JSON.parse(cleaned);
-    } catch (e) {
-      console.error("AI parse error:", e, aiData);
-      trends = [
-        { city: "Milan", trend: "Quiet luxury & structured tailoring", category: "Fashion" },
-        { city: "Paris", trend: "Layered neutrals & statement coats", category: "Style" },
-        { city: "Amalfi", trend: "Linen resort & gold accessories", category: "Destination" },
-      ];
+      console.error("AI trends error:", e);
     }
 
-    return new Response(JSON.stringify({ trends }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const getTrendImage = async (city: string): Promise<string | null> => {
+      if (!googleMapsKey || !city) return null;
+
+      try {
+        const query = `${city} iconic city view`;
+        const placesRes = await fetch(
+          `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${googleMapsKey}`
+        );
+
+        if (!placesRes.ok) return null;
+
+        const placesData = await placesRes.json();
+        const firstPhotoRef = placesData?.results?.[0]?.photos?.[0]?.photo_reference;
+        if (!firstPhotoRef) return null;
+
+        return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${firstPhotoRef}&key=${googleMapsKey}`;
+      } catch {
+        return null;
+      }
+    };
+
+    const enriched = await Promise.all(
+      trends.slice(0, 6).map(async (trend) => ({
+        ...trend,
+        image_url: trend.image_url || (await getTrendImage(trend.city)),
+      }))
+    );
+
+    return jsonResponse({ trends: enriched });
   } catch (error) {
     console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // Never bubble 500 to UI for this non-critical widget
+    return jsonResponse({ trends: fallbackTrends });
   }
 });

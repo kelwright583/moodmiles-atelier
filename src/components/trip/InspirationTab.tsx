@@ -54,7 +54,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
         .select("*")
         .eq("trip_id", tripId)
         .order("pinned", { ascending: false })
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data as unknown as OutfitSuggestion[];
     },
@@ -78,6 +78,18 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
     },
   });
 
+  const getInvokeErrorMessage = async (err: any, fallback = "Request failed") => {
+    if (err?.context && typeof err.context.json === "function") {
+      try {
+        const payload = await err.context.json();
+        if (payload?.error) return payload.error;
+      } catch {
+        // ignore parse issues
+      }
+    }
+    return err?.message || fallback;
+  };
+
   const buildContext = () => {
     const weatherSummary = weather.length > 0
       ? weather.map(w => `${w.date}: ${w.description}, ${Math.round(w.temperature_high || 0)}°/${Math.round(w.temperature_low || 0)}°`).join("; ")
@@ -99,7 +111,8 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
       queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
       toast({ title: "Looks generated!", description: "Street-style outfit inspiration is ready." });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      const message = await getInvokeErrorMessage(err, "Could not generate looks right now.");
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setGeneratingOutfits(false);
     }
@@ -115,7 +128,8 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
       queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
       toast({ title: "Web looks added!", description: "Real fashion inspiration from the web has been added to your feed." });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      const message = await getInvokeErrorMessage(err, "Could not fetch web inspiration right now.");
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setSearchingWeb(false);
     }
@@ -136,7 +150,8 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
       queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
       toast({ title: "More looks added!", description: "Similar styles have been added to your feed." });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      const message = await getInvokeErrorMessage(err, "Could not load similar looks right now.");
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setGeneratingMore(false);
     }

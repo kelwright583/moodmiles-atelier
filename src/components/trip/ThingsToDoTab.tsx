@@ -65,6 +65,18 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
     },
   });
 
+  const getInvokeErrorMessage = async (err: any, fallback = "Request failed") => {
+    if (err?.context && typeof err.context.json === "function") {
+      try {
+        const payload = await err.context.json();
+        if (payload?.error) return payload.error;
+      } catch {
+        // ignore parse issues
+      }
+    }
+    return err?.message || fallback;
+  };
+
   const generateActivities = async () => {
     setGeneratingActivities(true);
     try {
@@ -75,7 +87,8 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
       queryClient.invalidateQueries({ queryKey: ["activity-suggestions", tripId] });
       toast({ title: "Real experiences found!" });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      const message = await getInvokeErrorMessage(err, "Could not discover activities right now.");
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setGeneratingActivities(false);
     }
