@@ -4,13 +4,15 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Trip } from "@/types/database";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, MapPin, Pencil, Trash2 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import OverviewTab from "@/components/trip/OverviewTab";
 import ThingsToDoTab from "@/components/trip/ThingsToDoTab";
 import InspirationTab from "@/components/trip/InspirationTab";
 import PackingTab from "@/components/trip/PackingTab";
 import BoardTab from "@/components/trip/BoardTab";
+import TripEditDialog from "@/components/trip/TripEditDialog";
+import TripDeleteDialog from "@/components/trip/TripDeleteDialog";
 
 const tabs = ["Overview", "Things to Do", "Inspiration", "Packing", "Board"] as const;
 type Tab = typeof tabs[number];
@@ -18,6 +20,8 @@ type Tab = typeof tabs[number];
 const TripDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data: trip, isLoading } = useQuery({
     queryKey: ["trip", id],
@@ -59,12 +63,22 @@ const TripDetail = () => {
       <div className="relative h-44 md:h-56 overflow-hidden bg-secondary">
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
         <div className="absolute bottom-6 left-4 right-4 md:bottom-8 md:left-8 md:right-8 max-w-6xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <span className="text-xs tracking-[0.2em] uppercase text-primary font-body">{trip.trip_type || "Trip"}</span>
-            <h1 className="text-3xl md:text-5xl font-heading mt-1">{trip.destination}</h1>
-            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground font-body">
-              <span className="flex items-center gap-1"><Calendar size={12} className="text-primary" /> {formatDate(trip.start_date)} – {formatDate(trip.end_date)}</span>
-              {trip.country && <span className="flex items-center gap-1"><MapPin size={12} className="text-primary" /> {trip.country}</span>}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
+            <div>
+              <span className="text-xs tracking-[0.2em] uppercase text-primary font-body">{trip.trip_type || "Trip"}</span>
+              <h1 className="text-3xl md:text-5xl font-heading mt-1">{trip.destination}</h1>
+              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground font-body">
+                <span className="flex items-center gap-1"><Calendar size={12} className="text-primary" /> {formatDate(trip.start_date)} – {formatDate(trip.end_date)}</span>
+                {trip.country && <span className="flex items-center gap-1"><MapPin size={12} className="text-primary" /> {trip.country}</span>}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setEditOpen(true)} className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary transition-colors" aria-label="Edit trip">
+                <Pencil size={14} className="text-muted-foreground" />
+              </button>
+              <button onClick={() => setDeleteOpen(true)} className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive/20 transition-colors" aria-label="Delete trip">
+                <Trash2 size={14} className="text-muted-foreground" />
+              </button>
             </div>
           </motion.div>
         </div>
@@ -89,6 +103,9 @@ const TripDetail = () => {
           {activeTab === "Board" && <BoardTab tripId={trip.id} />}
         </div>
       </main>
+
+      <TripEditDialog trip={trip} open={editOpen} onOpenChange={setEditOpen} />
+      <TripDeleteDialog tripId={trip.id} destination={trip.destination} open={deleteOpen} onOpenChange={setDeleteOpen} />
     </div>
   );
 };
