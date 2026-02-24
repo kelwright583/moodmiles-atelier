@@ -1,11 +1,11 @@
 import { useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ActivitySuggestion, TripEvent } from "@/types/database";
 import {
   RefreshCw, Star, MapPin, ChevronLeft, ChevronRight,
-  Plus, Pin, PinOff, Trash2, Calendar,
+  Plus, Pin, PinOff, Trash2, Calendar, X, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,9 +35,11 @@ const categoryColors: Record<string, string> = {
 const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
   const queryClient = useQueryClient();
   const [generatingActivities, setGeneratingActivities] = useState(false);
+  const [feedOpen, setFeedOpen] = useState(false);
+  const [startIndex, setStartIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Events (user-created)
+  // Events state
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
@@ -56,11 +58,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
   const { data: activities = [] } = useQuery({
     queryKey: ["activity-suggestions", tripId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("activity_suggestions")
-        .select("*")
-        .eq("trip_id", tripId)
-        .order("created_at", { ascending: true });
+      const { data, error } = await supabase.from("activity_suggestions").select("*").eq("trip_id", tripId).order("created_at", { ascending: true });
       if (error) throw error;
       return data as ActivitySuggestion[];
     },
@@ -70,14 +68,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
     setGeneratingActivities(true);
     try {
       const { error } = await supabase.functions.invoke("suggest-activities", {
-        body: {
-          trip_id: tripId,
-          destination: trip.destination,
-          country: trip.country,
-          trip_type: trip.trip_type,
-          latitude: trip.latitude,
-          longitude: trip.longitude,
-        },
+        body: { trip_id: tripId, destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude },
       });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["activity-suggestions", tripId] });
@@ -154,54 +145,80 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
             </Button>
           </div>
         ) : (
-          <div
-            ref={scrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
-            style={{ scrollSnapType: "x mandatory" }}
-          >
-            {activities.map((activity) => (
-              <div
-                key={activity.id}
-                className="glass-card rounded-xl min-w-[280px] max-w-[300px] shrink-0 hover:shadow-champagne transition-all duration-300 overflow-hidden"
-                style={{ scrollSnapAlign: "start" }}
-              >
-                {activity.image_url && (
-                  <div className="w-full h-36 overflow-hidden bg-secondary">
-                    <img src={activity.image_url} alt={activity.name} className="w-full h-full object-cover" />
-                  </div>
-                )}
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-heading text-base leading-tight">{activity.name}</h3>
-                    {activity.rating && (
-                      <span className="flex items-center gap-1 text-xs text-primary shrink-0">
-                        <Star size={10} className="fill-primary" />
-                        {activity.rating.toFixed(1)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-xs font-body tracking-wider uppercase ${categoryColors[activity.category || ""] || "text-muted-foreground"}`}>
-                      {activity.category}
-                    </span>
-                    {activity.price_level && (
-                      <span className="text-xs text-muted-foreground font-body">{activity.price_level}</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground font-body leading-relaxed line-clamp-3">{activity.description}</p>
-                  {activity.location && (
-                    <p className="text-xs text-muted-foreground/70 font-body mt-2 flex items-center gap-1 truncate">
-                      <MapPin size={10} /> {activity.location}
-                    </p>
+          <>
+            <div
+              ref={scrollRef}
+              className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
+              style={{ scrollSnapType: "x mandatory" }}
+            >
+              {activities.map((activity, i) => (
+                <div
+                  key={activity.id}
+                  onClick={() => { setStartIndex(i); setFeedOpen(true); }}
+                  className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-champagne transition-all duration-500"
+                  style={{ scrollSnapAlign: "start" }}
+                >
+                  {activity.image_url ? (
+                    <div className="aspect-[4/5] bg-secondary overflow-hidden">
+                      <img src={activity.image_url} alt={activity.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    </div>
+                  ) : (
+                    <div className="aspect-[4/5] bg-secondary flex items-center justify-center">
+                      <MapPin size={32} className="text-muted-foreground/20" />
+                    </div>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
+                        {activity.category}
+                      </span>
+                      {activity.rating && (
+                        <span className="flex items-center gap-0.5 text-xs text-primary">
+                          <Star size={10} className="fill-primary" /> {activity.rating.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-heading text-lg leading-tight text-foreground">{activity.name}</h3>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground/50 font-body text-center">
+              Tap to explore · Scroll for more
+            </p>
+          </>
         )}
       </section>
 
-      {/* User's Planned Events */}
+      {/* Instagram-style Vertical Feed Overlay */}
+      <AnimatePresence>
+        {feedOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background overflow-y-auto"
+          >
+            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
+              <h3 className="text-sm tracking-[0.15em] uppercase text-muted-foreground font-body flex items-center gap-2">
+                <MapPin size={12} className="text-primary" /> Experiences
+              </h3>
+              <button onClick={() => setFeedOpen(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">
+                <X size={18} className="text-foreground" />
+              </button>
+            </div>
+
+            <div className="max-w-lg mx-auto pb-20">
+              {activities.slice(startIndex).concat(activities.slice(0, startIndex)).map((activity) => (
+                <ActivityFeedCard key={activity.id} activity={activity} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Pinned Events */}
       {pinnedEvents.length > 0 && (
         <section>
           <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground mb-6 font-body flex items-center gap-2">
@@ -215,6 +232,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
         </section>
       )}
 
+      {/* User's Events */}
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
@@ -251,6 +269,62 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
     </motion.div>
   );
 };
+
+/* ── Activity Feed Card ── */
+
+const ActivityFeedCard = ({ activity }: { activity: ActivitySuggestion }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-50px" }}
+    className="border-b border-border"
+  >
+    {activity.image_url ? (
+      <div className="w-full aspect-[4/5] bg-secondary overflow-hidden">
+        <img src={activity.image_url} alt={activity.name} className="w-full h-full object-cover" />
+      </div>
+    ) : (
+      <div className="w-full aspect-[4/5] bg-secondary flex items-center justify-center">
+        <MapPin size={40} className="text-muted-foreground/20" />
+      </div>
+    )}
+
+    <div className="px-4 py-4">
+      <div className="flex items-center gap-2 mb-1">
+        <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
+          {activity.category}
+        </span>
+        {activity.rating && (
+          <span className="flex items-center gap-0.5 text-xs text-primary">
+            <Star size={10} className="fill-primary" /> {activity.rating.toFixed(1)}
+          </span>
+        )}
+        {activity.price_level && (
+          <span className="text-xs text-muted-foreground font-body">{activity.price_level}</span>
+        )}
+      </div>
+      <h3 className="font-heading text-xl leading-tight mb-1">{activity.name}</h3>
+      <p className="text-sm text-muted-foreground font-body leading-relaxed">{activity.description}</p>
+      {activity.location && (
+        <p className="text-xs text-muted-foreground/70 font-body mt-2 flex items-center gap-1">
+          <MapPin size={10} /> {activity.location}
+        </p>
+      )}
+      {activity.source_url && (
+        <a
+          href={activity.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 mt-3 text-xs text-primary font-body hover:underline"
+        >
+          <ExternalLink size={12} /> Explore this
+        </a>
+      )}
+    </div>
+  </motion.div>
+);
+
+/* ── Event Row ── */
 
 const EventRow = ({ event, onTogglePin, onDelete }: { event: TripEvent; onTogglePin: (e: TripEvent) => void; onDelete: (id: string) => void }) => (
   <div className="glass-card rounded-xl p-4 md:p-5 flex items-center justify-between hover:shadow-champagne transition-all duration-300">

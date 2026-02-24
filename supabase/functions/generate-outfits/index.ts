@@ -21,22 +21,27 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { trip_id, destination, country, trip_type, weather_summary, events_summary } = await req.json();
+    const { trip_id, destination, country, trip_type, weather_summary, events_summary, similar_to } = await req.json();
     if (!trip_id || !destination) throw new Error("Missing trip_id or destination");
 
-    // Step 1: Generate outfit data via tool calling
-    const prompt = `You are a luxury fashion stylist creating outfit boards for a ${trip_type || "leisure"} trip to ${destination}${country ? `, ${country}` : ""}.
+    const count = similar_to ? 8 : 15;
+    const similarContext = similar_to
+      ? `\n\nGenerate outfits SIMILAR in style/vibe to this look: "${similar_to.title}" (${similar_to.occasion}) - ${similar_to.description}. Keep the same aesthetic but vary the items and settings.`
+      : "";
+
+    const prompt = `You are a luxury fashion stylist creating outfit inspiration for a ${trip_type || "leisure"} trip to ${destination}${country ? `, ${country}` : ""}.
 
 ${weather_summary ? `Weather forecast: ${weather_summary}` : ""}
 ${events_summary ? `Planned events/activities: ${events_summary}` : ""}
+${similarContext}
 
-Create 5 complete, styled outfit suggestions. Consider the destination culture, weather, and any planned events.
+Create ${count} complete, styled outfit suggestions. Consider the destination culture, weather, and planned events.
 
 For each outfit:
 - title: A catchy editorial name (e.g., "Riviera Evening", "Gallery Hopping")  
 - occasion: When to wear it (e.g., "Dinner", "Sightseeing", "Beach Day", "Night Out")
-- description: 2 sentences about the look, vibe, and why it works for this trip
-- image_prompt: A detailed flat-lay fashion photography prompt describing THIS specific outfit laid out beautifully on a neutral surface. Include specific items, colors, textures, and styling. Example: "Flat lay fashion photography of a cream linen blazer, white silk camisole, high-waisted navy trousers, tan leather loafers, and a gold chain necklace arranged on a marble surface, editorial style, soft lighting"
+- description: 2-3 sentences about the look, vibe, and why it works for this trip
+- image_prompt: A STREET STYLE fashion photography prompt showing a stylish person wearing THIS outfit in ${destination}. Must feel like a real Instagram or Pinterest photo — candid, aspirational, shot in a beautiful location. Example: "Street style fashion photography of a woman wearing a cream linen blazer over a white silk camisole with high-waisted navy trousers and tan leather loafers, walking through a sun-drenched cobblestone street in ${destination}, golden hour lighting, shot on 35mm film, candid pose, editorial quality, Instagram aesthetic"
 - items: Array of 4-6 items, each with:
   - category: "Top", "Bottom", "Outerwear", "Shoes", "Accessory", or "Bag"
   - name: Specific item (e.g., "Cream linen blazer")
@@ -53,7 +58,7 @@ For each outfit:
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are a luxury fashion stylist AI." },
+          { role: "system", content: "You are a luxury fashion stylist AI creating Instagram-worthy outfit inspiration." },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -125,7 +130,16 @@ For each outfit:
 
     const { outfits } = JSON.parse(toolCall.function.arguments);
 
-    // Step 2: Generate images for each outfit (in parallel, max 3 at a time)
+    // If "see more like this", append rather than replace
+    if (!similar_to) {
+      await supabase.from("outfit_suggestions").delete().eq("trip_id", trip_id);
+      const { data: oldFiles } = await supabase.storage.from("outfit-images").list(trip_id);
+      if (oldFiles && oldFiles.length > 0) {
+        await supabase.storage.from("outfit-images").remove(oldFiles.map((f: any) => `${trip_id}/${f.name}`));
+      }
+    }
+
+    // Generate images in batches of 3
     const generateImage = async (imagePrompt: string, index: number): Promise<string | null> => {
       try {
         const imgResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -136,9 +150,7 @@ For each outfit:
           },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash-image",
-            messages: [
-              { role: "user", content: imagePrompt },
-            ],
+            messages: [{ role: "user", content: imagePrompt }],
             modalities: ["image", "text"],
           }),
         });
@@ -152,7 +164,6 @@ For each outfit:
         const base64Url = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
         if (!base64Url) return null;
 
-        // Extract base64 data and upload to storage
         const base64Data = base64Url.replace(/^data:image\/\w+;base64,/, "");
         const imageBytes = decode(base64Data);
         const fileName = `${trip_id}/outfit-${index}-${Date.now()}.png`;
@@ -174,26 +185,15 @@ For each outfit:
       }
     };
 
-    // Delete old suggestions and images
-    await supabase.from("outfit_suggestions").delete().eq("trip_id", trip_id);
-    
-    // Clean up old images
-    const { data: oldFiles } = await supabase.storage.from("outfit-images").list(trip_id);
-    if (oldFiles && oldFiles.length > 0) {
-      await supabase.storage.from("outfit-images").remove(oldFiles.map((f: any) => `${trip_id}/${f.name}`));
-    }
-
-    // Generate images in batches of 2 to avoid rate limits
     const imageUrls: (string | null)[] = [];
-    for (let i = 0; i < outfits.length; i += 2) {
-      const batch = outfits.slice(i, i + 2);
+    for (let i = 0; i < outfits.length; i += 3) {
+      const batch = outfits.slice(i, i + 3);
       const results = await Promise.all(
         batch.map((o: any, j: number) => generateImage(o.image_prompt, i + j))
       );
       imageUrls.push(...results);
     }
 
-    // Insert outfits with image URLs
     const rows = outfits.map((o: any, i: number) => ({
       trip_id,
       title: o.title,
