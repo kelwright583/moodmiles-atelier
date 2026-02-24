@@ -63,18 +63,35 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You curate travel & fashion trends. Given web search results, produce exactly 6 trending items as a JSON array. Each item has: "city" (destination name), "trend" (one-line fashion/travel insight, max 15 words), "category" (one of: "Style", "Destination", "Experience", "Fashion"). Only output the JSON array, no markdown.`,
+            content: `You curate travel & fashion trends. Given web search results, produce exactly 6 trending items as a JSON array. Each item has: "city" (destination name), "trend" (one-line fashion/travel insight, max 15 words), "category" (one of: "Style", "Destination", "Experience", "Fashion"). Only output the raw JSON array, no markdown fences, no explanation.`,
           },
           {
             role: "user",
-            content: `Here are this week's search results:\n\n${searchResults.join("\n\n")}\n\nProduce 6 curated trending items.`,
+            content: `Here are this week's search results:\n\n${searchResults.join("\n\n")}\n\nProduce 6 curated trending items as a JSON array.`,
           },
         ],
         temperature: 0.7,
       }),
     });
 
-    const aiData = await aiRes.json();
+    const aiText = await aiRes.text();
+    console.log("AI raw response:", aiText.substring(0, 500));
+    
+    let aiData;
+    try {
+      aiData = JSON.parse(aiText);
+    } catch (e) {
+      console.error("Failed to parse AI response as JSON:", e);
+      // Return fallback
+      return new Response(JSON.stringify({ trends: [
+        { city: "Milan", trend: "Quiet luxury & structured tailoring", category: "Fashion" },
+        { city: "Paris", trend: "Layered neutrals & statement coats", category: "Style" },
+        { city: "Amalfi", trend: "Linen resort & gold accessories", category: "Destination" },
+        { city: "Tokyo", trend: "Streetwear meets minimalist travel", category: "Style" },
+        { city: "Marrakech", trend: "Earthy tones & artisan textiles", category: "Experience" },
+        { city: "Santorini", trend: "Breezy whites & statement swim", category: "Destination" },
+      ]}), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     let trends = [];
     try {
       const content = aiData.choices?.[0]?.message?.content || "[]";
