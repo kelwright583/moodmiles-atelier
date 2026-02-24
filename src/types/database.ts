@@ -115,5 +115,8 @@ export interface ActivitySuggestion {
   price_level: string | null;
   image_url: string | null;
   source_url: string | null;
+  booking_url: string | null;
+  is_promoted: boolean;
+  promoted_by: string | null;
   created_at: string;
 }

@@ -16,40 +16,49 @@ export type Database = {
     Tables: {
       activity_suggestions: {
         Row: {
+          booking_url: string | null
           category: string | null
           created_at: string
           description: string | null
           id: string
           image_url: string | null
+          is_promoted: boolean
           location: string | null
           name: string
           price_level: string | null
+          promoted_by: string | null
           rating: number | null
           source_url: string | null
           trip_id: string
         }
         Insert: {
+          booking_url?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          is_promoted?: boolean
           location?: string | null
           name: string
           price_level?: string | null
+          promoted_by?: string | null
           rating?: number | null
           source_url?: string | null
           trip_id: string
         }
         Update: {
+          booking_url?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
+          is_promoted?: boolean
           location?: string | null
           name?: string
           price_level?: string | null
+          promoted_by?: string | null
           rating?: number | null
           source_url?: string | null
           trip_id?: string
