@@ -8,7 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { Trip } from "@/types/database";
 import PlacesAutocomplete from "./PlacesAutocomplete";
 
-const tripTypes = ["Leisure", "Business", "Fashion Week", "Ski", "Yacht", "Wedding", "City Break", "Beach Escape"];
+const tripTypes = ["Leisure", "Business", "Fashion Week", "Ski", "Yacht", "Wedding", "City Break", "Beach Escape", "Family"];
 
 interface TripEditDialogProps {
   trip: Trip;

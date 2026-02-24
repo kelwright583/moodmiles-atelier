@@ -11,7 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import PlacesAutocomplete from "@/components/trip/PlacesAutocomplete";
 
-const tripTypes = ["Leisure", "Business", "Fashion Week", "Ski", "Yacht", "Wedding", "City Break", "Beach Escape"];
+const tripTypes = ["Leisure", "Business", "Fashion Week", "Ski", "Yacht", "Wedding", "City Break", "Beach Escape", "Family"];
 
 const CreateTrip = () => {
   const navigate = useNavigate();
@@ -24,6 +24,7 @@ const CreateTrip = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedType, setSelectedType] = useState("");
+  const [customType, setCustomType] = useState("");
   const [accommodation, setAccommodation] = useState("");
   const [originCity, setOriginCity] = useState("");
   const [originCountry, setOriginCountry] = useState("");
@@ -57,7 +58,7 @@ const CreateTrip = () => {
           country: country || null,
           start_date: startDate,
           end_date: endDate,
-          trip_type: selectedType || null,
+          trip_type: (selectedType === "Other" ? customType : selectedType) || null,
           accommodation: accommodation || null,
           latitude,
           longitude,
@@ -139,12 +140,15 @@ const CreateTrip = () => {
             <div>
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-3 block font-body">Type of Trip</label>
               <div className="flex flex-wrap gap-2">
-                {tripTypes.map((type) => (
+                {[...tripTypes, "Other"].map((type) => (
                   <button key={type} type="button" onClick={() => setSelectedType(type)} className={`px-4 py-2 rounded-full text-sm font-body transition-all duration-300 ${selectedType === type ? "bg-gradient-champagne text-primary-foreground shadow-champagne" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                     {type}
                   </button>
                 ))}
               </div>
+              {selectedType === "Other" && (
+                <Input value={customType} onChange={(e) => setCustomType(e.target.value)} placeholder="Describe your trip type..." className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body mt-3" />
+              )}
             </div>
             <div>
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Accommodation <span className="text-muted-foreground/50">(optional)</span></label>
