@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_suggestions: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          name: string
+          price_level: string | null
+          rating: number | null
+          source_url: string | null
+          trip_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          name: string
+          price_level?: string | null
+          rating?: number | null
+          source_url?: string | null
+          trip_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          name?: string
+          price_level?: string | null
+          rating?: number | null
+          source_url?: string | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_suggestions_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_items: {
         Row: {
           created_at: string
@@ -45,6 +95,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "board_items_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outfit_suggestions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          items: Json
+          occasion: string | null
+          pinned: boolean
+          title: string
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          items?: Json
+          occasion?: string | null
+          pinned?: boolean
+          title: string
+          trip_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          items?: Json
+          occasion?: string | null
+          pinned?: boolean
+          title?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outfit_suggestions_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"

@@ -10,8 +10,9 @@ import OverviewTab from "@/components/trip/OverviewTab";
 import CapsuleTab from "@/components/trip/CapsuleTab";
 import PackingTab from "@/components/trip/PackingTab";
 import BoardTab from "@/components/trip/BoardTab";
+import InspirationTab from "@/components/trip/InspirationTab";
 
-const tabs = ["Overview", "Capsule", "Packing", "Board"] as const;
+const tabs = ["Overview", "Inspiration", "Capsule", "Packing", "Board"] as const;
 type Tab = typeof tabs[number];
 
 const TripDetail = () => {
@@ -74,7 +75,7 @@ const TripDetail = () => {
           {/* Tabs */}
           <div className="flex gap-1 mt-6 md:mt-8 mb-8 md:mb-12 border-b border-border overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => (
-              <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-3 text-sm font-body tracking-wide transition-all duration-300 relative ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 md:px-5 py-3 text-sm font-body tracking-wide transition-all duration-300 relative whitespace-nowrap ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 {tab}
                 {activeTab === tab && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-px bg-gradient-champagne" />}
               </button>
@@ -82,6 +83,7 @@ const TripDetail = () => {
           </div>
 
           {activeTab === "Overview" && <OverviewTab tripId={trip.id} trip={{ latitude: (trip as any).latitude, longitude: (trip as any).longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
+          {activeTab === "Inspiration" && <InspirationTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude }} />}
           {activeTab === "Capsule" && <CapsuleTab tripId={trip.id} />}
           {activeTab === "Packing" && <PackingTab tripId={trip.id} />}
           {activeTab === "Board" && <BoardTab tripId={trip.id} />}
