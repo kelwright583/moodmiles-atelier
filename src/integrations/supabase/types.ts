@@ -178,6 +178,8 @@ export type Database = {
           destination: string
           end_date: string
           id: string
+          latitude: number | null
+          longitude: number | null
           start_date: string
           trip_type: string | null
           user_id: string
@@ -189,6 +191,8 @@ export type Database = {
           destination: string
           end_date: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           start_date: string
           trip_type?: string | null
           user_id: string
@@ -200,6 +204,8 @@ export type Database = {
           destination?: string
           end_date?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           start_date?: string
           trip_type?: string | null
           user_id?: string
@@ -243,6 +249,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "wardrobe_items_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weather_data: {
+        Row: {
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          rain_probability: number | null
+          temperature_high: number | null
+          temperature_low: number | null
+          trip_id: string
+          weather_code: number | null
+          wind_speed: number | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          description?: string | null
+          id?: string
+          rain_probability?: number | null
+          temperature_high?: number | null
+          temperature_low?: number | null
+          trip_id: string
+          weather_code?: number | null
+          wind_speed?: number | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          rain_probability?: number | null
+          temperature_high?: number | null
+          temperature_low?: number | null
+          trip_id?: string
+          weather_code?: number | null
+          wind_speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_data_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
