@@ -1,10 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 const fallbackTrends = [
   { city: "Milan", trend: "Quiet luxury & structured tailoring", category: "Fashion", image_url: null },
@@ -17,9 +12,11 @@ const fallbackTrends = [
 
 const allowedCategories = new Set(["Style", "Destination", "Experience", "Fashion"]);
 
+let _corsHeaders: Record<string, string> = {};
+
 const jsonResponse = (body: unknown) =>
   new Response(JSON.stringify(body), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ..._corsHeaders, "Content-Type": "application/json" },
   });
 
 const parseTrends = (content: string) => {
@@ -40,19 +37,31 @@ const parseTrends = (content: string) => {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCorsPreflightRequest(req);
+  if (preflight) return preflight;
+
+  _corsHeaders = getCorsHeaders(req);
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+        status: 401,
+        headers: { ..._corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
     const googleMapsKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
 
-    if (!lovableKey) {
-      console.error("LOVABLE_API_KEY not configured");
+    if (!apiKey) {
+      console.error("OPENAI_API_KEY not configured");
       return jsonResponse({ trends: fallbackTrends });
     }
+
+    const chatUrl = "https://api.openai.com/v1/chat/completions";
+    const chatModel = "gpt-4o-mini";
 
     const searches = [
       "trending travel destinations this week 2026 fashion style",
@@ -97,14 +106,14 @@ serve(async (req) => {
     let trends = fallbackTrends;
 
     try {
-      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const aiRes = await fetch(chatUrl, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${lovableKey}`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: chatModel,
           messages: [
             {
               role: "system",
@@ -135,25 +144,47 @@ serve(async (req) => {
       console.error("AI trends error:", e);
     }
 
+    const unsplashKey = Deno.env.get("UNSPLASH_ACCESS_KEY");
+
     const getTrendImage = async (city: string): Promise<string | null> => {
-      if (!googleMapsKey || !city) return null;
-
-      try {
-        const query = `${city} iconic city view`;
-        const placesRes = await fetch(
-          `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${googleMapsKey}`
-        );
-
-        if (!placesRes.ok) return null;
-
-        const placesData = await placesRes.json();
-        const firstPhotoRef = placesData?.results?.[0]?.photos?.[0]?.photo_reference;
-        if (!firstPhotoRef) return null;
-
-        return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${firstPhotoRef}&key=${googleMapsKey}`;
-      } catch {
-        return null;
+      // Try Google Places first if key is set
+      if (googleMapsKey && city) {
+        try {
+          const query = `${city} iconic city view`;
+          const placesRes = await fetch(
+            `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${googleMapsKey}`
+          );
+          if (placesRes.ok) {
+            const placesData = await placesRes.json();
+            const firstPhotoRef = placesData?.results?.[0]?.photos?.[0]?.photo_reference;
+            if (firstPhotoRef) {
+              return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1200&photo_reference=${firstPhotoRef}&key=${googleMapsKey}`;
+            }
+          }
+        } catch {
+          /* fall through to Unsplash */
+        }
       }
+
+      // Fallback: Unsplash search for city/destination
+      if (unsplashKey && city) {
+        try {
+          const res = await fetch(
+            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(city + " travel")}&per_page=1&orientation=landscape&client_id=${unsplashKey}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const photo = data?.results?.[0];
+            if (photo?.urls?.regular) return photo.urls.regular;
+          }
+        } catch {
+          /* fall through */
+        }
+      }
+
+      // Last resort: deterministic placeholder (Picsum)
+      const slug = city.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "travel";
+      return `https://picsum.photos/seed/${slug}/800/600`;
     };
 
     const enriched = await Promise.all(

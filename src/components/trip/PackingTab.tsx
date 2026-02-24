@@ -49,12 +49,15 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
       const { data, error } = await supabase.functions.invoke("suggest-packing", {
         body: { trip_id: tripId },
       });
-      if (error) throw error;
+      if (error) {
+        const msg = (data as { error?: string })?.error || error.message;
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
       queryClient.invalidateQueries({ queryKey: ["packing-items", tripId] });
-      toast({ title: "Packing list generated", description: `${data.count} smart suggestions based on your trip context.` });
+      toast({ title: "Packing list generated", description: `${(data as { count?: number })?.count ?? 0} smart suggestions based on your trip context.` });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err?.message || "Smart Suggest failed. Check that JWT verification is off for suggest-packing in Supabase Dashboard.", variant: "destructive" });
     } finally {
       setGenerating(false);
     }

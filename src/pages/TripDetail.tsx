@@ -13,6 +13,7 @@ import PackingTab from "@/components/trip/PackingTab";
 import BoardTab from "@/components/trip/BoardTab";
 import TripEditDialog from "@/components/trip/TripEditDialog";
 import TripDeleteDialog from "@/components/trip/TripDeleteDialog";
+import { ShimmerSkeleton } from "@/components/ui/shimmer-skeleton";
 
 const tabs = ["Overview", "Things to Do", "Inspiration", "Packing", "Board"] as const;
 type Tab = typeof tabs[number];
@@ -41,8 +42,18 @@ const TripDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full bg-gradient-champagne animate-pulse" />
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 md:pt-28 px-4 md:px-6">
+          <div className="max-w-6xl mx-auto">
+            <ShimmerSkeleton variant="card" className="h-56 rounded-2xl mb-8" />
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <ShimmerSkeleton key={i} variant="text" className="h-10 flex-1 rounded-lg" />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -96,10 +107,10 @@ const TripDetail = () => {
             ))}
           </div>
 
-          {activeTab === "Overview" && <OverviewTab tripId={trip.id} trip={{ latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
+          {activeTab === "Overview" && <OverviewTab tripId={trip.id} trip={{ latitude: trip.latitude ?? undefined, longitude: trip.longitude ?? undefined, start_date: trip.start_date, end_date: trip.end_date }} />}
           {activeTab === "Things to Do" && <ThingsToDoTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude }} />}
           {activeTab === "Inspiration" && <InspirationTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
-          {activeTab === "Packing" && <PackingTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, origin_city: (trip as any).origin_city, origin_country: (trip as any).origin_country, start_date: trip.start_date, end_date: trip.end_date, trip_type: trip.trip_type }} />}
+          {activeTab === "Packing" && <PackingTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, origin_city: trip.origin_city, origin_country: trip.origin_country, start_date: trip.start_date, end_date: trip.end_date, trip_type: trip.trip_type }} />}
           {activeTab === "Board" && <BoardTab tripId={trip.id} />}
         </div>
       </main>

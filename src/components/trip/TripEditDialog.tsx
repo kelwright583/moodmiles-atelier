@@ -26,8 +26,8 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
   const [endDate, setEndDate] = useState(trip.end_date);
   const [selectedType, setSelectedType] = useState(trip.trip_type || "");
   const [accommodation, setAccommodation] = useState(trip.accommodation || "");
-  const [originCity, setOriginCity] = useState((trip as any).origin_city || "");
-  const [originCountry, setOriginCountry] = useState((trip as any).origin_country || "");
+  const [originCity, setOriginCity] = useState(trip.origin_city || "");
+  const [originCountry, setOriginCountry] = useState(trip.origin_country || "");
 
   const handleOriginSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
     setOriginCity(place.city);
@@ -44,8 +44,8 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
     setEndDate(trip.end_date);
     setSelectedType(trip.trip_type || "");
     setAccommodation(trip.accommodation || "");
-    setOriginCity((trip as any).origin_city || "");
-    setOriginCountry((trip as any).origin_country || "");
+    setOriginCity(trip.origin_city || "");
+    setOriginCountry(trip.origin_country || "");
   }, [trip, open]);
 
   const handlePlaceSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
@@ -75,13 +75,24 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
           longitude,
           origin_city: originCity || null,
           origin_country: originCountry || null,
-        } as any)
+        })
         .eq("id", trip.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["trip", trip.id] });
       queryClient.invalidateQueries({ queryKey: ["trips"] });
       toast({ title: "Trip updated" });
       onOpenChange(false);
+      // Refresh destination image if destination changed
+      if (destination !== trip.destination || country !== (trip.country || "")) {
+        supabase.functions.invoke("fetch-destination-image", {
+          body: { trip_id: trip.id, destination, country: country || null },
+        }).then(({ data: imgData }) => {
+          if (imgData?.image_url) {
+            queryClient.invalidateQueries({ queryKey: ["trips"] });
+            queryClient.invalidateQueries({ queryKey: ["trip", trip.id] });
+          }
+        }).catch(console.error);
+      }
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {

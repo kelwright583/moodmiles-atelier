@@ -1,20 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { parseBody, suggestActivitiesSchema, type SuggestActivitiesBody, ValidationError } from "../_shared/validation.ts";
+import { extractUserIdFromJwt } from "../_shared/auth.ts";
+import { checkRateLimit, recordUsage, RateLimitError } from "../_shared/rate-limit.ts";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCorsPreflightRequest(req);
+  if (preflight) return preflight;
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) throw new Error("OPENAI_API_KEY required");
 
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
     const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
@@ -23,8 +22,12 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { trip_id, destination, country, trip_type, latitude, longitude } = await req.json();
-    if (!trip_id || !destination) throw new Error("Missing trip_id or destination");
+    const { trip_id, destination, country, trip_type, latitude, longitude } = parseBody<SuggestActivitiesBody>(suggestActivitiesSchema, await req.json());
+
+    const userId = extractUserIdFromJwt(req);
+    if (userId) {
+      await checkRateLimit(userId, "suggest-activities", trip_id);
+    }
 
     const locationStr = `${destination}${country ? `, ${country}` : ""}`;
 
@@ -38,27 +41,32 @@ serve(async (req) => {
           `${locationStr} restaurant reservations fine dining booking`,
         ];
 
-        for (const query of searches) {
-          const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              query,
-              limit: 5,
-              scrapeOptions: { formats: ["markdown"] },
-            }),
-          });
-
-          if (searchRes.ok) {
-            const searchData = await searchRes.json();
-            if (searchData.data) {
-              webExperiences.push(...searchData.data);
+        const searchResults = await Promise.all(
+          searches.map(async (query) => {
+            try {
+              const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  query,
+                  limit: 5,
+                  scrapeOptions: { formats: ["markdown"] },
+                }),
+              });
+              if (searchRes.ok) {
+                const searchData = await searchRes.json();
+                return searchData.data || [];
+              }
+              return [];
+            } catch {
+              return [];
             }
-          }
-        }
+          })
+        );
+        webExperiences = searchResults.flat();
         console.log(`Firecrawl returned ${webExperiences.length} results`);
       } catch (e) {
         console.error("Firecrawl search failed:", e);
@@ -95,14 +103,17 @@ For each, provide:
 - booking_url: Direct booking/reservation URL if available (or website URL)
 ${webContext}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const chatUrl = "https://api.openai.com/v1/chat/completions";
+    const chatModel = "gpt-4o-mini";
+
+    const response = await fetch(chatUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: chatModel,
         messages: [
           { role: "system", content: "You are a luxury travel concierge. Return REAL, verifiable experiences with actual URLs." },
           { role: "user", content: prompt },
@@ -215,13 +226,19 @@ ${webContext}`;
     const { error: insertError } = await supabase.from("activity_suggestions").insert(rows);
     if (insertError) throw insertError;
 
+    if (userId) {
+      await recordUsage(userId, "suggest-activities", trip_id, 0, 0.25);
+    }
+
     return new Response(JSON.stringify({ success: true, count: rows.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const status = err instanceof RateLimitError ? 429 : err instanceof ValidationError ? 400 : 500;
+    console.error("Error:", err);
+    return new Response(JSON.stringify({ error: msg }), {
+      status, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

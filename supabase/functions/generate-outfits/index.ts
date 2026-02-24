@@ -1,30 +1,34 @@
+/// <reference path="../deno.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { decode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { parseBody, generateOutfitsSchema, type GenerateOutfitsBody, ValidationError } from "../_shared/validation.ts";
+import { extractUserIdFromJwt } from "../_shared/auth.ts";
+import { checkRateLimit, recordUsage, RateLimitError } from "../_shared/rate-limit.ts";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCorsPreflightRequest(req);
+  if (preflight) return preflight;
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) throw new Error("OPENAI_API_KEY required");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { trip_id, destination, country, trip_type, weather_summary, events_summary, similar_to } = await req.json();
-    if (!trip_id || !destination) throw new Error("Missing trip_id or destination");
+    const { trip_id, destination, country, trip_type, weather_summary, events_summary, similar_to } = parseBody<GenerateOutfitsBody>(generateOutfitsSchema, await req.json());
 
-    const count = similar_to ? 8 : 15;
+    const userId = extractUserIdFromJwt(req);
+    if (userId) {
+      await checkRateLimit(userId, "generate-outfits", trip_id);
+    }
+
+    const count = similar_to ? 5 : 8;
     const similarContext = similar_to
       ? `\n\nGenerate outfits SIMILAR in style/vibe to this look: "${similar_to.title}" (${similar_to.occasion}) - ${similar_to.description}. Keep the same aesthetic but vary the items and settings.`
       : "";
@@ -49,14 +53,17 @@ For each outfit:
   - brand_suggestion: A luxury/premium brand
   - search_terms: Shopping search keywords`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const chatUrl = "https://api.openai.com/v1/chat/completions";
+    const chatModel = "gpt-4o-mini";
+
+    const response = await fetch(chatUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: chatModel,
         messages: [
           { role: "system", content: "You are a luxury fashion stylist AI creating Instagram-worthy outfit inspiration." },
           { role: "user", content: prompt },
@@ -142,29 +149,28 @@ For each outfit:
     // Generate images in batches of 3
     const generateImage = async (imagePrompt: string, index: number): Promise<string | null> => {
       try {
-        const imgResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        const imgResponse = await fetch("https://api.openai.com/v1/images/generations", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image",
-            messages: [{ role: "user", content: imagePrompt }],
-            modalities: ["image", "text"],
+            model: "dall-e-3",
+            prompt: imagePrompt.slice(0, 1000),
+            size: "1024x1024",
+            quality: "standard",
+            response_format: "b64_json",
           }),
         });
-
         if (!imgResponse.ok) {
-          console.error(`Image gen failed for outfit ${index}:`, imgResponse.status);
+          console.error(`DALL-E failed for outfit ${index}:`, imgResponse.status);
           return null;
         }
-
         const imgData = await imgResponse.json();
-        const base64Url = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-        if (!base64Url) return null;
+        const base64Data = imgData.data?.[0]?.b64_json || null;
 
-        const base64Data = base64Url.replace(/^data:image\/\w+;base64,/, "");
+        if (!base64Data) return null;
         const imageBytes = decode(base64Data);
         const fileName = `${trip_id}/outfit-${index}-${Date.now()}.png`;
 
@@ -186,8 +192,8 @@ For each outfit:
     };
 
     const imageUrls: (string | null)[] = [];
-    for (let i = 0; i < outfits.length; i += 3) {
-      const batch = outfits.slice(i, i + 3);
+    for (let i = 0; i < outfits.length; i += 4) {
+      const batch = outfits.slice(i, i + 4);
       const results = await Promise.all(
         batch.map((o: any, j: number) => generateImage(o.image_prompt, i + j))
       );
@@ -206,13 +212,19 @@ For each outfit:
     const { error: insertError } = await supabase.from("outfit_suggestions").insert(rows);
     if (insertError) throw insertError;
 
+    if (userId) {
+      await recordUsage(userId, "generate-outfits", trip_id, 0, outfits.length * 0.04);
+    }
+
     return new Response(JSON.stringify({ success: true, count: rows.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const status = err instanceof RateLimitError ? 429 : err instanceof ValidationError ? 400 : 500;
+    console.error("Error:", err);
+    return new Response(JSON.stringify({ error: msg }), {
+      status, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

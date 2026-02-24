@@ -25,6 +25,9 @@ export interface Trip {
   longitude: number | null;
   origin_city: string | null;
   origin_country: string | null;
+  origin_latitude?: number | null;
+  origin_longitude?: number | null;
+  image_url: string | null;
   created_at: string;
 }
 

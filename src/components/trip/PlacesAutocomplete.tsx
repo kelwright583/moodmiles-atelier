@@ -24,6 +24,7 @@ const PlacesAutocomplete = ({ onSelect, value, onChange }: PlacesAutocompletePro
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout>();
   const containerRef = useRef<HTMLDivElement>(null);
+  const justSelectedRef = useRef(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -37,6 +38,12 @@ const PlacesAutocomplete = ({ onSelect, value, onChange }: PlacesAutocompletePro
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
+      return;
+    }
+
     if (value.length < 2) {
       setPredictions([]);
       setShowDropdown(false);
@@ -61,7 +68,9 @@ const PlacesAutocomplete = ({ onSelect, value, onChange }: PlacesAutocompletePro
   }, [value]);
 
   const handleSelect = (p: Prediction) => {
+    justSelectedRef.current = true;
     onChange(p.city || p.description);
+    setPredictions([]);
     setShowDropdown(false);
     if (p.city && p.country && p.lat && p.lng) {
       onSelect({ city: p.city, country: p.country, lat: p.lat, lng: p.lng });

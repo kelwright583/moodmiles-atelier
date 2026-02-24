@@ -7,7 +7,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const Navbar = () => {
+interface NavbarProps {
+  transparent?: boolean;
+}
+
+const Navbar = ({ transparent = false }: NavbarProps) => {
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -45,7 +49,9 @@ const Navbar = () => {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="fixed top-0 left-0 right-0 z-50 px-6 py-5"
+      className={`fixed top-0 left-0 right-0 z-50 px-6 py-5 transition-colors duration-300 ${
+        transparent ? "bg-transparent" : "bg-background/95 backdrop-blur-md border-b border-border/50"
+      }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">

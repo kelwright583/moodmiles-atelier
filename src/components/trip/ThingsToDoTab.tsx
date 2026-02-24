@@ -8,6 +8,7 @@ import {
   Plus, Pin, PinOff, Trash2, Calendar, X, ExternalLink,
   Bookmark, BookmarkCheck, Send, Ticket, Globe,
 } from "lucide-react";
+import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -201,15 +202,14 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
                     onClick={() => { setStartIndex(i); setFeedOpen(true); }}
                     className="cursor-pointer"
                   >
-                    {activity.image_url ? (
-                      <div className="aspect-[4/5] bg-secondary overflow-hidden">
-                        <img src={activity.image_url} alt={activity.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                      </div>
-                    ) : (
-                      <div className="aspect-[4/5] bg-secondary flex items-center justify-center">
-                        <MapPin size={32} className="text-muted-foreground/20" />
-                      </div>
-                    )}
+                    <div className="group-hover:[&_img]:scale-105 transition-transform duration-700">
+                      <ImageWithFallback
+                        src={activity.image_url}
+                        alt={activity.name}
+                        fallbackIcon={MapPin}
+                        aspectClass="aspect-[4/5]"
+                      />
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent pointer-events-none" />
                   </div>
                   {/* Promoted badge */}
@@ -229,7 +229,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
                         </span>
                       )}
                     </div>
-                    <h3 className="font-heading text-lg leading-tight text-foreground">{activity.name}</h3>
+                    <h3 className="font-heading text-2xl leading-tight text-foreground">{activity.name}</h3>
                   </div>
                 </div>
               ))}
@@ -349,15 +349,12 @@ const ActivityFeedCard = ({
       viewport={{ once: true, margin: "-50px" }}
       className="rounded-2xl overflow-hidden bg-card mx-4 mb-5"
     >
-      {activity.image_url ? (
-        <div className="w-full aspect-[4/5] bg-secondary overflow-hidden">
-          <img src={activity.image_url} alt={activity.name} className="w-full h-full object-cover" />
-        </div>
-      ) : (
-        <div className="w-full aspect-[4/5] bg-secondary flex items-center justify-center">
-          <MapPin size={40} className="text-muted-foreground/20" />
-        </div>
-      )}
+      <ImageWithFallback
+        src={activity.image_url}
+        alt={activity.name}
+        fallbackIcon={MapPin}
+        aspectClass="w-full aspect-[4/5]"
+      />
 
       {/* Action bar */}
       <div className="flex items-center justify-between px-4 pt-3">
@@ -408,7 +405,7 @@ const ActivityFeedCard = ({
             <span className="text-[9px] tracking-[0.15em] uppercase text-primary font-body bg-primary/10 px-2 py-0.5 rounded-full">Promoted</span>
           )}
         </div>
-        <h3 className="font-heading text-xl leading-tight mb-1">{activity.name}</h3>
+        <h3 className="font-heading text-2xl leading-tight mb-1">{activity.name}</h3>
         <p className="text-sm text-muted-foreground font-body leading-relaxed">{activity.description}</p>
         {activity.location && (
           <p className="text-xs text-muted-foreground/70 font-body mt-2 flex items-center gap-1">

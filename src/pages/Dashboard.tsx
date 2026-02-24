@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Calendar, ArrowRight, TrendingUp, MapPin, Sparkles, X, ChevronRight } from "lucide-react";
+import { Calendar, ArrowRight, TrendingUp, MapPin, Sparkles, X, ChevronRight, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ShimmerSkeleton } from "@/components/ui/shimmer-skeleton";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 import { Trip } from "@/types/database";
 
 interface TrendingItem {
@@ -31,8 +33,30 @@ const categoryColors: Record<string, string> = {
   Experience: "bg-primary/5 text-primary",
 };
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 const Dashboard = () => {
   const [showTrendingFeed, setShowTrendingFeed] = useState(false);
+  const { user } = useAuth();
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("name, avatar_url, subscription_tier, style_profile")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const { data: trips = [], isLoading } = useQuery({
     queryKey: ["trips"],
@@ -75,9 +99,25 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-10 md:mb-16"
           >
-            <div>
-              <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">My Suite</p>
-              <h1 className="text-3xl md:text-5xl font-heading">Welcome back</h1>
+            <div className="flex items-center gap-4">
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt=""
+                  className="w-14 h-14 rounded-full object-cover border-2 border-primary/20"
+                />
+              ) : null}
+              <div>
+                <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">My Suite</p>
+                <h1 className="text-3xl md:text-5xl font-heading">
+                  {getGreeting()}{profile?.name ? `, ${profile.name.split(" ")[0]}` : ""}
+                </h1>
+                {profile?.subscription_tier === "luxe" && (
+                  <span className="inline-flex items-center gap-1.5 mt-2 text-xs tracking-[0.15em] uppercase text-primary font-body">
+                    <Crown size={12} /> Luxe Member
+                  </span>
+                )}
+              </div>
             </div>
           </motion.div>
 
@@ -87,22 +127,41 @@ const Dashboard = () => {
             {isLoading ? (
               <div className="grid md:grid-cols-2 gap-6">
                 {[1, 2].map((i) => (
-                  <div key={i} className="glass-card rounded-2xl h-72 animate-pulse" />
+                  <ShimmerSkeleton key={i} variant="card" className="h-72 rounded-2xl" />
                 ))}
               </div>
             ) : trips.length === 0 ? (
-              <div className="glass-card rounded-2xl p-12 text-center">
-                <p className="text-muted-foreground font-body mb-4">No trips yet. Start planning your next journey.</p>
+              <div className="glass-card rounded-2xl p-12 md:p-16 text-center">
+                <p className="text-lg text-muted-foreground font-body mb-2">Your first journey awaits</p>
+                <p className="text-sm text-muted-foreground/80 font-body mb-6">
+                  Tell us where you&apos;re going and we&apos;ll style every moment.
+                </p>
+                {(!profile?.style_profile || profile.style_profile.length === 0) && (
+                  <p className="text-sm text-primary/90 font-body mb-6">
+                    <Link to="/settings" className="hover:underline">Tell us your style</Link> first for personalised suggestions.
+                  </p>
+                )}
                 <Link to="/create-trip">
-                  <Button variant="champagne">Create Your First Trip</Button>
+                  <Button variant="champagne" size="xl">
+                    Create Your First Trip
+                    <ArrowRight size={18} className="ml-2" />
+                  </Button>
                 </Link>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {trips.map((trip) => (
                   <Link to={`/trip/${trip.id}`} key={trip.id}>
-                    <div className="group glass-card rounded-2xl overflow-hidden hover:shadow-champagne transition-all duration-500 cursor-pointer">
+                    <div className="group glass-card rounded-2xl overflow-hidden hover:shadow-champagne hover:scale-[1.01] transition-all duration-500 cursor-pointer">
                       <div className="relative h-48 overflow-hidden bg-secondary">
+                        {trip.image_url ? (
+                          <img
+                            src={trip.image_url}
+                            alt={trip.destination}
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        ) : null}
                         <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
                         <div className="absolute top-4 right-4">
                           <span className="text-xs tracking-[0.15em] uppercase bg-secondary/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-primary font-body">
@@ -113,7 +172,7 @@ const Dashboard = () => {
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h3 className="text-xl font-heading">{trip.destination}</h3>
+                            <h3 className="text-2xl md:text-3xl font-heading">{trip.destination}</h3>
                             <p className="text-sm text-muted-foreground font-body">{trip.country}</p>
                           </div>
                           <ArrowRight size={18} className="text-primary mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -175,7 +234,7 @@ const Dashboard = () => {
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <p className="text-sm font-heading">{t.city}</p>
+                        <p className="text-xl font-heading">{t.city}</p>
                         <span className={`text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 rounded-full ${categoryColors[t.category] || "bg-secondary text-muted-foreground"}`}>
                           {t.category}
                         </span>
@@ -237,7 +296,7 @@ const Dashboard = () => {
                       </div>
                       <div className="p-5">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-lg font-heading">{t.city}</h3>
+                          <h3 className="text-2xl font-heading">{t.city}</h3>
                           <span className={`text-[10px] tracking-[0.1em] uppercase px-2.5 py-1 rounded-full ${categoryColors[t.category] || "bg-secondary text-muted-foreground"}`}>
                             {t.category}
                           </span>

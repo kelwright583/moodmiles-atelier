@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Plane } from "lucide-react";
+import { ArrowRight, Plane, Crown } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import PlacesAutocomplete from "@/components/trip/PlacesAutocomplete";
 
 const tripTypes = ["Leisure", "Business", "Fashion Week", "Ski", "Yacht", "Wedding", "City Break", "Beach Escape", "Family"];
@@ -17,6 +17,27 @@ const CreateTrip = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const { data: trips = [] } = useQuery({
+    queryKey: ["trips"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("trips").select("id").order("start_date", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("subscription_tier").eq("user_id", user!.id).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const needsUpgrade = profile?.subscription_tier === "free" && trips.length >= 1;
   const [destination, setDestination] = useState("");
   const [country, setCountry] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
@@ -28,10 +49,14 @@ const CreateTrip = () => {
   const [accommodation, setAccommodation] = useState("");
   const [originCity, setOriginCity] = useState("");
   const [originCountry, setOriginCountry] = useState("");
+  const [originLat, setOriginLat] = useState<number | null>(null);
+  const [originLng, setOriginLng] = useState<number | null>(null);
 
   const handleOriginSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
     setOriginCity(place.city);
     setOriginCountry(place.country);
+    setOriginLat(place.lat);
+    setOriginLng(place.lng);
   };
   const [loading, setLoading] = useState(false);
 
@@ -64,7 +89,9 @@ const CreateTrip = () => {
           longitude,
           origin_city: originCity || null,
           origin_country: originCountry || null,
-        } as any)
+          origin_latitude: originLat,
+          origin_longitude: originLng,
+        })
         .select()
         .single();
       if (error) throw error;
@@ -76,6 +103,15 @@ const CreateTrip = () => {
         }).catch(console.error);
       }
 
+      // Fetch destination image for trip card (runs in background)
+      supabase.functions.invoke("fetch-destination-image", {
+        body: { trip_id: data.id, destination, country: country || null },
+      }).then(({ data: imgData }) => {
+        if (imgData?.image_url) {
+          queryClient.invalidateQueries({ queryKey: ["trips"] });
+        }
+      }).catch(console.error);
+
       queryClient.invalidateQueries({ queryKey: ["trips"] });
       navigate(`/trip/${data.id}`);
     } catch (error: any) {
@@ -84,6 +120,36 @@ const CreateTrip = () => {
       setLoading(false);
     }
   };
+
+  if (needsUpgrade) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-24 md:pt-28 pb-16 md:pb-20 px-4 md:px-6">
+          <div className="max-w-xl mx-auto text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-12">
+              <Crown size={48} className="mx-auto mb-6 text-primary" />
+              <h1 className="text-2xl md:text-3xl font-heading mb-4">Unlock unlimited trips</h1>
+              <p className="text-muted-foreground font-body mb-8">
+                Your first trip is on us. Upgrade to Luxe for $7.99/month and plan as many journeys as you like — with full AI styling, outfit inspiration, and smart packing for every one.
+              </p>
+              <Link to="/settings">
+                <Button variant="champagne" size="xl">
+                  Upgrade to Luxe
+                  <ArrowRight size={18} className="ml-2" />
+                </Button>
+              </Link>
+              <p className="text-sm text-muted-foreground mt-6 font-body">
+                <button type="button" onClick={() => navigate("/dashboard")} className="text-primary hover:underline">
+                  Back to dashboard
+                </button>
+              </p>
+            </motion.div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

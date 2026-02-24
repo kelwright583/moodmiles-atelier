@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { parseBody, fetchWeatherSchema, type FetchWeatherBody, ValidationError } from "../_shared/validation.ts";
 
 const weatherCodeMap: Record<number, string> = {
   0: "Clear sky",
@@ -32,9 +28,10 @@ const weatherCodeMap: Record<number, string> = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handleCorsPreflightRequest(req);
+  if (preflight) return preflight;
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -44,10 +41,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { trip_id, latitude, longitude, start_date, end_date } = await req.json();
-    if (!trip_id || !latitude || !longitude) {
-      throw new Error("Missing trip_id, latitude, or longitude");
-    }
+    const { trip_id, latitude, longitude, start_date, end_date } = parseBody<FetchWeatherBody>(fetchWeatherSchema, await req.json());
 
     // Clamp dates to Open-Meteo's 16-day forecast window
     const today = new Date();
@@ -101,10 +95,12 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, days: rows.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const status = err instanceof ValidationError ? 400 : 500;
+    console.error("Error:", err);
+    return new Response(JSON.stringify({ error: msg }), {
+      status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

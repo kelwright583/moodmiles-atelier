@@ -1,18 +1,32 @@
+/// <reference path="../deno.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { parseBody, suggestPackingSchema, type SuggestPackingBody, ValidationError } from "../_shared/validation.ts";
+import { extractUserIdFromJwt } from "../_shared/auth.ts";
+import { checkRateLimit, recordUsage, RateLimitError } from "../_shared/rate-limit.ts";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const preflight = handleCorsPreflightRequest(req);
+  if (preflight) return preflight;
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
-    const { trip_id } = await req.json();
-    if (!trip_id) throw new Error("trip_id required");
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body. Send { trip_id: \"<uuid>\" }." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { trip_id } = parseBody<SuggestPackingBody>(suggestPackingSchema, body);
+
+    const userId = extractUserIdFromJwt(req);
+    if (userId) {
+      await checkRateLimit(userId, "suggest-packing", trip_id);
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -102,17 +116,20 @@ Categories MUST be one of: Tops, Bottoms, Dresses, Outerwear, Shoes, Accessories
 Be specific with item names (e.g. "Lightweight waterproof jacket" not just "jacket").
 Return ONLY the JSON array, no other text.`;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) throw new Error("OPENAI_API_KEY required");
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const chatUrl = "https://api.openai.com/v1/chat/completions";
+    const chatModel = "gpt-4o-mini";
+
+    const aiResponse = await fetch(chatUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: chatModel,
         messages: [
           { role: "system", content: "You are a travel packing expert. Return only valid JSON arrays." },
           { role: "user", content: prompt },
@@ -170,13 +187,18 @@ Return ONLY the JSON array, no other text.`;
     const { error: insertError } = await supabase.from("packing_items").insert(packingItems);
     if (insertError) throw insertError;
 
+    if (userId) {
+      await recordUsage(userId, "suggest-packing", trip_id, 0, 0.02);
+    }
+
     return new Response(JSON.stringify({ success: true, count: items.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("suggest-packing error:", err);
+    const status = err instanceof RateLimitError ? 429 : err instanceof ValidationError ? 400 : 500;
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

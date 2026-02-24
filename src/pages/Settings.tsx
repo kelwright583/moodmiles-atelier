@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Camera, User, Mail, Briefcase, LogOut, ChevronRight } from "lucide-react";
+import { Camera, User, Mail, LogOut, ChevronRight, Crown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/layout/Navbar";
@@ -11,6 +11,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { Profile } from "@/types/database";
 
+const styleProfileOptions = ["Minimal", "Structured", "Tailored", "Resort", "Street", "Monochrome", "Feminine", "Masculine", "Avant-garde", "Classic"];
+const luggageSizes = ["carry-on", "medium", "large"];
+
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -18,8 +21,15 @@ const Settings = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [name, setName] = useState("");
   const [nameLoaded, setNameLoaded] = useState(false);
+  const [styleProfile, setStyleProfile] = useState<string[]>([]);
+  const [styleProfileLoaded, setStyleProfileLoaded] = useState(false);
+  const [luggageSize, setLuggageSize] = useState("medium");
+  const [luggageSizeLoaded, setLuggageSizeLoaded] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
@@ -35,10 +45,18 @@ const Settings = () => {
     enabled: !!user,
   });
 
-  // Set name from profile once loaded
+  // Set form values from profile once loaded
   if (profile && !nameLoaded) {
     setName(profile.name || "");
     setNameLoaded(true);
+  }
+  if (profile && !styleProfileLoaded) {
+    setStyleProfile(profile.style_profile || []);
+    setStyleProfileLoaded(true);
+  }
+  if (profile && !luggageSizeLoaded) {
+    setLuggageSize(profile.luggage_size || "medium");
+    setLuggageSizeLoaded(true);
   }
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +78,7 @@ const Settings = () => {
 
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: avatarUrl } as any)
+        .update({ avatar_url: avatarUrl })
         .eq("user_id", user.id);
       if (updateError) throw updateError;
 
@@ -79,21 +97,93 @@ const Settings = () => {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ name } as any)
+        .update({ name })
         .eq("user_id", user.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast({ title: "Name updated" });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Update failed", variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleStyleTag = (tag: string) => {
+    setStyleProfile((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const saveStyleProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ style_profile: styleProfile })
+        .eq("user_id", user.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+      toast({ title: "Style profile updated" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Update failed", variant: "destructive" });
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const saveLuggageSize = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ luggage_size: luggageSize })
+        .eq("user_id", user.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+      toast({ title: "Luggage size updated" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Update failed", variant: "destructive" });
+    } finally {
+      setSavingProfile(false);
     }
   };
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleManageSubscription = async () => {
+    if (!user) return;
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-portal", { body: {} });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+      else throw new Error("No portal URL");
+    } catch (err) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Could not open billing", variant: "destructive" });
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  const handleUpgradeToLuxe = async () => {
+    if (!user) return;
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", { body: {} });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+      else throw new Error("No checkout URL");
+    } catch (err) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Could not start checkout", variant: "destructive" });
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -170,23 +260,74 @@ const Settings = () => {
 
             <div className="glass-card rounded-xl p-5">
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-2 block">Style Profile</label>
-              <div className="flex flex-wrap gap-2">
-                {(profile?.style_profile || []).length > 0 ? (
-                  profile!.style_profile.map((s) => (
-                    <span key={s} className="text-xs bg-secondary text-foreground px-3 py-1.5 rounded-full font-body">{s}</span>
-                  ))
-                ) : (
-                  <p className="text-xs text-muted-foreground font-body">No style preferences set yet</p>
-                )}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {styleProfileOptions.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleStyleTag(tag)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-body transition-all ${styleProfile.includes(tag) ? "bg-gradient-champagne text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {tag}
+                  </button>
+                ))}
               </div>
+              <Button variant="champagne-outline" size="sm" onClick={saveStyleProfile} disabled={savingProfile || JSON.stringify(styleProfile) === JSON.stringify(profile?.style_profile || [])}>
+                {savingProfile ? "Saving..." : "Save"}
+              </Button>
             </div>
 
             <div className="glass-card rounded-xl p-5">
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-2 block">Luggage Size</label>
-              <div className="flex items-center gap-2.5 bg-secondary rounded-lg px-4 h-11">
-                <Briefcase size={14} className="text-muted-foreground" />
-                <span className="text-sm font-body text-foreground capitalize">{profile?.luggage_size || "medium"}</span>
+              <div className="flex items-center gap-3">
+                <div className="flex flex-wrap gap-2 flex-1">
+                  {luggageSizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setLuggageSize(size)}
+                      className={`px-4 py-2 rounded-full text-sm font-body transition-all capitalize ${luggageSize === size ? "bg-gradient-champagne text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {size.replace("-", " ")}
+                    </button>
+                  ))}
+                </div>
+                <Button variant="champagne-outline" size="sm" onClick={saveLuggageSize} disabled={savingProfile || luggageSize === (profile?.luggage_size || "medium")}>
+                  {savingProfile ? "Saving..." : "Save"}
+                </Button>
               </div>
+            </div>
+
+            {/* Membership */}
+            <div className="glass-card rounded-xl p-5">
+              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-2 block">Membership</label>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  {profile?.subscription_tier === "luxe" ? (
+                    <>
+                      <Crown size={18} className="text-primary" />
+                      <span className="font-body text-foreground">Luxe — $7.99/month</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={18} className="text-muted-foreground" />
+                      <span className="font-body text-muted-foreground">Free — first trip included</span>
+                    </>
+                  )}
+                </div>
+                {profile?.subscription_tier === "luxe" ? (
+                  <Button variant="champagne-outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
+                    {portalLoading ? "Opening…" : "Manage"}
+                  </Button>
+                ) : (
+                  <Button variant="champagne" size="sm" onClick={handleUpgradeToLuxe} disabled={checkoutLoading}>
+                    {checkoutLoading ? "Opening…" : "Upgrade to Luxe"}
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 font-body">
+                {profile?.subscription_tier === "luxe" ? "Unlimited trips, full AI styling." : "Your first trip is free. Upgrade for unlimited trips."}
+              </p>
             </div>
           </motion.div>
 

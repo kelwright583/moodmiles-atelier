@@ -1,12 +1,14 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Compass, CloudSun, Shirt } from "lucide-react";
-import heroImage from "@/assets/hero-travel.jpg";
-import dest1 from "@/assets/destination-1.jpg";
-import dest2 from "@/assets/destination-2.jpg";
-import dest3 from "@/assets/destination-3.jpg";
 import Navbar from "@/components/layout/Navbar";
+
+const heroImage = "/images/hero.png";
+const dest1 = "https://images.unsplash.com/photo-1455587734955-081b22074882?w=800&q=80";
+const dest2 = "https://images.unsplash.com/photo-1431274172761-fca41d930114?w=800&q=80";
+const dest3 = "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?w=800&q=80";
 
 const features = [
   {
@@ -33,9 +35,17 @@ const destinations = [
 ];
 
 const Index = () => {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 80);
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navbar transparent={!scrolled} />
 
       {/* Hero */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -44,6 +54,7 @@ const Index = () => {
             src={heroImage}
             alt="Luxury travel fashion"
             className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
         </div>
@@ -179,7 +190,9 @@ const Index = () => {
                 <img
                   src={d.image}
                   alt={d.name}
+                  loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">

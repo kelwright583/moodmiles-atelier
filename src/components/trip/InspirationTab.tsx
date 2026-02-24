@@ -4,16 +4,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { OutfitSuggestion, OutfitItem, TripEvent, WeatherData } from "@/types/database";
 import {
-  Sparkles, RefreshCw, Pin, ExternalLink, ShoppingBag, Shirt, Footprints,
+  Sparkles, Pin, ExternalLink, ShoppingBag, Shirt, Footprints,
   Watch, Briefcase, Gem, Palette, X, ChevronLeft, ChevronRight, Heart, ArrowDown, Globe,
 } from "lucide-react";
+import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
 const categoryIcons: Record<string, any> = {
-  Top: Shirt, Bottom: Palette, Outerwear: Briefcase,
-  Shoes: Footprints, Accessory: Watch, Bag: Gem,
+  Top: Shirt, Bottom: Palette, Dresses: Palette, Outerwear: Briefcase,
+  Shoes: Footprints, Accessory: Watch, Bag: Gem, Other: Shirt,
 };
 
 const retailers = [
@@ -39,8 +40,6 @@ interface InspirationTabProps {
 const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [generatingOutfits, setGeneratingOutfits] = useState(false);
-  const [generatingMore, setGeneratingMore] = useState(false);
   const [searchingWeb, setSearchingWeb] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
@@ -90,45 +89,20 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
     return err?.message || fallback;
   };
 
-  const buildContext = () => {
-    const weatherSummary = weather.length > 0
-      ? weather.map(w => `${w.date}: ${w.description}, ${Math.round(w.temperature_high || 0)}°/${Math.round(w.temperature_low || 0)}°`).join("; ")
-      : undefined;
-    const eventsSummary = events.length > 0
-      ? events.map(e => `${e.event_name}${e.event_type ? ` (${e.event_type})` : ""}${e.event_date ? ` on ${e.event_date}` : ""}`).join("; ")
-      : undefined;
-    return { weatherSummary, eventsSummary };
-  };
-
-  const generateOutfits = async () => {
-    setGeneratingOutfits(true);
-    try {
-      const { weatherSummary, eventsSummary } = buildContext();
-      const { error } = await supabase.functions.invoke("generate-outfits", {
-        body: { trip_id: tripId, destination: trip.destination, country: trip.country, trip_type: trip.trip_type, weather_summary: weatherSummary, events_summary: eventsSummary },
-      });
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
-      toast({ title: "Looks generated!", description: "Street-style outfit inspiration is ready." });
-    } catch (err: any) {
-      const message = await getInvokeErrorMessage(err, "Could not generate looks right now.");
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setGeneratingOutfits(false);
-    }
-  };
-
-  const searchWebFashion = async () => {
+  const searchWebFashion = async (occasion?: string) => {
     setSearchingWeb(true);
     try {
-      const { error } = await supabase.functions.invoke("search-fashion", {
-        body: { trip_id: tripId, destination: trip.destination, country: trip.country, trip_type: trip.trip_type },
+      const { data, error } = await supabase.functions.invoke("search-fashion", {
+        body: { trip_id: tripId, destination: trip.destination, country: trip.country, trip_type: trip.trip_type, occasion: occasion || null },
       });
-      if (error) throw error;
+      if (error) {
+        const msg = (data as { error?: string })?.error || error.message;
+        throw new Error(msg);
+      }
       queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
-      toast({ title: "Web looks added!", description: "Real fashion inspiration from the web has been added to your feed." });
+      toast({ title: "Looks added!", description: occasion ? "More similar styles from the web." : "Real fashion inspiration from the web has been added to your feed." });
     } catch (err: any) {
-      const message = await getInvokeErrorMessage(err, "Could not fetch web inspiration right now.");
+      const message = err?.message || (await getInvokeErrorMessage(err, "Could not fetch web inspiration right now."));
       toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setSearchingWeb(false);
@@ -136,29 +110,11 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
   };
 
   const seeMoreLikeThis = async (outfit: OutfitSuggestion) => {
-    setGeneratingMore(true);
-    try {
-      const { weatherSummary, eventsSummary } = buildContext();
-      const { error } = await supabase.functions.invoke("generate-outfits", {
-        body: {
-          trip_id: tripId, destination: trip.destination, country: trip.country, trip_type: trip.trip_type,
-          weather_summary: weatherSummary, events_summary: eventsSummary,
-          similar_to: { title: outfit.title, occasion: outfit.occasion, description: outfit.description },
-        },
-      });
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
-      toast({ title: "More looks added!", description: "Similar styles have been added to your feed." });
-    } catch (err: any) {
-      const message = await getInvokeErrorMessage(err, "Could not load similar looks right now.");
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setGeneratingMore(false);
-    }
+    await searchWebFashion(outfit.occasion);
   };
 
   const togglePin = async (outfit: OutfitSuggestion) => {
-    await supabase.from("outfit_suggestions").update({ pinned: !outfit.pinned } as any).eq("id", outfit.id);
+    await supabase.from("outfit_suggestions").update({ pinned: !outfit.pinned }).eq("id", outfit.id);
     queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
   };
 
@@ -195,7 +151,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
             <Sparkles size={14} className="text-primary" /> Get the Look
           </h2>
           <p className="text-xs text-muted-foreground/70 font-body mt-1">
-            AI-styled street looks for {trip.destination}
+            Real street-style looks from the web for {trip.destination}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -209,13 +165,9 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
               </button>
             </>
           )}
-          <Button variant="champagne-outline" size="sm" onClick={searchWebFashion} disabled={searchingWeb || generatingOutfits}>
+          <Button variant="champagne-outline" size="sm" onClick={() => searchWebFashion()} disabled={searchingWeb}>
             <Globe size={14} className={searchingWeb ? "animate-spin" : ""} />
-            {searchingWeb ? "Searching..." : "Web Inspo"}
-          </Button>
-          <Button variant="champagne-outline" size="sm" onClick={generateOutfits} disabled={generatingOutfits || generatingMore || searchingWeb}>
-            <RefreshCw size={14} className={generatingOutfits ? "animate-spin" : ""} />
-            {generatingOutfits ? "Styling..." : outfits.length > 0 ? "Regenerate" : "Generate Looks"}
+            {searchingWeb ? "Finding looks..." : outfits.length > 0 ? "Find More" : "Get Looks"}
           </Button>
         </div>
       </div>
@@ -225,15 +177,15 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
           <Sparkles size={40} className="text-primary mx-auto mb-4 opacity-40" />
           <h3 className="font-heading text-xl mb-2">Your Style Awaits</h3>
           <p className="text-muted-foreground font-body text-sm mb-6 max-w-md mx-auto">
-            Generate AI-curated outfit boards with street-style visuals, tailored to {trip.destination}'s weather, events, and vibe.
+            Find real street-style looks from the web, curated for {trip.destination}.
           </p>
-          <Button variant="champagne" onClick={generateOutfits} disabled={generatingOutfits}>
-            <Sparkles size={16} />
-            {generatingOutfits ? "Generating looks..." : "Generate Outfit Inspiration"}
+          <Button variant="champagne" onClick={() => searchWebFashion()} disabled={searchingWeb}>
+            <Globe size={16} />
+            {searchingWeb ? "Finding looks..." : "Get Looks"}
           </Button>
-          {generatingOutfits && (
+          {searchingWeb && (
             <p className="text-xs text-muted-foreground/60 font-body mt-4 animate-pulse">
-              Creating 15 street-style looks with visuals — this may take a moment...
+              Searching the web for real fashion inspiration…
             </p>
           )}
         </div>
@@ -252,19 +204,18 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
                 className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-champagne transition-all duration-500"
                 style={{ scrollSnapAlign: "start" }}
               >
-                {outfit.image_url ? (
-                  <div className="aspect-[3/4] bg-secondary overflow-hidden">
-                    <img src={outfit.image_url} alt={outfit.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  </div>
-                ) : (
-                  <div className="aspect-[3/4] bg-secondary flex items-center justify-center">
-                    <Sparkles size={32} className="text-muted-foreground/20" />
-                  </div>
-                )}
+                <div className="group-hover:[&_img]:scale-105 transition-transform duration-700">
+                  <ImageWithFallback
+                    src={outfit.image_url}
+                    alt={outfit.title}
+                    fallbackIcon={Sparkles}
+                    aspectClass="aspect-[3/4]"
+                  />
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <span className="text-[10px] tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</span>
-                  <h3 className="font-heading text-lg leading-tight text-foreground">{outfit.title}</h3>
+                  <h3 className="font-heading text-2xl leading-tight text-foreground">{outfit.title}</h3>
                 </div>
                 {outfit.pinned && (
                   <div className="absolute top-3 right-3">
@@ -309,7 +260,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
                   onTogglePin={togglePin}
                   onPinToBoard={pinToBoard}
                   onSeeMore={seeMoreLikeThis}
-                  generatingMore={generatingMore}
+                  loading={searchingWeb}
                 />
               ))}
 
@@ -319,10 +270,10 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
                   variant="champagne-outline"
                   size="sm"
                   onClick={() => seeMoreLikeThis(outfits[outfits.length - 1])}
-                  disabled={generatingMore}
+                  disabled={searchingWeb}
                 >
-                  <ArrowDown size={14} className={generatingMore ? "animate-bounce" : ""} />
-                  {generatingMore ? "Loading more looks..." : "Load More Looks"}
+                  <ArrowDown size={14} className={searchingWeb ? "animate-bounce" : ""} />
+                  {searchingWeb ? "Loading more looks..." : "Load More Looks"}
                 </Button>
               </div>
             </div>
@@ -336,13 +287,13 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
 /* ── Full-screen Feed Card (Instagram-style) ── */
 
 const FeedCard = ({
-  outfit, onTogglePin, onPinToBoard, onSeeMore, generatingMore,
+  outfit, onTogglePin, onPinToBoard, onSeeMore, loading,
 }: {
   outfit: OutfitSuggestion;
   onTogglePin: (o: OutfitSuggestion) => void;
   onPinToBoard: (o: OutfitSuggestion) => void;
   onSeeMore: (o: OutfitSuggestion) => void;
-  generatingMore: boolean;
+  loading: boolean;
 }) => {
   const [shopOpen, setShopOpen] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -356,15 +307,12 @@ const FeedCard = ({
       className="rounded-2xl overflow-hidden bg-card mx-4 mb-5"
     >
       {/* Image */}
-      {outfit.image_url ? (
-        <div className="relative w-full aspect-[3/4] bg-secondary overflow-hidden">
-          <img src={outfit.image_url} alt={outfit.title} className="w-full h-full object-cover" />
-        </div>
-      ) : (
-        <div className="w-full aspect-[3/4] bg-secondary flex items-center justify-center">
-          <Sparkles size={40} className="text-muted-foreground/20" />
-        </div>
-      )}
+      <ImageWithFallback
+        src={outfit.image_url}
+        alt={outfit.title}
+        fallbackIcon={Sparkles}
+        aspectClass="w-full aspect-[3/4]"
+      />
 
       {/* Action bar */}
       <div className="px-4 pt-3 flex items-center justify-between">
@@ -378,10 +326,10 @@ const FeedCard = ({
         </div>
         <button
           onClick={() => onSeeMore(outfit)}
-          disabled={generatingMore}
+          disabled={loading}
           className="text-xs text-primary font-body tracking-wide hover:underline disabled:opacity-50"
         >
-          {generatingMore ? "Loading..." : "See more like this"}
+          {loading ? "Loading..." : "See more like this"}
         </button>
       </div>
 
@@ -390,7 +338,7 @@ const FeedCard = ({
         <div className="flex items-center gap-2 mb-1">
           <span className="text-[10px] tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</span>
         </div>
-        <h3 className="font-heading text-xl leading-tight mb-1">{outfit.title}</h3>
+        <h3 className="font-heading text-2xl leading-tight mb-1">{outfit.title}</h3>
         <p className="text-sm text-muted-foreground font-body leading-relaxed">{outfit.description}</p>
 
         {/* Items */}
