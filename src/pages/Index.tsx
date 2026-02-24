@@ -82,7 +82,7 @@ const Index = () => {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="flex items-center justify-center gap-4"
           >
-            <Link to="/dashboard">
+            <Link to="/auth">
               <Button variant="champagne" size="xl">
                 Begin Your Journey
                 <ArrowRight className="ml-2" size={18} />
@@ -206,7 +206,7 @@ const Index = () => {
           <p className="text-muted-foreground mb-10 font-body leading-relaxed">
             Join Moodmiles. Intelligent, beautiful, private.
           </p>
-          <Link to="/dashboard">
+          <Link to="/auth">
             <Button variant="champagne" size="xl">
               Start Planning
               <ArrowRight className="ml-2" size={18} />
