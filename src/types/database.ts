@@ -21,6 +21,21 @@ export interface Trip {
   end_date: string;
   trip_type: string | null;
   accommodation: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  created_at: string;
+}
+
+export interface WeatherData {
+  id: string;
+  trip_id: string;
+  date: string;
+  temperature_high: number | null;
+  temperature_low: number | null;
+  rain_probability: number | null;
+  wind_speed: number | null;
+  weather_code: number | null;
+  description: string | null;
   created_at: string;
 }
 

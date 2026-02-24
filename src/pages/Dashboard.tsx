@@ -38,16 +38,16 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="pt-28 pb-20 px-6">
+      <main className="pt-24 md:pt-28 pb-16 md:pb-20 px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-end justify-between mb-16"
+            className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-10 md:mb-16"
           >
             <div>
               <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">Dashboard</p>
-              <h1 className="text-4xl md:text-5xl font-heading">Good evening</h1>
+              <h1 className="text-3xl md:text-5xl font-heading">Good evening</h1>
             </div>
             <div className="flex items-center gap-3">
               <Link to="/create-trip">
@@ -79,7 +79,7 @@ const Dashboard = () => {
                 </Link>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {trips.map((trip) => (
                   <Link to={`/trip/${trip.id}`} key={trip.id}>
                     <div className="group glass-card rounded-2xl overflow-hidden hover:shadow-champagne transition-all duration-500 cursor-pointer">
@@ -119,7 +119,7 @@ const Dashboard = () => {
               <TrendingUp size={14} className="text-primary" />
               <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body">Trending This Week</h2>
             </div>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
               {trending.map((t, i) => (
                 <motion.div key={t.city} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + i * 0.1 }} className="glass-card rounded-xl p-5 hover:shadow-champagne transition-all duration-500">
                   <div className="flex items-center gap-3 mb-3">
