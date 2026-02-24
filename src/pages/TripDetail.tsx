@@ -7,12 +7,12 @@ import { Trip } from "@/types/database";
 import { Calendar, MapPin } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import OverviewTab from "@/components/trip/OverviewTab";
-import CapsuleTab from "@/components/trip/CapsuleTab";
+import ThingsToDoTab from "@/components/trip/ThingsToDoTab";
+import InspirationTab from "@/components/trip/InspirationTab";
 import PackingTab from "@/components/trip/PackingTab";
 import BoardTab from "@/components/trip/BoardTab";
-import InspirationTab from "@/components/trip/InspirationTab";
 
-const tabs = ["Overview", "Inspiration", "Capsule", "Packing", "Board"] as const;
+const tabs = ["Overview", "Things to Do", "Inspiration", "Packing", "Board"] as const;
 type Tab = typeof tabs[number];
 
 const TripDetail = () => {
@@ -82,9 +82,9 @@ const TripDetail = () => {
             ))}
           </div>
 
-          {activeTab === "Overview" && <OverviewTab tripId={trip.id} trip={{ latitude: (trip as any).latitude, longitude: (trip as any).longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
-          {activeTab === "Inspiration" && <InspirationTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude }} />}
-          {activeTab === "Capsule" && <CapsuleTab tripId={trip.id} />}
+          {activeTab === "Overview" && <OverviewTab tripId={trip.id} trip={{ latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
+          {activeTab === "Things to Do" && <ThingsToDoTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude }} />}
+          {activeTab === "Inspiration" && <InspirationTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
           {activeTab === "Packing" && <PackingTab tripId={trip.id} />}
           {activeTab === "Board" && <BoardTab tripId={trip.id} />}
         </div>

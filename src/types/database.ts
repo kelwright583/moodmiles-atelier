@@ -98,6 +98,7 @@ export interface OutfitSuggestion {
   occasion: string | null;
   description: string | null;
   items: OutfitItem[];
+  image_url: string | null;
   pinned: boolean;
   created_at: string;
 }
