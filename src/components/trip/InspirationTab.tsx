@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OutfitSuggestion, OutfitItem, TripEvent, WeatherData } from "@/types/database";
 import {
   Sparkles, RefreshCw, Pin, ExternalLink, ShoppingBag, Shirt, Footprints,
-  Watch, Briefcase, Gem, Palette, X, ChevronLeft, ChevronRight, Heart, ArrowDown,
+  Watch, Briefcase, Gem, Palette, X, ChevronLeft, ChevronRight, Heart, ArrowDown, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -41,6 +41,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
   const { user } = useAuth();
   const [generatingOutfits, setGeneratingOutfits] = useState(false);
   const [generatingMore, setGeneratingMore] = useState(false);
+  const [searchingWeb, setSearchingWeb] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -101,6 +102,22 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setGeneratingOutfits(false);
+    }
+  };
+
+  const searchWebFashion = async () => {
+    setSearchingWeb(true);
+    try {
+      const { error } = await supabase.functions.invoke("search-fashion", {
+        body: { trip_id: tripId, destination: trip.destination, country: trip.country, trip_type: trip.trip_type },
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
+      toast({ title: "Web looks added!", description: "Real fashion inspiration from the web has been added to your feed." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSearchingWeb(false);
     }
   };
 
@@ -177,7 +194,11 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
               </button>
             </>
           )}
-          <Button variant="champagne-outline" size="sm" onClick={generateOutfits} disabled={generatingOutfits || generatingMore}>
+          <Button variant="champagne-outline" size="sm" onClick={searchWebFashion} disabled={searchingWeb || generatingOutfits}>
+            <Globe size={14} className={searchingWeb ? "animate-spin" : ""} />
+            {searchingWeb ? "Searching..." : "Web Inspo"}
+          </Button>
+          <Button variant="champagne-outline" size="sm" onClick={generateOutfits} disabled={generatingOutfits || generatingMore || searchingWeb}>
             <RefreshCw size={14} className={generatingOutfits ? "animate-spin" : ""} />
             {generatingOutfits ? "Styling..." : outfits.length > 0 ? "Regenerate" : "Generate Looks"}
           </Button>
