@@ -286,6 +286,8 @@ export type Database = {
           id: string
           latitude: number | null
           longitude: number | null
+          origin_city: string | null
+          origin_country: string | null
           start_date: string
           trip_type: string | null
           user_id: string
@@ -299,6 +301,8 @@ export type Database = {
           id?: string
           latitude?: number | null
           longitude?: number | null
+          origin_city?: string | null
+          origin_country?: string | null
           start_date: string
           trip_type?: string | null
           user_id: string
@@ -312,6 +316,8 @@ export type Database = {
           id?: string
           latitude?: number | null
           longitude?: number | null
+          origin_city?: string | null
+          origin_country?: string | null
           start_date?: string
           trip_type?: string | null
           user_id?: string

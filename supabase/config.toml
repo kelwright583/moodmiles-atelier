@@ -1,1 +1,4 @@
 project_id = "rasfikgdqoofpabfmbzv"
+
+[functions.suggest-packing]
+verify_jwt = false
