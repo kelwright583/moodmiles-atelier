@@ -1,0 +1,70 @@
+// Local type definitions for database tables
+// These mirror the database schema until types.ts auto-regenerates
+
+export interface Profile {
+  id: string;
+  user_id: string;
+  name: string | null;
+  style_profile: string[];
+  luggage_size: string;
+  subscription_tier: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Trip {
+  id: string;
+  user_id: string;
+  destination: string;
+  country: string | null;
+  start_date: string;
+  end_date: string;
+  trip_type: string | null;
+  accommodation: string | null;
+  created_at: string;
+}
+
+export interface WardrobeItem {
+  id: string;
+  trip_id: string;
+  category: string;
+  description: string | null;
+  color: string | null;
+  tags: string[];
+  image_url: string | null;
+  order_index: number;
+  created_at: string;
+}
+
+export interface PackingItem {
+  id: string;
+  trip_id: string;
+  name: string;
+  category: string | null;
+  quantity: number;
+  is_packed: boolean;
+  order_index: number;
+  created_at: string;
+}
+
+export interface TripEvent {
+  id: string;
+  trip_id: string;
+  event_name: string;
+  event_type: string | null;
+  event_date: string | null;
+  location: string | null;
+  is_pinned: boolean;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface BoardItem {
+  id: string;
+  trip_id: string;
+  image_url: string | null;
+  description: string | null;
+  notes: string | null;
+  order_index: number;
+  created_at: string;
+}

@@ -14,13 +14,248 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      board_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          notes: string | null
+          order_index: number | null
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          order_index?: number | null
+          trip_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          order_index?: number | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_items_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packing_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_packed: boolean | null
+          name: string
+          order_index: number | null
+          quantity: number | null
+          trip_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_packed?: boolean | null
+          name: string
+          order_index?: number | null
+          quantity?: number | null
+          trip_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_packed?: boolean | null
+          name?: string
+          order_index?: number | null
+          quantity?: number | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packing_items_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          luggage_size: string | null
+          name: string | null
+          style_profile: string[] | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          luggage_size?: string | null
+          name?: string | null
+          style_profile?: string[] | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          luggage_size?: string | null
+          name?: string | null
+          style_profile?: string[] | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trip_events: {
+        Row: {
+          created_at: string
+          event_date: string | null
+          event_name: string
+          event_type: string | null
+          id: string
+          is_pinned: boolean | null
+          location: string | null
+          notes: string | null
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date?: string | null
+          event_name: string
+          event_type?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          location?: string | null
+          notes?: string | null
+          trip_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string | null
+          event_name?: string
+          event_type?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          location?: string | null
+          notes?: string | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_events_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trips: {
+        Row: {
+          accommodation: string | null
+          country: string | null
+          created_at: string
+          destination: string
+          end_date: string
+          id: string
+          start_date: string
+          trip_type: string | null
+          user_id: string
+        }
+        Insert: {
+          accommodation?: string | null
+          country?: string | null
+          created_at?: string
+          destination: string
+          end_date: string
+          id?: string
+          start_date: string
+          trip_type?: string | null
+          user_id: string
+        }
+        Update: {
+          accommodation?: string | null
+          country?: string | null
+          created_at?: string
+          destination?: string
+          end_date?: string
+          id?: string
+          start_date?: string
+          trip_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wardrobe_items: {
+        Row: {
+          category: string
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          order_index: number | null
+          tags: string[] | null
+          trip_id: string
+        }
+        Insert: {
+          category: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          order_index?: number | null
+          tags?: string[] | null
+          trip_id: string
+        }
+        Update: {
+          category?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          order_index?: number | null
+          tags?: string[] | null
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wardrobe_items_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_trip_owner: { Args: { _trip_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
