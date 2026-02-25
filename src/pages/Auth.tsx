@@ -109,7 +109,7 @@ const Auth = () => {
           )}
           <div className="text-center mb-10">
             <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">
-              {isForgotPassword ? "Reset Password" : isLogin ? "Welcome Back" : "Join Moodmiles"}
+              {isForgotPassword ? "Reset Password" : isLogin ? "Welcome Back" : "Join Concierge Global"}
             </p>
             <h1 className="text-3xl md:text-4xl font-heading">
               {isForgotPassword ? "Forgot your password?" : isLogin ? "Sign In" : "Create Account"}

@@ -5,12 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { OutfitSuggestion, OutfitItem, TripEvent, WeatherData } from "@/types/database";
 import {
   Sparkles, Pin, ExternalLink, ShoppingBag, Shirt, Footprints,
-  Watch, Briefcase, Gem, Palette, X, ChevronLeft, ChevronRight, Heart, ArrowDown, Globe,
+  Watch, Briefcase, Gem, Palette, X, ChevronLeft, ChevronRight, Heart, ArrowDown, Globe, Copy,
 } from "lucide-react";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { SaveToOtherBoardDialog } from "./SaveToOtherBoardDialog";
 
 const categoryIcons: Record<string, any> = {
   Top: Shirt, Bottom: Palette, Dresses: Palette, Outerwear: Briefcase,
@@ -43,6 +44,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
   const [searchingWeb, setSearchingWeb] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
+  const [saveToOtherOutfit, setSaveToOtherOutfit] = useState<OutfitSuggestion | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: outfits = [] } = useQuery({
@@ -93,7 +95,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
     setSearchingWeb(true);
     try {
       const { data, error } = await supabase.functions.invoke("search-fashion", {
-        body: { trip_id: tripId, destination: trip.destination, country: trip.country, trip_type: trip.trip_type, occasion: occasion || null },
+        body: { trip_id: tripId, destination: trip.destination, country: trip.country, trip_type: trip.trip_type, occasion: occasion || null, start_date: trip.start_date, end_date: trip.end_date },
       });
       if (error) {
         const msg = (data as { error?: string })?.error || error.message;
@@ -175,9 +177,9 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
       {outfits.length === 0 ? (
         <div className="glass-card rounded-2xl p-10 text-center">
           <Sparkles size={40} className="text-primary mx-auto mb-4 opacity-40" />
-          <h3 className="font-heading text-xl mb-2">Your Style Awaits</h3>
+          <h3 className="font-heading text-xl mb-2">Styled for {trip.destination}</h3>
           <p className="text-muted-foreground font-body text-sm mb-6 max-w-md mx-auto">
-            Find real street-style looks from the web, curated for {trip.destination}.
+            Real street-style looks, curated for your trip. One tap and we&apos;ll find what&apos;s trending where you&apos;re going.
           </p>
           <Button variant="champagne" onClick={() => searchWebFashion()} disabled={searchingWeb}>
             <Globe size={16} />
@@ -259,6 +261,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
                   outfit={outfit}
                   onTogglePin={togglePin}
                   onPinToBoard={pinToBoard}
+                  onSaveToOtherBoard={() => setSaveToOtherOutfit(outfit)}
                   onSeeMore={seeMoreLikeThis}
                   loading={searchingWeb}
                 />
@@ -280,6 +283,22 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {saveToOtherOutfit && (
+        <SaveToOtherBoardDialog
+          open={!!saveToOtherOutfit}
+          onOpenChange={(open) => !open && setSaveToOtherOutfit(null)}
+          currentTripId={tripId}
+          item={{
+            image_url: saveToOtherOutfit.image_url,
+            description: `${saveToOtherOutfit.title} — ${saveToOtherOutfit.occasion}`,
+            notes: saveToOtherOutfit.description
+              ? `${saveToOtherOutfit.description}\n\nItems: ${(saveToOtherOutfit.items as OutfitItem[]).map((i) => `${i.name} (${i.brand_suggestion || i.color})`).join(", ")}`
+              : null,
+          }}
+          onSaved={() => setSaveToOtherOutfit(null)}
+        />
+      )}
     </motion.div>
   );
 };
@@ -287,11 +306,12 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
 /* ── Full-screen Feed Card (Instagram-style) ── */
 
 const FeedCard = ({
-  outfit, onTogglePin, onPinToBoard, onSeeMore, loading,
+  outfit, onTogglePin, onPinToBoard, onSaveToOtherBoard, onSeeMore, loading,
 }: {
   outfit: OutfitSuggestion;
   onTogglePin: (o: OutfitSuggestion) => void;
   onPinToBoard: (o: OutfitSuggestion) => void;
+  onSaveToOtherBoard: () => void;
   onSeeMore: (o: OutfitSuggestion) => void;
   loading: boolean;
 }) => {
@@ -317,11 +337,14 @@ const FeedCard = ({
       {/* Action bar */}
       <div className="px-4 pt-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => onTogglePin(outfit)} className="p-1.5 hover:scale-110 transition-transform">
+          <button onClick={() => onTogglePin(outfit)} className="p-1.5 hover:scale-110 transition-transform" title={outfit.pinned ? "Unpin" : "Pin"}>
             <Heart size={22} className={outfit.pinned ? "text-primary fill-primary" : "text-foreground"} />
           </button>
-          <button onClick={() => onPinToBoard(outfit)} className="p-1.5 hover:scale-110 transition-transform">
+          <button onClick={() => onPinToBoard(outfit)} className="p-1.5 hover:scale-110 transition-transform" title="Pin to this trip's board">
             <Pin size={20} className="text-foreground" />
+          </button>
+          <button onClick={onSaveToOtherBoard} className="p-1.5 hover:scale-110 transition-transform" title="Save to another trip's board">
+            <Copy size={18} className="text-foreground" />
           </button>
         </div>
         <button

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,6 +99,19 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
   const packedCount = items.filter((i) => i.is_packed).length;
   const totalCount = items.length;
   const progress = totalCount > 0 ? (packedCount / totalCount) * 100 : 0;
+  const hasCelebratedRef = useRef(false);
+
+  // Celebrate when 100% packed
+  useEffect(() => {
+    if (totalCount > 0 && progress >= 100 && !hasCelebratedRef.current) {
+      hasCelebratedRef.current = true;
+      toast({
+        title: "All packed!",
+        description: "You're ready to arrive impeccably.",
+      });
+    }
+    if (progress < 100) hasCelebratedRef.current = false;
+  }, [progress, totalCount]);
 
   // Group by category
   const grouped = items.reduce((acc, item) => {
@@ -180,9 +193,9 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-body text-muted-foreground">{packedCount} of {totalCount} packed</span>
-            <span className="text-xs font-body text-primary">{Math.round(progress)}%</span>
+            <span className={`text-xs font-body ${progress >= 100 ? "text-primary font-medium" : "text-primary"}`}>{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className={`h-2 transition-all duration-300 ${progress >= 100 ? "shadow-champagne ring-1 ring-primary/20" : ""}`} />
         </div>
       )}
 
@@ -190,7 +203,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
         <div className="glass-card rounded-xl p-12 text-center">
           <Sparkles size={32} className="mx-auto text-muted-foreground/30 mb-4" />
           <p className="text-muted-foreground font-body text-sm mb-4">
-            Your packing list is empty. Hit <span className="text-primary">Smart Suggest</span> to generate a contextual list based on your weather, events, and trip type.
+            One tap and we&apos;ll build a smart list from your weather, events, and trip type — so you never overpack or forget the essentials.
           </p>
           <Button variant="champagne" onClick={generateSuggestions} disabled={generating}>
             {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}

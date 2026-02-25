@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import Logo from "./Logo";
 import { motion } from "framer-motion";
 import { Menu, X, LogIn, User, Settings, LogOut } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
@@ -54,11 +55,7 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="font-heading text-2xl tracking-tight text-foreground">
-            Mood<span className="text-gradient-champagne">miles</span>
-          </span>
-        </Link>
+        <Logo size="md" />
 
         <div className="hidden md:flex items-center gap-8">
           {user && (

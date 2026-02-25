@@ -67,6 +67,25 @@ export interface PackingItem {
   created_at: string;
 }
 
+export interface Flight {
+  id: string;
+  trip_id: string;
+  airline: string | null;
+  flight_number: string | null;
+  departure_airport: string | null;
+  departure_city: string | null;
+  departure_datetime: string | null;
+  arrival_airport: string | null;
+  arrival_city: string | null;
+  arrival_datetime: string | null;
+  confirmation_number: string | null;
+  booking_url: string | null;
+  document_url: string | null;
+  notes: string | null;
+  order_index: number;
+  created_at: string;
+}
+
 export interface TripEvent {
   id: string;
   trip_id: string;

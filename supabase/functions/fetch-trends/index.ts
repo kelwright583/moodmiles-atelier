@@ -1,17 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
-const fallbackTrends = [
-  { city: "Milan", trend: "Quiet luxury & structured tailoring", category: "Fashion", image_url: null },
-  { city: "Paris", trend: "Layered neutrals & statement coats", category: "Style", image_url: null },
-  { city: "Amalfi", trend: "Linen resort & gold accessories", category: "Destination", image_url: null },
-  { city: "Tokyo", trend: "Streetwear meets minimalist travel", category: "Style", image_url: null },
-  { city: "Marrakech", trend: "Earthy tones & artisan textiles", category: "Experience", image_url: null },
-  { city: "Santorini", trend: "Breezy whites & statement swim", category: "Destination", image_url: null },
-];
-
-const allowedCategories = new Set(["Style", "Destination", "Experience", "Fashion"]);
-
 let _corsHeaders: Record<string, string> = {};
 
 const jsonResponse = (body: unknown) =>
@@ -19,18 +8,24 @@ const jsonResponse = (body: unknown) =>
     headers: { ..._corsHeaders, "Content-Type": "application/json" },
   });
 
-const parseTrends = (content: string) => {
+interface TrendDestination {
+  city: string;
+  country: string;
+  tagline: string;
+  why_trending: string;
+  highlights: string[];
+  vibe: string;
+  best_for: string[];
+}
+
+const parseTrends = (content: string): TrendDestination[] => {
   try {
     const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const parsed = JSON.parse(cleaned);
     if (!Array.isArray(parsed)) return [];
-
-    return parsed.slice(0, 6).map((item: any) => ({
-      city: (item?.city || "Unknown").toString().trim(),
-      trend: (item?.trend || "Travel style trend").toString().trim().slice(0, 120),
-      category: allowedCategories.has(item?.category) ? item.category : "Style",
-      image_url: null,
-    }));
+    return parsed.slice(0, 6).filter(
+      (d: any) => d && typeof d.city === "string" && d.city.trim()
+    );
   } catch {
     return [];
   }
@@ -43,114 +38,109 @@ serve(async (req) => {
   _corsHeaders = getCorsHeaders(req);
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization" }), {
-        status: 401,
-        headers: { ..._corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     const googleMapsKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
 
-    if (!apiKey) {
-      console.error("OPENAI_API_KEY not configured");
-      return jsonResponse({ trends: fallbackTrends });
+    if (!firecrawlKey) {
+      console.error("FIRECRAWL_API_KEY not configured");
+      return jsonResponse({ trends: [] });
     }
-
-    const chatUrl = "https://api.openai.com/v1/chat/completions";
-    const chatModel = "gpt-4o-mini";
-
-    const searches = [
-      "trending travel destinations this week 2026 fashion style",
-      "luxury travel trends what to wear 2026",
-    ];
 
     const searchResults: string[] = [];
+    const searches = [
+      "trending luxury travel destinations 2026",
+      "best stylish places to travel this year",
+      "most exciting destinations for fashion and culture 2026",
+    ];
 
-    if (firecrawlKey) {
-      for (const query of searches) {
-        try {
-          const res = await fetch("https://api.firecrawl.dev/v1/search", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${firecrawlKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              query,
-              limit: 5,
-              tbs: "qdr:w",
-            }),
-          });
-
-          if (!res.ok) {
-            console.error("Firecrawl search failed:", res.status);
-            continue;
+    for (const query of searches) {
+      try {
+        const res = await fetch("https://api.firecrawl.dev/v1/search", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${firecrawlKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query, limit: 8 }),
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (Array.isArray(data?.data)) {
+          for (const r of data.data) {
+            searchResults.push(`${r.title || ""} ${r.description || ""} ${r.url || ""}`);
           }
-
-          const data = await res.json();
-          if (Array.isArray(data?.data)) {
-            for (const r of data.data) {
-              searchResults.push(`${r.title || ""}: ${r.description || ""}`);
-            }
-          }
-        } catch (e) {
-          console.error("Search error:", e);
         }
+      } catch (e) {
+        console.error("Firecrawl search error:", e);
       }
     }
 
-    let trends = fallbackTrends;
+    if (searchResults.length === 0) {
+      return jsonResponse({ trends: [] });
+    }
 
-    try {
-      const aiRes = await fetch(chatUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: chatModel,
-          messages: [
-            {
-              role: "system",
-              content:
-                'You curate travel and fashion trends. Return exactly 6 items as JSON array with fields: city, trend, category. category must be one of "Style", "Destination", "Experience", "Fashion". No markdown.',
-            },
-            {
-              role: "user",
-              content: `Curate this week's trends from:\n\n${searchResults.join("\n\n") || "Global luxury travel and fashion trends."}`,
-            },
-          ],
-          temperature: 0.7,
-        }),
-      });
+    let destinations: TrendDestination[] = [];
+    if (apiKey) {
+      try {
+        const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: `You are a luxury travel editorial writer for a high-end travel styling platform called Concierge Global. From the web search results provided, identify up to 6 destinations that are genuinely trending right now.
 
-      if (aiRes.ok) {
-        const aiData = await aiRes.json();
-        const content = aiData?.choices?.[0]?.message?.content || "[]";
-        const parsed = parseTrends(content);
-        if (parsed.length > 0) {
-          trends = parsed;
+For each destination, produce a rich editorial entry that would make a style-conscious traveller want to visit. Write with authority and aspiration — think Condé Nast Traveller meets Net-a-Porter.
+
+Return ONLY a JSON array with this exact structure (no other text):
+[
+  {
+    "city": "City Name",
+    "country": "Country",
+    "tagline": "A short, punchy editorial line — max 8 words. E.g. 'The new capital of quiet luxury'",
+    "why_trending": "2-3 sentences explaining WHY this destination is trending RIGHT NOW. Reference real events, openings, cultural moments, or seasonal relevance. Be specific, not generic.",
+    "highlights": ["3-4 short bullet points about what makes this place extraordinary — think architecture, dining scene, fashion, art, natural beauty"],
+    "vibe": "A 2-3 word mood descriptor, e.g. 'Coastal Minimalism', 'Cultural Renaissance', 'Alpine Elegance', 'Mediterranean Grandeur'",
+    "best_for": ["2-3 trip types this suits, e.g. 'City Break', 'Fashion Week', 'Beach Escape', 'Art & Culture'"]
+  }
+]
+
+Be specific and editorial. Avoid clichés like 'hidden gem' or 'something for everyone'. Write like you're curating for someone who has been everywhere and needs a reason to go.`,
+              },
+              {
+                role: "user",
+                content: searchResults.join("\n\n"),
+              },
+            ],
+            temperature: 0.4,
+          }),
+        });
+        if (aiRes.ok) {
+          const aiData = await aiRes.json();
+          const content = aiData?.choices?.[0]?.message?.content || "[]";
+          destinations = parseTrends(content);
         }
-      } else {
-        const text = await aiRes.text();
-        console.error("AI trends request failed:", aiRes.status, text.slice(0, 250));
+      } catch (e) {
+        console.error("AI parse error:", e);
       }
-    } catch (e) {
-      console.error("AI trends error:", e);
+    }
+
+    if (destinations.length === 0) {
+      return jsonResponse({ trends: [] });
     }
 
     const unsplashKey = Deno.env.get("UNSPLASH_ACCESS_KEY");
 
-    const getTrendImage = async (city: string): Promise<string | null> => {
-      // Try Google Places first if key is set
+    const getTrendImage = async (city: string, country: string, vibe: string): Promise<string | null> => {
       if (googleMapsKey && city) {
         try {
-          const query = `${city} iconic city view`;
+          const query = `${city} ${country} landmark architecture`;
           const placesRes = await fetch(
             `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${googleMapsKey}`
           );
@@ -166,11 +156,11 @@ serve(async (req) => {
         }
       }
 
-      // Fallback: Unsplash search for city/destination
       if (unsplashKey && city) {
         try {
+          const searchQuery = `${city} ${country} architecture luxury`;
           const res = await fetch(
-            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(city + " travel")}&per_page=1&orientation=landscape&client_id=${unsplashKey}`
+            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=1&orientation=portrait&content_filter=high&client_id=${unsplashKey}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -182,22 +172,19 @@ serve(async (req) => {
         }
       }
 
-      // Last resort: deterministic placeholder (Picsum)
-      const slug = city.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "travel";
-      return `https://picsum.photos/seed/${slug}/800/600`;
+      return null;
     };
 
-    const enriched = await Promise.all(
-      trends.slice(0, 6).map(async (trend) => ({
-        ...trend,
-        image_url: trend.image_url || (await getTrendImage(trend.city)),
+    const trends = await Promise.all(
+      destinations.map(async (dest) => ({
+        ...dest,
+        image_url: await getTrendImage(dest.city, dest.country, dest.vibe),
       }))
     );
 
-    return jsonResponse({ trends: enriched });
+    return jsonResponse({ trends });
   } catch (error) {
     console.error("Error:", error);
-    // Never bubble 500 to UI for this non-critical widget
-    return jsonResponse({ trends: fallbackTrends });
+    return jsonResponse({ trends: [] });
   }
 });

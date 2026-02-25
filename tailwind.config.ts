@@ -16,16 +16,17 @@ export default {
       fontFamily: {
         heading: ['Playfair Display', 'Georgia', 'serif'],
         body: ['Inter', '-apple-system', 'sans-serif'],
+        global: ['Anek Bangla', 'Inter', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
+        ring: "#ca975c",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#ca975c",
+          foreground: "#151311",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -40,7 +41,7 @@ export default {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
+          DEFAULT: "#ca975c",
           foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
@@ -52,9 +53,9 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         champagne: {
-          DEFAULT: "hsl(var(--champagne))",
-          glow: "hsl(var(--champagne-glow))",
-          muted: "hsl(var(--champagne-muted))",
+          DEFAULT: "#ca975c",
+          glow: "#ca975c",
+          muted: "#ca975c",
         },
         charcoal: {
           deep: "hsl(var(--charcoal-deep))",
@@ -63,12 +64,12 @@ export default {
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          primary: "#ca975c",
+          "primary-foreground": "#151311",
           accent: "hsl(var(--sidebar-accent))",
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+          ring: "#ca975c",
         },
       },
       borderRadius: {

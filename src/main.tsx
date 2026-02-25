@@ -9,6 +9,7 @@ import "@fontsource/playfair-display/600.css";
 import "@fontsource/playfair-display/700.css";
 import "@fontsource/playfair-display/400-italic.css";
 import "@fontsource/playfair-display/500-italic.css";
+import "@fontsource/anek-bangla/400.css";
 import App from "./App.tsx";
 import "./index.css";
 

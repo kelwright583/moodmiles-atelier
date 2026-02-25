@@ -176,10 +176,10 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
           <div className="glass-card rounded-xl p-8 text-center">
             <Globe size={32} className="text-primary mx-auto mb-3 opacity-50" />
             <p className="text-muted-foreground font-body text-sm mb-1">
-              Discover real, bookable experiences in {trip.destination}.
+              Curated restaurants, sights, and experiences in {trip.destination}.
             </p>
             <p className="text-muted-foreground/60 font-body text-xs mb-4">
-              Powered by web search & local intelligence
+              Real places you can book — discovered for your trip type
             </p>
             <Button variant="champagne" size="sm" onClick={generateActivities} disabled={generatingActivities}>
               {generatingActivities ? "Discovering..." : "Find Experiences"}

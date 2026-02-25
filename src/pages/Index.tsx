@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import Logo from "@/components/layout/Logo";
 import { ArrowRight, Compass, CloudSun, Shirt } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
+import TrendingDestinationDrawer, {
+  type TrendingDestination,
+} from "@/components/landing/TrendingDestinationDrawer";
 
 const heroImage = "/images/hero.png";
-const dest1 = "https://images.unsplash.com/photo-1455587734955-081b22074882?w=800&q=80";
-const dest2 = "https://images.unsplash.com/photo-1431274172761-fca41d930114?w=800&q=80";
-const dest3 = "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?w=800&q=80";
 
 const features = [
   {
@@ -28,14 +30,22 @@ const features = [
   },
 ];
 
-const destinations = [
-  { image: dest1, name: "Amalfi Coast", tag: "Resort" },
-  { image: dest2, name: "Paris", tag: "Fashion Week" },
-  { image: dest3, name: "Milan", tag: "City Break" },
-];
-
 const Index = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState<TrendingDestination | null>(null);
+
+  const { data: trending } = useQuery<TrendingDestination[]>({
+    queryKey: ["trending-landing"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("fetch-trends");
+      if (error) return [];
+      return (data?.trends || []) as TrendingDestination[];
+    },
+    staleTime: 1000 * 60 * 60,
+    retry: 0,
+  });
+
+  const destinations = trending?.slice(0, 6) ?? [];
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 80);
@@ -64,7 +74,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-sm tracking-[0.3em] uppercase text-primary mb-6 font-body"
+            className="text-[11px] tracking-[0.3em] uppercase text-primary mb-4 font-body"
           >
             Travel, Styled.
           </motion.p>
@@ -72,20 +82,18 @@ const Index = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-3xl sm:text-5xl md:text-7xl font-heading font-medium leading-tight mb-6 md:mb-8"
+            className="font-heading font-medium leading-tight mb-4 md:mb-6"
           >
-            Arrive Impeccably
-            <br />
-            <span className="text-gradient-champagne italic">Everywhere</span>
+            <span className="block text-3xl sm:text-4xl md:text-6xl">Arrive Impeccably</span>
+            <span className="block text-2xl sm:text-3xl md:text-5xl text-gradient-champagne italic mt-1">Everywhere</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="text-lg text-muted-foreground max-w-lg mx-auto mb-10 font-body font-light leading-relaxed"
+            className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground max-w-md mx-auto mb-8 font-body font-light leading-relaxed"
           >
-            Intelligent travel wardrobe planning for the modern, elevated traveller.
-            What to wear, what to pack, how to arrive — styled.
+            Styled experiences for the modern, elevated traveller.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -93,11 +101,9 @@ const Index = () => {
             transition={{ duration: 0.8, delay: 0.8 }}
             className="flex items-center justify-center gap-4"
           >
-            <Link to="/auth">
-              <Button variant="champagne" size="xl">
-                Begin Your Journey
-                <ArrowRight className="ml-2" size={18} />
-              </Button>
+            <Link to="/auth" className="btn-hero-cta inline-flex items-center justify-center gap-2 font-body text-xs">
+              Begin Your Journey
+              <ArrowRight size={14} strokeWidth={2} />
             </Link>
           </motion.div>
         </div>
@@ -178,29 +184,53 @@ const Index = () => {
           </motion.h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {destinations.map((d, i) => (
-              <motion.div
-                key={d.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer"
-              >
-                <img
-                  src={d.image}
-                  alt={d.name}
-                  loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <span className="text-xs tracking-[0.2em] uppercase text-primary font-body">{d.tag}</span>
-                  <h3 className="text-2xl font-heading mt-1">{d.name}</h3>
-                </div>
-              </motion.div>
-            ))}
+            {destinations.length === 0 ? (
+              <div className="col-span-full glass-card rounded-2xl p-12 text-center">
+                <p className="text-muted-foreground font-body">Trending destinations loading…</p>
+              </div>
+            ) : (
+              destinations.map((d, i) => (
+                <motion.div
+                  key={`${d.city}-${i}`}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  onClick={() => setSelectedDestination(d)}
+                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer"
+                >
+                  {d.image_url ? (
+                    <img
+                      src={d.image_url}
+                      alt={d.city}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-secondary" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent" />
+
+                  {d.vibe && (
+                    <div className="absolute top-4 left-4">
+                      <span className="px-2.5 py-1 rounded-full bg-background/50 backdrop-blur-md text-[10px] tracking-[0.15em] uppercase font-body text-primary">
+                        {d.vibe}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <h3 className="text-2xl font-heading">{d.city}</h3>
+                    {d.tagline && (
+                      <p className="text-xs text-muted-foreground font-body italic mt-1 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
+                        {d.tagline}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -217,13 +247,11 @@ const Index = () => {
             I travel <span className="text-gradient-champagne italic">differently</span>
           </h2>
           <p className="text-muted-foreground mb-10 font-body leading-relaxed">
-            Join Moodmiles. Intelligent, beautiful, private.
+            Join Concierge Global. Intelligent, beautiful, private.
           </p>
-          <Link to="/auth">
-            <Button variant="champagne" size="xl">
-              Start Planning
-              <ArrowRight className="ml-2" size={18} />
-            </Button>
+          <Link to="/auth" className="btn-hero-cta inline-flex items-center justify-center gap-3 font-body">
+            Start Planning
+            <ArrowRight size={16} strokeWidth={2} />
           </Link>
         </motion.div>
       </section>
@@ -231,14 +259,17 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t border-border py-12 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <span className="font-heading text-lg">
-            Mood<span className="text-gradient-champagne">miles</span>
-          </span>
+          <Logo size="sm" className="text-foreground" />
           <p className="text-xs text-muted-foreground font-body">
-            © 2026 Moodmiles. All rights reserved.
+            © 2026 Concierge Global. All rights reserved.
           </p>
         </div>
       </footer>
+
+      <TrendingDestinationDrawer
+        destination={selectedDestination}
+        onClose={() => setSelectedDestination(null)}
+      />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
-import { Calendar, ArrowRight, TrendingUp, MapPin, Sparkles, X, ChevronRight, Crown } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Calendar, ArrowRight, TrendingUp, MapPin, Sparkles, X, ChevronRight, Crown, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShimmerSkeleton } from "@/components/ui/shimmer-skeleton";
 import Navbar from "@/components/layout/Navbar";
@@ -12,26 +12,8 @@ import { Trip } from "@/types/database";
 
 interface TrendingItem {
   city: string;
-  trend: string;
-  category: string;
   image_url?: string | null;
 }
-
-const fallbackTrending: TrendingItem[] = [
-  { city: "Milan", trend: "Quiet luxury & structured tailoring", category: "Fashion", image_url: null },
-  { city: "Paris", trend: "Layered neutrals & statement coats", category: "Style", image_url: null },
-  { city: "Amalfi", trend: "Linen resort & gold accessories", category: "Destination", image_url: null },
-  { city: "Tokyo", trend: "Streetwear meets minimalist travel", category: "Style", image_url: null },
-  { city: "Marrakech", trend: "Earthy tones & artisan textiles", category: "Experience", image_url: null },
-  { city: "Santorini", trend: "Breezy whites & statement swim", category: "Destination", image_url: null },
-];
-
-const categoryColors: Record<string, string> = {
-  Style: "bg-primary/10 text-primary",
-  Fashion: "bg-accent/20 text-accent-foreground",
-  Destination: "bg-secondary text-muted-foreground",
-  Experience: "bg-primary/5 text-primary",
-};
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -40,8 +22,24 @@ function getGreeting(): string {
   return "Good evening";
 }
 
+function getCountdown(startDate: string, endDate: string, destination: string): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+  const daysUntilStart = Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const daysUntilEnd = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysUntilStart > 0) return `${destination} in ${daysUntilStart} day${daysUntilStart === 1 ? "" : "s"}`;
+  if (daysUntilEnd >= 0) return `${destination} — ${daysUntilEnd + 1} day${daysUntilEnd === 0 ? "" : "s"} left`;
+  return destination;
+}
+
 const Dashboard = () => {
   const [showTrendingFeed, setShowTrendingFeed] = useState(false);
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const { data: profile } = useQuery({
@@ -70,15 +68,12 @@ const Dashboard = () => {
     },
   });
 
-  const { data: trending = fallbackTrending } = useQuery<TrendingItem[]>({
+  const { data: trending = [] } = useQuery<TrendingItem[]>({
     queryKey: ["trending-v2"],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("fetch-trends");
-      if (error) {
-        console.error("fetch-trends error:", error);
-        return fallbackTrending;
-      }
-      return data?.trends?.length > 0 ? (data.trends as TrendingItem[]) : fallbackTrending;
+      if (error) return [];
+      return (data?.trends || []) as TrendingItem[];
     },
     staleTime: 1000 * 60 * 60,
     retry: 0,
@@ -132,18 +127,18 @@ const Dashboard = () => {
               </div>
             ) : trips.length === 0 ? (
               <div className="glass-card rounded-2xl p-12 md:p-16 text-center">
-                <p className="text-lg text-muted-foreground font-body mb-2">Your first journey awaits</p>
-                <p className="text-sm text-muted-foreground/80 font-body mb-6">
-                  Tell us where you&apos;re going and we&apos;ll style every moment.
+                <p className="text-xl font-heading text-foreground mb-2">Your next adventure starts here</p>
+                <p className="text-sm text-muted-foreground font-body mb-6 max-w-md mx-auto">
+                  Where to? We&apos;ll handle the weather, the outfits, and the packing — so you can focus on arriving impeccably.
                 </p>
                 {(!profile?.style_profile || profile.style_profile.length === 0) && (
                   <p className="text-sm text-primary/90 font-body mb-6">
-                    <Link to="/settings" className="hover:underline">Tell us your style</Link> first for personalised suggestions.
+                    <Link to="/settings" className="hover:underline">Set your style</Link> for personalised outfit suggestions.
                   </p>
                 )}
                 <Link to="/create-trip">
                   <Button variant="champagne" size="xl">
-                    Create Your First Trip
+                    Plan Your First Trip
                     <ArrowRight size={18} className="ml-2" />
                   </Button>
                 </Link>
@@ -177,8 +172,11 @@ const Dashboard = () => {
                           </div>
                           <ArrowRight size={18} className="text-primary mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground font-body">
-                          <span className="flex items-center gap-1.5">
+                        <div className="flex flex-col gap-1 text-xs font-body">
+                          <span className="text-primary font-medium">
+                            {getCountdown(trip.start_date, trip.end_date, trip.destination)}
+                          </span>
+                          <span className="text-muted-foreground flex items-center gap-1.5">
                             <Calendar size={12} className="text-primary" />
                             {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
                           </span>
@@ -208,41 +206,48 @@ const Dashboard = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
               {previewTrending.map((t, i) => (
-                <motion.button
+                <motion.div
                   key={`${t.city}-${i}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 + i * 0.1 }}
-                  onClick={() => setShowTrendingFeed(true)}
-                  className="glass-card rounded-xl overflow-hidden hover:shadow-champagne transition-all duration-500 text-left w-full"
+                  className="glass-card rounded-xl overflow-hidden hover:shadow-champagne transition-all duration-500 group/card"
                 >
-                  <div className="relative h-32 bg-secondary overflow-hidden">
-                    {t.image_url && (
-                      <img
-                        src={t.image_url}
-                        alt={`${t.city} trending inspiration`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent" />
-                    <div className="absolute top-3 left-3 w-9 h-9 rounded-lg bg-secondary/80 backdrop-blur-sm flex items-center justify-center">
-                      <MapPin size={14} className="text-primary" />
-                    </div>
-                  </div>
-
-                  <div className="p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-xl font-heading">{t.city}</p>
-                        <span className={`text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 rounded-full ${categoryColors[t.category] || "bg-secondary text-muted-foreground"}`}>
-                          {t.category}
-                        </span>
+                  <button
+                    onClick={() => setShowTrendingFeed(true)}
+                    className="w-full text-left"
+                  >
+                    <div className="relative h-32 bg-secondary overflow-hidden">
+                      {t.image_url && (
+                        <img
+                          src={t.image_url}
+                          alt={`${t.city} trending inspiration`}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent" />
+                      <div className="absolute top-3 left-3 w-9 h-9 rounded-lg bg-secondary/80 backdrop-blur-sm flex items-center justify-center">
+                        <MapPin size={14} className="text-primary" />
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground font-body leading-relaxed">{t.trend}</p>
+
+                    <div className="p-5">
+                      <p className="text-xl font-heading">{t.city}</p>
+                    </div>
+                  </button>
+                  <div className="px-5 pb-5 pt-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/create-trip?destination=${encodeURIComponent(t.city)}`);
+                      }}
+                      className="flex items-center gap-2 text-xs text-primary font-body tracking-wide hover:underline opacity-0 group-hover/card:opacity-100 transition-opacity"
+                    >
+                      <Plane size={12} /> Create trip to {t.city}
+                    </button>
                   </div>
-                </motion.button>
+                </motion.div>
               ))}
             </div>
           </motion.section>
@@ -295,13 +300,16 @@ const Dashboard = () => {
                         <MapPin size={28} className="relative text-primary/70" />
                       </div>
                       <div className="p-5">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-2xl font-heading">{t.city}</h3>
-                          <span className={`text-[10px] tracking-[0.1em] uppercase px-2.5 py-1 rounded-full ${categoryColors[t.category] || "bg-secondary text-muted-foreground"}`}>
-                            {t.category}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground font-body leading-relaxed">{t.trend}</p>
+                        <h3 className="text-2xl font-heading mb-3">{t.city}</h3>
+                        <button
+                          onClick={() => {
+                            setShowTrendingFeed(false);
+                            navigate(`/create-trip?destination=${encodeURIComponent(t.city)}`);
+                          }}
+                          className="flex items-center gap-2 mt-3 text-xs text-primary font-body tracking-wide hover:underline"
+                        >
+                          <Plane size={12} /> Create trip to {t.city}
+                        </button>
                       </div>
                     </motion.div>
                   ))}

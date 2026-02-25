@@ -175,7 +175,7 @@ const OverviewTab = ({ tripId, trip }: { tripId: string; trip?: { latitude?: num
         </div>
         {otherEvents.length === 0 && pinnedEvents.length === 0 ? (
           <div className="glass-card rounded-xl p-8 text-center">
-            <p className="text-muted-foreground font-body text-sm">No events yet. Add events to your trip to plan outfits around them.</p>
+            <p className="text-muted-foreground font-body text-sm">Add dinners, shows, or special occasions — we&apos;ll suggest outfits for each.</p>
           </div>
         ) : (
           <div className="space-y-3">

@@ -6,54 +6,49 @@
 
 @layer base {
   :root {
-    /* Warm blacks (brown-tinted) per Master Roadmap §8.2 */
-    --background: 30 8% 7%;
-    --foreground: 40 15% 92%;
+    /* Concierge Global brand palette — single source of truth: #ca975c */
+    --brand-gold: #ca975c;
 
-    --card: 30 7% 10%;
-    --card-foreground: 40 15% 92%;
+    --background: 30 11% 7%;
+    --foreground: 30 33% 96%;
 
-    --popover: 30 7% 10%;
-    --popover-foreground: 40 15% 92%;
+    --card: 30 12% 11%;
+    --card-foreground: 30 33% 96%;
 
-    --primary: 38 35% 55%;
-    --primary-foreground: 30 8% 7%;
+    --popover: 30 12% 11%;
+    --popover-foreground: 30 33% 96%;
 
-    --secondary: 30 6% 13%;
-    --secondary-foreground: 40 15% 92%;
+    --primary-foreground: 30 11% 7%;
 
-    --muted: 30 5% 16%;
-    --muted-foreground: 30 8% 50%;
+    --secondary: 30 15% 33%;
+    --secondary-foreground: 30 33% 96%;
 
-    --accent: 38 25% 45%;
-    --accent-foreground: 40 15% 92%;
+    --muted: 30 12% 20%;
+    --muted-foreground: 40 7% 84%;
+
+    --accent-foreground: 30 33% 96%;
 
     --destructive: 0 62% 50%;
-    --destructive-foreground: 40 15% 92%;
+    --destructive-foreground: 30 33% 96%;
 
-    --border: 30 5% 15%;
-    --input: 30 5% 15%;
-    --ring: 38 35% 55%;
+    --border: 30 15% 22%;
+    --input: 30 15% 22%;
 
     --radius: 0.75rem;
 
-    --champagne: 38 35% 55%;
-    --champagne-glow: 38 45% 65%;
-    --champagne-muted: 38 15% 35%;
-    --charcoal-deep: 30 8% 4%;
-    --charcoal-light: 30 6% 14%;
+    --charcoal-deep: 30 11% 5%;
+    --charcoal-light: 30 15% 25%;
 
-    --sidebar-background: 30 8% 5%;
-    --sidebar-foreground: 40 15% 92%;
-    --sidebar-primary: 38 35% 55%;
-    --sidebar-primary-foreground: 30 8% 7%;
-    --sidebar-accent: 30 6% 13%;
-    --sidebar-accent-foreground: 40 15% 92%;
-    --sidebar-border: 30 5% 15%;
-    --sidebar-ring: 38 35% 55%;
+    --sidebar-background: 30 11% 5%;
+    --sidebar-foreground: 30 33% 96%;
+    --sidebar-primary-foreground: 30 11% 7%;
+    --sidebar-accent: 30 15% 33%;
+    --sidebar-accent-foreground: 30 33% 96%;
+    --sidebar-border: 30 15% 22%;
 
     --font-heading: 'Playfair Display', Georgia, serif;
     --font-body: 'Inter', -apple-system, sans-serif;
+    --font-global: 'Anek Bangla', Inter, sans-serif;
   }
 }
 
@@ -76,32 +71,66 @@
 
 @layer utilities {
   .text-gradient-champagne {
-    background: linear-gradient(135deg, hsl(38 45% 65%), hsl(38 35% 55%), hsl(38 25% 45%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #ca975c !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #ca975c !important;
+    background-clip: unset !important;
   }
 
   .bg-gradient-champagne {
-    background: linear-gradient(135deg, hsl(38 45% 65%), hsl(38 35% 55%));
+    background: #ca975c !important;
+  }
+
+  .bg-gold-brand {
+    background-color: #ca975c !important;
+  }
+
+  .btn-hero-cta {
+    background-color: #ca975c !important;
+    color: #151311 !important;
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+  }
+  .btn-hero-cta:hover {
+    background-color: #ca975c !important;
+    opacity: 0.9;
+    transform: translateY(-1px);
   }
 
   .bg-gradient-dark {
-    background: linear-gradient(180deg, hsl(30 8% 7%), hsl(30 8% 4%));
+    background: linear-gradient(180deg, hsl(30 11% 7%), hsl(30 11% 5%));
   }
 
   .shadow-champagne {
-    box-shadow: 0 0 40px -10px hsl(38 35% 55% / 0.2);
+    box-shadow: 0 0 40px -10px rgba(202, 151, 92, 0.3);
   }
 
   .border-champagne {
-    border-color: hsl(38 35% 55% / 0.2);
+    border-color: rgba(202, 151, 92, 0.3);
   }
 
   .glass-card {
-    background: hsl(30 7% 10% / 0.8);
+    background: hsl(30 12% 11% / 0.8);
     backdrop-filter: blur(20px);
-    border: 1px solid hsl(30 5% 15% / 0.5);
+    border: 1px solid hsl(30 15% 22% / 0.5);
+  }
+
+  .logo-global {
+    font-family: 'Anek Bangla', Inter, sans-serif;
+    letter-spacing: 0.35em;
+    transform: scaleX(1.12);
+    transform-origin: center center;
+  }
+  .logo-global-tiny {
+    font-size: 0.38em;
+    margin-top: 0.15em;
   }
 
   .scrollbar-hide {
@@ -113,21 +142,61 @@
   }
 }
 
-/* Minimal scrollbar — small draggable thumb, no arrows, no track */
+/* Force #ca975c on every Tailwind gold/primary class — no HSL, no variables */
+.text-primary {
+  color: #ca975c !important;
+}
+.bg-primary {
+  background-color: #ca975c !important;
+}
+.border-primary {
+  border-color: #ca975c !important;
+}
+.ring-primary {
+  --tw-ring-color: #ca975c !important;
+}
+.text-accent {
+  color: #ca975c !important;
+}
+.bg-accent {
+  background-color: #ca975c !important;
+}
+.fill-primary {
+  fill: #ca975c !important;
+}
+.text-champagne {
+  color: #ca975c !important;
+}
+.bg-champagne {
+  background-color: #ca975c !important;
+}
+.border-champagne {
+  border-color: rgba(202, 151, 92, 0.3) !important;
+}
+
+/* Primary foreground stays dark */
+.text-primary-foreground {
+  color: #151311 !important;
+}
+.bg-primary-foreground {
+  background-color: #151311 !important;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(30 8% 7%);
+  background: hsl(30 11% 7%);
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(38 35% 55% / 0.4);
+  background: rgba(202, 151, 92, 0.5);
   border-radius: 9999px;
   min-height: 38px;
   max-height: 38px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(38 35% 55% / 0.6);
+  background: rgba(202, 151, 92, 0.7);
 }
 ::-webkit-scrollbar-button {
   height: 0;
@@ -141,6 +210,6 @@
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(38 35% 55% / 0.4) hsl(30 8% 7%);
+    scrollbar-color: rgba(202, 151, 92, 0.5) hsl(30 11% 7%);
   }
 }

@@ -52,6 +52,8 @@ export type SearchFashionBody = {
   country?: string | null;
   trip_type?: string | null;
   occasion?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
 };
 
 export type SuggestActivitiesBody = {
@@ -108,6 +110,8 @@ export const searchFashionSchema = z.object({
   country: z.string().max(100).optional().nullable(),
   trip_type: z.string().max(100).optional().nullable(),
   occasion: z.string().max(200).optional().nullable(),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
 });
 
 export const suggestActivitiesSchema = z.object({

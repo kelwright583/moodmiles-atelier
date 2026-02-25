@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Plane, Crown } from "lucide-react";
@@ -15,8 +15,17 @@ const tripTypes = ["Leisure", "Business", "Fashion Week", "Ski", "Yacht", "Weddi
 
 const CreateTrip = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Pre-fill destination from trending "Create trip" flow
+  const destinationParam = searchParams.get("destination");
+  useEffect(() => {
+    if (destinationParam) {
+      setDestination(destinationParam);
+    }
+  }, [destinationParam]);
 
   const { data: trips = [] } = useQuery({
     queryKey: ["trips"],
@@ -51,6 +60,8 @@ const CreateTrip = () => {
   const [originCountry, setOriginCountry] = useState("");
   const [originLat, setOriginLat] = useState<number | null>(null);
   const [originLng, setOriginLng] = useState<number | null>(null);
+  const [showOrigin, setShowOrigin] = useState(false);
+  const [showAccommodation, setShowAccommodation] = useState(false);
 
   const handleOriginSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
     setOriginCity(place.city);
@@ -164,19 +175,30 @@ const CreateTrip = () => {
           </motion.div>
 
           <motion.form initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
-            {/* Travelling From */}
+            {/* Travelling From — optional, collapsible */}
             <div>
-              <p className="text-xs tracking-[0.15em] uppercase text-primary mb-3 font-body">Travelling From</p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">City</label>
-                  <PlacesAutocomplete value={originCity} onChange={setOriginCity} onSelect={handleOriginSelect} />
-                </div>
-                <div>
-                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Country</label>
-                  <Input value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} placeholder="South Africa" className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
-                </div>
-              </div>
+              {showOrigin ? (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs tracking-[0.15em] uppercase text-primary font-body">Travelling From</p>
+                    <button type="button" onClick={() => { setShowOrigin(false); setOriginCity(""); setOriginCountry(""); setOriginLat(null); setOriginLng(null); }} className="text-xs text-muted-foreground font-body hover:text-foreground">Skip</button>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">City</label>
+                      <PlacesAutocomplete value={originCity} onChange={setOriginCity} onSelect={handleOriginSelect} />
+                    </div>
+                    <div>
+                      <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Country</label>
+                      <Input value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} placeholder="South Africa" className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <button type="button" onClick={() => setShowOrigin(true)} className="text-xs text-muted-foreground font-body hover:text-primary transition-colors">
+                  + Add travelling from (optional)
+                </button>
+              )}
             </div>
 
             {/* Destination */}
@@ -217,8 +239,19 @@ const CreateTrip = () => {
               )}
             </div>
             <div>
-              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Accommodation <span className="text-muted-foreground/50">(optional)</span></label>
-              <Input value={accommodation} onChange={(e) => setAccommodation(e.target.value)} placeholder="Hotel, villa, resort..." className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+              {showAccommodation ? (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body">Accommodation</label>
+                    <button type="button" onClick={() => { setShowAccommodation(false); setAccommodation(""); }} className="text-xs text-muted-foreground font-body hover:text-foreground">Skip</button>
+                  </div>
+                  <Input value={accommodation} onChange={(e) => setAccommodation(e.target.value)} placeholder="Hotel, villa, resort..." className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+                </>
+              ) : (
+                <button type="button" onClick={() => setShowAccommodation(true)} className="text-xs text-muted-foreground font-body hover:text-primary transition-colors">
+                  + Add accommodation (optional)
+                </button>
+              )}
             </div>
             <div className="pt-4">
               <Button variant="champagne" size="xl" type="submit" className="w-full md:w-auto" disabled={loading}>

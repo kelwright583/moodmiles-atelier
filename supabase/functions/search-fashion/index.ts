@@ -41,24 +41,42 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { trip_id, destination, country, trip_type, occasion } = parseBody<SearchFashionBody>(searchFashionSchema, body);
+    const { trip_id, destination, country, trip_type, occasion, start_date, end_date } = parseBody<SearchFashionBody>(searchFashionSchema, body);
 
     const userId = extractUserIdFromJwt(req);
     if (userId) {
       await checkRateLimit(userId, "search-fashion", trip_id);
     }
 
-    // Build search queries for real street-style fashion content
+    // Derive season from trip dates (Northern Hemisphere convention; works for most travel)
+    const dateStr = start_date || end_date || "";
+    const month = dateStr ? parseInt(dateStr.slice(5, 7), 10) : new Date().getMonth() + 1;
+    const season = month >= 3 && month <= 5 ? "spring" : month >= 6 && month <= 8 ? "summer" : month >= 9 && month <= 11 ? "fall" : "winter";
+    const seasonLabel = season.charAt(0).toUpperCase() + season.slice(1);
+
+    // Region hint from country (for broader, chic results)
+    const regionHint = country
+      ? /france|italy|spain|portugal|greece|germany|uk|england|netherlands|switzerland|austria/i.test(country)
+        ? "European"
+        : /japan|korea|thailand|vietnam|singapore/i.test(country)
+          ? "Asian"
+          : /australia|new zealand/i.test(country)
+            ? "Southern Hemisphere"
+            : country
+      : "travel";
+
+    // Build search queries: chic, trending, broader scope (country, region, season) — not just destination
     const queries = [
-      `street style fashion ${destination} outfit`,
-      `what to wear ${destination} ${trip_type || "travel"}`,
-      `${destination} fashion inspo outfit ideas`,
-      occasion ? `${occasion} outfit ${destination} style` : `${destination} travel outfit lookbook`,
+      `chic trending street style fashion ${season} 2024`,
+      `elegant travel outfit lookbook ${season} chic`,
+      country ? `${country} ${season} fashion street style outfit` : `chic ${season} travel fashion outfit`,
+      regionHint !== "travel" ? `${regionHint} ${season} fashion what to wear` : `${destination} ${season} style outfit`,
+      occasion ? `${occasion} outfit chic ${season}` : `minimalist chic outfit ${trip_type || "travel"} ${season}`,
     ];
 
     // Search for real fashion content using Firecrawl (parallel)
     const searchResultsArrays = await Promise.all(
-      queries.slice(0, 3).map(async (query) => {
+      queries.slice(0, 4).map(async (query) => {
         try {
           const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
             method: "POST",
@@ -116,11 +134,11 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a fashion curator extracting outfit inspiration from web content. Extract real, concrete outfit ideas with source attribution.",
+            content: "You are a fashion curator extracting chic, trending outfit inspiration from web content. Prioritise elegant, stylish, and aspirational looks — the kind that appear in fashion lookbooks and street style roundups. Avoid generic or basic outfits. Extract real, concrete outfit ideas with source attribution.",
           },
           {
             role: "user",
-            content: `From these web sources about fashion in ${destination}, extract up to 10 distinct outfit ideas. For each outfit, use the source_url and when the source lists Images:, pick the best matching image URL for that outfit. Include image_url when you have one from the source.\n\n${combinedContent}`,
+            content: `From these web sources about chic, trending fashion (for ${destination}${country ? `, ${country}` : ""}, ${seasonLabel} season), extract up to 10 distinct outfit ideas. Prioritise elegant, stylish, and aspirational looks — not generic or basic. For each outfit, use the source_url and when the source lists Images:, pick the best matching image URL for that outfit. Include image_url when you have one from the source.\n\n${combinedContent}`,
           },
         ],
         tools: [

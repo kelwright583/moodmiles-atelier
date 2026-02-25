@@ -121,7 +121,7 @@ const BoardTab = ({ tripId }: { tripId: string }) => {
       {items.length === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
           <Grid3X3 size={32} className="mx-auto text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground font-body text-sm">Your mood board is empty. Upload inspiration images, notes, and outfit ideas.</p>
+          <p className="text-muted-foreground font-body text-sm">Pin looks from Inspiration, upload your own images, or add notes. Your private style scrapbook for this trip.</p>
         </div>
       ) : (
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">

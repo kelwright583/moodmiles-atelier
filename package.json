@@ -14,6 +14,7 @@
     "deploy:functions": "supabase functions deploy --project-ref hwykcvpcwpaiotatzise --no-verify-jwt"
   },
   "dependencies": {
+    "@fontsource/anek-bangla": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/playfair-display": "^5.2.8",
     "@hookform/resolvers": "^3.10.0",

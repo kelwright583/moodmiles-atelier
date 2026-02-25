@@ -6,21 +6,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Trip } from "@/types/database";
 import { Calendar, MapPin, Pencil, Trash2 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
-import OverviewTab from "@/components/trip/OverviewTab";
-import ThingsToDoTab from "@/components/trip/ThingsToDoTab";
-import InspirationTab from "@/components/trip/InspirationTab";
+import PlanTab from "@/components/trip/PlanTab";
+import InspireTab from "@/components/trip/InspireTab";
 import PackingTab from "@/components/trip/PackingTab";
-import BoardTab from "@/components/trip/BoardTab";
 import TripEditDialog from "@/components/trip/TripEditDialog";
 import TripDeleteDialog from "@/components/trip/TripDeleteDialog";
 import { ShimmerSkeleton } from "@/components/ui/shimmer-skeleton";
 
-const tabs = ["Overview", "Things to Do", "Inspiration", "Packing", "Board"] as const;
+const tabs = ["Plan", "Inspire", "Pack"] as const;
 type Tab = typeof tabs[number];
 
 const TripDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState<Tab>("Overview");
+  const [activeTab, setActiveTab] = useState<Tab>("Plan");
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -48,7 +46,7 @@ const TripDetail = () => {
           <div className="max-w-6xl mx-auto">
             <ShimmerSkeleton variant="card" className="h-56 rounded-2xl mb-8" />
             <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((i) => (
+              {[1, 2, 3].map((i) => (
                 <ShimmerSkeleton key={i} variant="text" className="h-10 flex-1 rounded-lg" />
               ))}
             </div>
@@ -72,7 +70,19 @@ const TripDetail = () => {
 
       {/* Hero */}
       <div className="relative h-44 md:h-56 overflow-hidden bg-secondary">
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
+        {trip.image_url ? (
+          <>
+            <img
+              src={trip.image_url}
+              alt={trip.destination}
+              className="absolute inset-0 w-full h-full object-cover animate-ken-burns"
+              loading="eager"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
+        )}
         <div className="absolute bottom-6 left-4 right-4 md:bottom-8 md:left-8 md:right-8 max-w-6xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
             <div>
@@ -107,11 +117,9 @@ const TripDetail = () => {
             ))}
           </div>
 
-          {activeTab === "Overview" && <OverviewTab tripId={trip.id} trip={{ latitude: trip.latitude ?? undefined, longitude: trip.longitude ?? undefined, start_date: trip.start_date, end_date: trip.end_date }} />}
-          {activeTab === "Things to Do" && <ThingsToDoTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude }} />}
-          {activeTab === "Inspiration" && <InspirationTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
-          {activeTab === "Packing" && <PackingTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, origin_city: trip.origin_city, origin_country: trip.origin_country, start_date: trip.start_date, end_date: trip.end_date, trip_type: trip.trip_type }} />}
-          {activeTab === "Board" && <BoardTab tripId={trip.id} />}
+          {activeTab === "Plan" && <PlanTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
+          {activeTab === "Inspire" && <InspireTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date }} />}
+          {activeTab === "Pack" && <PackingTab tripId={trip.id} trip={{ destination: trip.destination, country: trip.country, origin_city: trip.origin_city, origin_country: trip.origin_country, start_date: trip.start_date, end_date: trip.end_date, trip_type: trip.trip_type }} />}
         </div>
       </main>
 
