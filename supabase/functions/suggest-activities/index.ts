@@ -5,6 +5,36 @@ import { parseBody, suggestActivitiesSchema, type SuggestActivitiesBody, Validat
 import { extractUserIdFromJwt } from "../_shared/auth.ts";
 import { checkRateLimit, recordUsage, RateLimitError } from "../_shared/rate-limit.ts";
 
+const VIATOR_BASE = "https://api.viator.com/partner";
+
+interface ViatorProduct {
+  productCode?: string;
+  title?: string;
+  shortDescription?: string;
+  webURL?: string;
+  productPhotos?: { url?: string }[];
+  rating?: { value?: number; count?: number };
+  price?: { formattedPrice?: string };
+  priceFrom?: { formattedPrice?: string };
+}
+
+interface ActivityRow {
+  name: string;
+  description: string;
+  category: string;
+  location: string;
+  price_level: string | null;
+  price_from?: string | null;
+  source_url: string | null;
+  booking_url: string | null;
+  image_url?: string | null;
+  rating?: number | null;
+}
+
+interface ViatorSearchResponse {
+  products?: ViatorProduct[];
+}
+
 serve(async (req) => {
   const preflight = handleCorsPreflightRequest(req);
   if (preflight) return preflight;
@@ -12,17 +42,23 @@ serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   try {
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!apiKey) throw new Error("OPENAI_API_KEY required");
-
+    const VIATOR_API_KEY = Deno.env.get("VIATOR_API_KEY");
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
-    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { trip_id, destination, country, trip_type, latitude, longitude } = parseBody<SuggestActivitiesBody>(suggestActivitiesSchema, await req.json());
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { trip_id, destination, country, trip_type, latitude, longitude } = parseBody<SuggestActivitiesBody>(suggestActivitiesSchema, body);
 
     const userId = extractUserIdFromJwt(req);
     if (userId) {
@@ -31,170 +67,169 @@ serve(async (req) => {
 
     const locationStr = `${destination}${country ? `, ${country}` : ""}`;
 
-    // Step 1: Search for real experiences via Firecrawl
-    let webExperiences: any[] = [];
-    if (FIRECRAWL_API_KEY) {
-      try {
-        const searches = [
-          `best ${trip_type || "luxury"} experiences ${locationStr} 2025 2026 booking`,
-          `top things to do ${locationStr} tours activities book online`,
-          `${locationStr} restaurant reservations fine dining booking`,
-        ];
+    let activities: ActivityRow[] = [];
 
-        const searchResults = await Promise.all(
-          searches.map(async (query) => {
-            try {
-              const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  query,
-                  limit: 5,
-                  scrapeOptions: { formats: ["markdown"] },
-                }),
-              });
-              if (searchRes.ok) {
-                const searchData = await searchRes.json();
-                return searchData.data || [];
-              }
-              return [];
-            } catch {
-              return [];
-            }
-          })
-        );
-        webExperiences = searchResults.flat();
-        console.log(`Firecrawl returned ${webExperiences.length} results`);
+    // Step 1: Try Viator API first (fast, real bookable experiences)
+    if (VIATOR_API_KEY) {
+      try {
+        const searchTerm = `things to do ${locationStr} ${trip_type || "tours"}`;
+        const viatorRes = await fetch(`${VIATOR_BASE}/search/freetext`, {
+          method: "POST",
+          headers: {
+            "exp-api-key": VIATOR_API_KEY,
+            "Accept-Language": "en-US",
+            "Accept": "application/json;version=2.0",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            searchTerm,
+            searchType: "PRODUCTS",
+            currencyCode: "USD",
+            topX: "1-20",
+          }),
+        });
+
+        if (viatorRes.ok) {
+          const viatorData = (await viatorRes.json()) as ViatorSearchResponse;
+          const products = viatorData.products || [];
+
+          activities = products.slice(0, 15).map((p) => {
+            const priceStr = p.priceFrom?.formattedPrice || p.price?.formattedPrice;
+            return {
+              name: p.title || "Experience",
+              description: p.shortDescription || "",
+              category: "Experience",
+              location: locationStr,
+              price_level: priceStr ? "$$" : null,
+              price_from: priceStr || null,
+              source_url: p.webURL || null,
+              booking_url: p.webURL || null,
+              image_url: p.productPhotos?.[0]?.url || null,
+              rating: p.rating?.value || null,
+            };
+          });
+          console.log(`Viator returned ${activities.length} products`);
+        } else {
+          console.error("Viator API error:", viatorRes.status, await viatorRes.text());
+        }
       } catch (e) {
-        console.error("Firecrawl search failed:", e);
+        console.error("Viator search failed:", e);
       }
     }
 
-    // Step 2: AI processes web results + generates structured suggestions
-    const webContext = webExperiences.length > 0
-      ? `\n\nHere are REAL experiences found online. Extract and prioritize these, keeping their source URLs and booking links:\n${webExperiences
-          .slice(0, 12)
-          .map((r: any) => `- Title: ${r.title || "Unknown"}\n  URL: ${r.url || ""}\n  Content: ${(r.markdown || r.description || "").slice(0, 500)}`)
-          .join("\n\n")}`
-      : "";
+    // Step 2: Fallback to GPT + Google Places when no Viator or empty results
+    if (activities.length === 0 && apiKey) {
+      const prompt = `You are a luxury travel concierge for ${locationStr}. Suggest 12 REAL, bookable experiences for a ${trip_type || "leisure"} trip.
 
-    const prompt = `You are a luxury travel concierge for ${locationStr}. Suggest 12 REAL, bookable experiences for a ${trip_type || "leisure"} trip.
+CRITICAL: These must be REAL places and experiences that actually exist. Include actual venue/tour names, real addresses.
 
-CRITICAL: These must be REAL places and experiences that actually exist. Include actual venue/tour names, real addresses, and real booking or website URLs.
+Include a mix of: Cultural experiences, Fine dining, Nightlife, Shopping, Outdoor activities, Unique local experiences.
 
-Include a mix of:
-- Cultural experiences (museums, galleries, historic sites, tours)
-- Fine dining & restaurants (with reservation links if possible)
-- Nightlife & entertainment
-- Shopping (boutiques, markets, designer stores)
-- Outdoor activities and day trips
-- Unique local experiences (cooking classes, wine tastings, etc.)
+For each, provide: name, description (2-3 sentences), category (Culture, Dining, Nightlife, Shopping, Outdoor, Experience), location, price_level (Free, $, $$, $$$), source_url, booking_url.`;
 
-For each, provide:
-- name: The actual name of the venue/experience
-- description: 2-3 sentences about what makes it special
-- category: One of Culture, Dining, Nightlife, Shopping, Outdoor, Experience
-- location: Real address or area
-- price_level: Free, $, $$, $$$
-- source_url: The website URL where more info can be found
-- booking_url: Direct booking/reservation URL if available (or website URL)
-${webContext}`;
-
-    const chatUrl = "https://api.openai.com/v1/chat/completions";
-    const chatModel = "gpt-4o-mini";
-
-    const response = await fetch(chatUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: chatModel,
-        messages: [
-          { role: "system", content: "You are a luxury travel concierge. Return REAL, verifiable experiences with actual URLs." },
-          { role: "user", content: prompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "save_activities",
-              description: "Save real activity suggestions with booking links",
-              parameters: {
-                type: "object",
-                properties: {
-                  activities: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        name: { type: "string" },
-                        description: { type: "string" },
-                        category: { type: "string" },
-                        location: { type: "string" },
-                        price_level: { type: "string" },
-                        source_url: { type: "string", description: "Website URL for more info" },
-                        booking_url: { type: "string", description: "Direct booking/reservation URL" },
+      const chatUrl = "https://api.openai.com/v1/chat/completions";
+      const response = await fetch(chatUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You are a luxury travel concierge. Return REAL, verifiable experiences." },
+            { role: "user", content: prompt },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "save_activities",
+                description: "Save activity suggestions",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    activities: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          name: { type: "string" },
+                          description: { type: "string" },
+                          category: { type: "string" },
+                          location: { type: "string" },
+                          price_level: { type: "string" },
+                          source_url: { type: "string" },
+                          booking_url: { type: "string" },
+                        },
+                        required: ["name", "description", "category", "location"],
                       },
-                      required: ["name", "description", "category", "location"],
                     },
                   },
+                  required: ["activities"],
+                  additionalProperties: false,
                 },
-                required: ["activities"],
-                additionalProperties: false,
               },
             },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "save_activities" } },
-      }),
-    });
+          ],
+          tool_choice: { type: "function", function: { name: "save_activities" } },
+        }),
+      });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded, try again shortly." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (!response.ok) {
+        if (response.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded, try again shortly." }), {
+            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (response.status === 402) {
+          return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
+            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw new Error("AI generation failed");
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error("AI generation failed");
+
+      const aiData = await response.json();
+      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+      if (!toolCall) throw new Error("No tool call in AI response");
+
+      const { activities: aiActivities } = JSON.parse(toolCall.function.arguments);
+      activities = aiActivities.map((a: any) => ({
+        ...a,
+        image_url: null,
+        rating: null,
+        price_from: null,
+      }));
     }
 
-    const aiData = await response.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in AI response");
+    if (activities.length === 0) {
+      return new Response(JSON.stringify({ error: "No experiences found. Add VIATOR_API_KEY for real bookable activities, or OPENAI_API_KEY for AI suggestions." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const { activities } = JSON.parse(toolCall.function.arguments);
-
-    // Step 3: Enrich with Google Places for ratings and images
+    // Step 3: Enrich with Google Places for ratings and images (when not from Viator)
     let enrichedActivities = activities;
     if (GOOGLE_MAPS_API_KEY && latitude && longitude) {
       try {
         enrichedActivities = await Promise.all(
-          activities.map(async (activity: any) => {
+          activities.map(async (activity) => {
+            if (activity.image_url) return activity;
             const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(activity.name + " " + destination)}&inputtype=textquery&fields=rating,photos,formatted_address,place_id&locationbias=circle:5000@${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`;
             const res = await fetch(searchUrl);
             const data = await res.json();
             const candidate = data.candidates?.[0];
-            let imageUrl = null;
+            let imageUrl = activity.image_url;
             if (candidate?.photos?.[0]?.photo_reference) {
               imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=600&photo_reference=${candidate.photos[0].photo_reference}&key=${GOOGLE_MAPS_API_KEY}`;
             }
-            // Use Google Maps URL as fallback source
             const googleMapsUrl = candidate?.place_id
               ? `https://www.google.com/maps/place/?q=place_id:${candidate.place_id}`
               : null;
             return {
               ...activity,
-              rating: candidate?.rating || null,
+              rating: activity.rating ?? candidate?.rating ?? null,
               image_url: imageUrl,
               location: candidate?.formatted_address || activity.location,
               source_url: activity.source_url || googleMapsUrl,
@@ -207,7 +242,6 @@ ${webContext}`;
       }
     }
 
-    // Delete old and insert new
     await supabase.from("activity_suggestions").delete().eq("trip_id", trip_id);
 
     const rows = enrichedActivities.map((a: any) => ({
@@ -216,18 +250,19 @@ ${webContext}`;
       description: a.description,
       category: a.category,
       location: a.location,
-      rating: a.rating || null,
-      price_level: a.price_level || null,
-      image_url: a.image_url || null,
-      source_url: a.source_url || null,
-      booking_url: a.booking_url || null,
+      rating: a.rating ?? null,
+      price_level: a.price_level ?? null,
+      price_from: a.price_from ?? null,
+      image_url: a.image_url ?? null,
+      source_url: a.source_url ?? null,
+      booking_url: a.booking_url ?? null,
     }));
 
     const { error: insertError } = await supabase.from("activity_suggestions").insert(rows);
     if (insertError) throw insertError;
 
     if (userId) {
-      await recordUsage(userId, "suggest-activities", trip_id, 0, 0.25);
+      await recordUsage(userId, "suggest-activities", trip_id, 0, 0.05);
     }
 
     return new Response(JSON.stringify({ success: true, count: rows.length }), {

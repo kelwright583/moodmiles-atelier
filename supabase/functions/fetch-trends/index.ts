@@ -38,12 +38,12 @@ serve(async (req) => {
   _corsHeaders = getCorsHeaders(req);
 
   try {
-    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+    const serperKey = Deno.env.get("SERPER_API_KEY");
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     const googleMapsKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
 
-    if (!firecrawlKey) {
-      console.error("FIRECRAWL_API_KEY not configured");
+    if (!serperKey) {
+      console.error("SERPER_API_KEY not configured for trends");
       return jsonResponse({ trends: [] });
     }
 
@@ -56,23 +56,22 @@ serve(async (req) => {
 
     for (const query of searches) {
       try {
-        const res = await fetch("https://api.firecrawl.dev/v1/search", {
+        const res = await fetch("https://api.serper.dev/search", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${firecrawlKey}`,
+            "X-API-KEY": serperKey,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ query, limit: 8 }),
+          body: JSON.stringify({ q: query, num: 8 }),
         });
         if (!res.ok) continue;
         const data = await res.json();
-        if (Array.isArray(data?.data)) {
-          for (const r of data.data) {
-            searchResults.push(`${r.title || ""} ${r.description || ""} ${r.url || ""}`);
-          }
+        const organic = data.organic || [];
+        for (const r of organic) {
+          searchResults.push(`${r.title || ""} ${r.snippet || ""} ${r.link || ""}`);
         }
       } catch (e) {
-        console.error("Firecrawl search error:", e);
+        console.error("Serper search error:", e);
       }
     }
 

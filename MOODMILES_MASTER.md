@@ -1007,7 +1007,8 @@ ad_events (id, campaign_id, user_id, trip_id, event_type, created_at)
 |--------|---------|----------|
 | `OPENAI_API_KEY` | generate-outfits, search-fashion, suggest-activities, suggest-packing, fetch-trends | Yes |
 | `GOOGLE_MAPS_API_KEY` | google-places, suggest-activities, fetch-destination-image, fetch-trends | Yes |
-| `FIRECRAWL_API_KEY` | search-fashion, suggest-activities, fetch-trends | Optional (graceful degradation) |
+| `SERPER_API_KEY` | search-fashion, fetch-trends | Required for outfit inspiration & trends |
+| `VIATOR_API_KEY` | suggest-activities | Optional (real bookable experiences; apply at partnerresources.viator.com) |
 | `UNSPLASH_ACCESS_KEY` | fetch-destination-image, fetch-trends | Optional (fallback to Picsum) |
 
 ### Functions Needed (New)
@@ -1176,7 +1177,8 @@ VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
 # Supabase Edge Function Secrets (set in Dashboard)
 OPENAI_API_KEY=sk-...
 GOOGLE_MAPS_API_KEY=AIza...
-FIRECRAWL_API_KEY=fc-...          # optional
+SERPER_API_KEY=...               # required for search-fashion & fetch-trends (serper.dev)
+VIATOR_API_KEY=...               # optional for real bookable experiences
 UNSPLASH_ACCESS_KEY=...           # optional
 STRIPE_SECRET_KEY=sk_...          # to be added
 STRIPE_WEBHOOK_SECRET=whsec_...   # to be added

@@ -216,8 +216,16 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <span className="text-[10px] tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</span>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-[10px] tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</span>
+                    {outfit.price && (
+                      <span className="text-sm font-body text-primary font-medium">{outfit.price}</span>
+                    )}
+                  </div>
                   <h3 className="font-heading text-2xl leading-tight text-foreground">{outfit.title}</h3>
+                  {outfit.store && (
+                    <p className="text-[10px] text-muted-foreground font-body mt-0.5">{outfit.store}</p>
+                  )}
                 </div>
                 {outfit.pinned && (
                   <div className="absolute top-3 right-3">
@@ -347,22 +355,42 @@ const FeedCard = ({
             <Copy size={18} className="text-foreground" />
           </button>
         </div>
-        <button
-          onClick={() => onSeeMore(outfit)}
-          disabled={loading}
-          className="text-xs text-primary font-body tracking-wide hover:underline disabled:opacity-50"
-        >
-          {loading ? "Loading..." : "See more like this"}
-        </button>
+        <div className="flex items-center gap-2">
+          {outfit.product_url && (
+            <a
+              href={outfit.product_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-champagne text-primary-foreground text-xs font-body tracking-wide hover:opacity-90 transition-opacity"
+            >
+              <ShoppingBag size={12} /> Shop
+            </a>
+          )}
+          <button
+            onClick={() => onSeeMore(outfit)}
+            disabled={loading}
+            className="text-xs text-primary font-body tracking-wide hover:underline disabled:opacity-50"
+          >
+            {loading ? "Loading..." : "See more"}
+          </button>
+        </div>
       </div>
 
       {/* Caption */}
       <div className="px-4 pt-2 pb-4">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center justify-between gap-2 mb-1">
           <span className="text-[10px] tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</span>
+          {outfit.price && (
+            <span className="text-sm font-body text-primary font-medium">{outfit.price}</span>
+          )}
         </div>
         <h3 className="font-heading text-2xl leading-tight mb-1">{outfit.title}</h3>
-        <p className="text-sm text-muted-foreground font-body leading-relaxed">{outfit.description}</p>
+        {outfit.store && (
+          <p className="text-xs text-muted-foreground font-body mb-1">{outfit.store}</p>
+        )}
+        {outfit.description && (
+          <p className="text-sm text-muted-foreground font-body leading-relaxed">{outfit.description}</p>
+        )}
 
         {/* Items */}
         <div className="mt-4 space-y-1.5">
@@ -382,22 +410,31 @@ const FeedCard = ({
                   </div>
                 </div>
                 <div className="relative shrink-0 ml-2">
-                  <button onClick={() => setShopOpen(shopOpen === i ? null : i)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
-                    <ShoppingBag size={14} className="text-primary" />
-                  </button>
-                  {shopOpen === i && (
-                    <div className="absolute right-0 top-full mt-1 z-50">
-                      <div className="bg-card border border-border rounded-xl shadow-xl p-1.5 min-w-[160px]">
-                        <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-body px-3 py-1.5">Shop this item</p>
-                        {retailers.map((r) => (
-                          <a key={r.name} href={r.url(item.search_terms)} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-3 py-2 text-xs font-body hover:bg-secondary rounded-lg transition-colors">
-                            <ExternalLink size={10} className="text-muted-foreground" />
-                            {r.name}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
+                  {outfit.product_url ? (
+                    <a href={outfit.product_url} target="_blank" rel="noopener noreferrer"
+                      className="p-2 rounded-lg hover:bg-secondary transition-colors inline-flex">
+                      <ShoppingBag size={14} className="text-primary" />
+                    </a>
+                  ) : (
+                    <>
+                      <button onClick={() => setShopOpen(shopOpen === i ? null : i)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+                        <ShoppingBag size={14} className="text-primary" />
+                      </button>
+                      {shopOpen === i && (
+                        <div className="absolute right-0 top-full mt-1 z-50">
+                          <div className="bg-card border border-border rounded-xl shadow-xl p-1.5 min-w-[160px]">
+                            <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-body px-3 py-1.5">Shop this item</p>
+                            {retailers.map((r) => (
+                              <a key={r.name} href={r.url(item.search_terms)} target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-body hover:bg-secondary rounded-lg transition-colors">
+                                <ExternalLink size={10} className="text-muted-foreground" />
+                                {r.name}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

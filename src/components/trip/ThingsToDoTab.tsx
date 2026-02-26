@@ -219,14 +219,19 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
                     </div>
                   )}
                   <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
-                        {activity.category}
-                      </span>
-                      {activity.rating && (
-                        <span className="flex items-center gap-0.5 text-xs text-primary">
-                          <Star size={10} className="fill-primary" /> {activity.rating.toFixed(1)}
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
+                          {activity.category}
                         </span>
+                        {activity.rating && (
+                          <span className="flex items-center gap-0.5 text-xs text-primary">
+                            <Star size={10} className="fill-primary" /> {activity.rating.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                      {activity.price_from && (
+                        <span className="text-sm font-body text-primary font-medium">{activity.price_from}</span>
                       )}
                     </div>
                     <h3 className="font-heading text-2xl leading-tight text-foreground">{activity.name}</h3>
@@ -389,17 +394,22 @@ const ActivityFeedCard = ({
       </div>
 
       <div className="px-4 py-3">
-        <div className="flex items-center gap-2 mb-1">
-          <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
-            {activity.category}
-          </span>
-          {activity.rating && (
-            <span className="flex items-center gap-0.5 text-xs text-primary">
-              <Star size={10} className="fill-primary" /> {activity.rating.toFixed(1)}
+        <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
+              {activity.category}
             </span>
-          )}
-          {activity.price_level && (
-            <span className="text-xs text-muted-foreground font-body">{activity.price_level}</span>
+            {activity.rating && (
+              <span className="flex items-center gap-0.5 text-xs text-primary">
+                <Star size={10} className="fill-primary" /> {activity.rating.toFixed(1)}
+              </span>
+            )}
+            {activity.price_level && !activity.price_from && (
+              <span className="text-xs text-muted-foreground font-body">{activity.price_level}</span>
+            )}
+          </div>
+          {activity.price_from && (
+            <span className="text-sm font-body text-primary font-medium">{activity.price_from}</span>
           )}
           {activity.is_promoted && (
             <span className="text-[9px] tracking-[0.15em] uppercase text-primary font-body bg-primary/10 px-2 py-0.5 rounded-full">Promoted</span>

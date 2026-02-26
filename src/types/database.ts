@@ -124,6 +124,9 @@ export interface OutfitSuggestion {
   description: string | null;
   items: OutfitItem[];
   image_url: string | null;
+  price: string | null;
+  store: string | null;
+  product_url: string | null;
   pinned: boolean;
   created_at: string;
 }
@@ -137,6 +140,7 @@ export interface ActivitySuggestion {
   location: string | null;
   rating: number | null;
   price_level: string | null;
+  price_from: string | null;
   image_url: string | null;
   source_url: string | null;
   booking_url: string | null;

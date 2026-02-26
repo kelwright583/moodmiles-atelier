@@ -1,20 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
-
-function extractImageUrlsFromMarkdown(markdown: string): string[] {
-  const regex = /!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g;
-  const urls: string[] = [];
-  let m;
-  while ((m = regex.exec(markdown)) !== null) {
-    const url = m[2];
-    if (url && !url.startsWith("data:") && urls.indexOf(url) === -1) urls.push(url);
-  }
-  return urls;
-}
 import { parseBody, searchFashionSchema, type SearchFashionBody, ValidationError } from "../_shared/validation.ts";
 import { extractUserIdFromJwt } from "../_shared/auth.ts";
 import { checkRateLimit, recordUsage, RateLimitError } from "../_shared/rate-limit.ts";
+
+interface SerperShoppingResult {
+  title?: string;
+  price?: string;
+  extractedPrice?: number;
+  image?: string;
+  link?: string;
+  source?: string;
+  productId?: string;
+  rating?: number;
+  reviews?: number;
+}
+
+interface SerperShoppingResponse {
+  shopping_results?: SerperShoppingResult[];
+  searchMetadata?: { totalResults?: string };
+}
 
 serve(async (req) => {
   const preflight = handleCorsPreflightRequest(req);
@@ -23,11 +29,8 @@ serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   try {
-    const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
-    if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY not configured");
-
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!apiKey) throw new Error("OPENAI_API_KEY required");
+    const SERPER_API_KEY = Deno.env.get("SERPER_API_KEY");
+    if (!SERPER_API_KEY) throw new Error("SERPER_API_KEY not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -48,255 +51,114 @@ serve(async (req) => {
       await checkRateLimit(userId, "search-fashion", trip_id);
     }
 
-    // Derive season from trip dates (Northern Hemisphere convention; works for most travel)
+    // Derive season from trip dates
     const dateStr = start_date || end_date || "";
     const month = dateStr ? parseInt(dateStr.slice(5, 7), 10) : new Date().getMonth() + 1;
     const season = month >= 3 && month <= 5 ? "spring" : month >= 6 && month <= 8 ? "summer" : month >= 9 && month <= 11 ? "fall" : "winter";
-    const seasonLabel = season.charAt(0).toUpperCase() + season.slice(1);
 
-    // Region hint from country (for broader, chic results)
-    const regionHint = country
-      ? /france|italy|spain|portugal|greece|germany|uk|england|netherlands|switzerland|austria/i.test(country)
-        ? "European"
-        : /japan|korea|thailand|vietnam|singapore/i.test(country)
-          ? "Asian"
-          : /australia|new zealand/i.test(country)
-            ? "Southern Hemisphere"
-            : country
-      : "travel";
-
-    // Build search queries: chic, trending, broader scope (country, region, season) — not just destination
+    // Build 2-3 targeted Google Shopping queries (fast, marketplace-style)
     const queries = [
-      `chic trending street style fashion ${season} 2024`,
-      `elegant travel outfit lookbook ${season} chic`,
-      country ? `${country} ${season} fashion street style outfit` : `chic ${season} travel fashion outfit`,
-      regionHint !== "travel" ? `${regionHint} ${season} fashion what to wear` : `${destination} ${season} style outfit`,
-      occasion ? `${occasion} outfit chic ${season}` : `minimalist chic outfit ${trip_type || "travel"} ${season}`,
-    ];
+      `chic ${season} travel outfit ${destination} ${country || ""}`.trim(),
+      `elegant ${trip_type || "travel"} fashion ${season} 2025`.trim(),
+      occasion ? `${occasion} outfit ${season}` : `street style ${destination} ${season}`.trim(),
+    ].filter((q) => q.length > 10);
 
-    // Search for real fashion content using Firecrawl (parallel)
-    const searchResultsArrays = await Promise.all(
-      queries.slice(0, 4).map(async (query) => {
-        try {
-          const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              query,
-              limit: 5,
-              scrapeOptions: { formats: ["markdown", "links"] },
-            }),
-          });
-          if (searchRes.ok) {
-            const data = await searchRes.json();
-            return data.data || [];
-          }
-          return [];
-        } catch (e) {
-          console.error("Search error for query:", query, e);
+    const allProducts: SerperShoppingResult[] = [];
+    const seenLinks = new Set<string>();
+
+    // Run all Serper queries in parallel (faster than sequential)
+    const searchPromises = queries.slice(0, 3).map(async (query) => {
+      try {
+        const res = await fetch("https://api.serper.dev/shopping", {
+          method: "POST",
+          headers: {
+            "X-API-KEY": SERPER_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            q: query,
+            gl: "us",
+            hl: "en",
+            num: 15,
+          }),
+        });
+
+        if (!res.ok) {
+          console.error("Serper error:", res.status, await res.text());
           return [];
         }
-      })
-    );
-    const searchResults = searchResultsArrays.flat();
 
-    if (searchResults.length === 0) {
+        const data = (await res.json()) as SerperShoppingResponse;
+        return data.shopping_results || [];
+      } catch (e) {
+        console.error("Serper search error for query:", query, e);
+        return [];
+      }
+    });
+
+    const resultsArrays = await Promise.all(searchPromises);
+    for (const results of resultsArrays) {
+      for (const r of results) {
+        const link = r.link || r.productId;
+        if (link && !seenLinks.has(link) && r.title) {
+          seenLinks.add(link);
+          allProducts.push(r);
+        }
+      }
+    }
+
+    if (allProducts.length === 0) {
       return new Response(JSON.stringify({ success: true, count: 0, message: "No results found" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Enrich each source with extracted image URLs from markdown
-    const enrichedSources = searchResults.slice(0, 8).map((r: any, i: number) => {
-      const markdown = r.markdown || r.description || "";
-      const imageUrls = extractImageUrlsFromMarkdown(markdown);
-      return { ...r, _index: i, _imageUrls: imageUrls };
-    });
-
-    const combinedContent = enrichedSources
-      .map((r: any) => `[Source ${r._index + 1}]: ${r.title || ""}\nURL: ${r.url || ""}\nImages: ${r._imageUrls?.length ? r._imageUrls.join(", ") : "none"}\n${(r.markdown || r.description || "").slice(0, 800)}`)
-      .join("\n\n---\n\n");
-
-    const chatUrl = "https://api.openai.com/v1/chat/completions";
-    const chatModel = "gpt-4o-mini";
-
-    const aiResponse = await fetch(chatUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: chatModel,
-        messages: [
-          {
-            role: "system",
-            content: "You are a fashion curator extracting chic, trending outfit inspiration from web content. Prioritise elegant, stylish, and aspirational looks — the kind that appear in fashion lookbooks and street style roundups. Avoid generic or basic outfits. Extract real, concrete outfit ideas with source attribution.",
-          },
-          {
-            role: "user",
-            content: `From these web sources about chic, trending fashion (for ${destination}${country ? `, ${country}` : ""}, ${seasonLabel} season), extract up to 10 distinct outfit ideas. Prioritise elegant, stylish, and aspirational looks — not generic or basic. For each outfit, use the source_url and when the source lists Images:, pick the best matching image URL for that outfit. Include image_url when you have one from the source.\n\n${combinedContent}`,
-          },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "save_web_outfits",
-              description: "Save outfit ideas extracted from web sources",
-              parameters: {
-                type: "object",
-                properties: {
-                  outfits: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string", description: "Catchy outfit name" },
-                        occasion: { type: "string", description: "When to wear it" },
-                        description: { type: "string", description: "2-3 sentences about the look" },
-                        source_url: { type: "string", description: "URL where this was found" },
-                        source_name: { type: "string", description: "Name of the source site" },
-                        image_url: { type: "string", description: "Direct URL of a fashion/outfit image from the source content (Images: ...). Use one of the listed image URLs when the outfit matches that source. Required when available." },
-                        items: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              category: { type: "string" },
-                              name: { type: "string" },
-                              color: { type: "string" },
-                              brand_suggestion: { type: "string" },
-                              search_terms: { type: "string" },
-                            },
-                            required: ["category", "name", "color", "search_terms"],
-                          },
-                        },
-                      },
-                      required: ["title", "occasion", "description", "source_url", "items"],
-                    },
-                  },
-                },
-                required: ["outfits"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "save_web_outfits" } },
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded, please try again shortly." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error("AI extraction failed");
-    }
-
-    const aiData = await aiResponse.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in AI response");
-
-    const { outfits } = JSON.parse(toolCall.function.arguments);
-
-    // Use real image URLs from web sources (no DALL-E). Fallback: match by source_url to get first image from that page.
-    let rows = outfits.map((o: any) => {
-      let imageUrl = o.image_url;
-      if (!imageUrl && o.source_url) {
-        const match = enrichedSources.find((s: any) => s.url === o.source_url);
-        if (match?._imageUrls?.[0]) imageUrl = match._imageUrls[0];
-      }
-      return {
+    // Map to outfit_suggestions schema (marketplace product cards)
+    const rows = allProducts.slice(0, 20).map((p) => {
+      const base: Record<string, unknown> = {
         trip_id,
-        title: o.title,
-        occasion: o.occasion,
-        description: `${o.description}\n\n📎 Source: ${o.source_name || "Web"}`,
-        items: o.items,
-        image_url: imageUrl || null,
+        title: p.title || "Fashion find",
+        occasion: occasion || `${season} travel`,
+        description: p.source ? `Shop at ${p.source}` : null,
+        items: [{
+          category: "Other",
+          name: p.title || "",
+          color: "",
+          search_terms: p.title || "",
+        }],
+        image_url: p.image || null,
         pinned: false,
       };
+      // Marketplace columns (require migration 20260226100000)
+      if (p.price) base.price = p.price;
+      if (p.source) base.store = p.source;
+      if (p.link) base.product_url = p.link;
+      return base;
     });
 
-    // Vision step: for rows WITH an image, describe what's actually IN the image so items match the photo
-    const visionModel = "gpt-4o-mini";
-    const visionPrompt = `Describe this fashion/outfit image. Return a JSON object with exactly:
-{
-  "title": "Short catchy outfit name (e.g. Relaxed Travel Look)",
-  "occasion": "When to wear it (e.g. Travel Day, Casual Day)",
-  "description": "2-3 sentences describing the actual outfit in the image",
-  "items": [
-    { "category": "Top|Bottom|Outerwear|Shoes|Accessory|Bag", "name": "Specific item name", "color": "Color", "search_terms": "search query for shopping" }
-  ]
-}
-Categories: Top, Bottom, Dresses, Outerwear, Shoes, Accessory, Bag. Be accurate to what you SEE in the image. Return ONLY valid JSON.`;
-
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row.image_url) continue;
-      try {
-        const visionRes = await fetch(chatUrl, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: visionModel,
-            messages: [
-              {
-                role: "user",
-                content: [
-                  { type: "text", text: visionPrompt },
-                  { type: "image_url", image_url: { url: row.image_url } },
-                ],
-              },
-            ],
-          }),
-        });
-        if (!visionRes.ok) continue;
-        const visionData = await visionRes.json();
-        const content = visionData.choices?.[0]?.message?.content || "";
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          rows[i] = {
-            ...row,
-            title: parsed.title || row.title,
-            occasion: parsed.occasion || row.occasion,
-            description: `${parsed.description || row.description}\n\n📎 Source: ${(outfits[i] as any).source_name || "Web"}`,
-            items: Array.isArray(parsed.items) && parsed.items.length > 0
-              ? parsed.items.map((it: any) => ({
-                  category: it.category || "Other",
-                  name: it.name || "",
-                  color: it.color || "",
-                  brand_suggestion: it.brand_suggestion || null,
-                  search_terms: it.search_terms || it.name || it.category || "",
-                }))
-              : row.items,
-          };
-        }
-      } catch (e) {
-        console.error("Vision describe failed for image:", row.image_url, e);
-        // Keep original row; items may not match image but we don't drop the outfit
+    const { error: insertError } = await supabase.from("outfit_suggestions").insert(rows);
+    if (insertError) {
+      // If new columns don't exist, retry with base columns only
+      const isColumnError = insertError.message?.includes("column") || insertError.code === "42703";
+      if (isColumnError) {
+        const fallbackRows = allProducts.slice(0, 20).map((p) => ({
+          trip_id,
+          title: p.title || "Fashion find",
+          occasion: occasion || `${season} travel`,
+          description: p.source ? `Shop at ${p.source}` : null,
+          items: [{ category: "Other", name: p.title || "", color: "", search_terms: p.title || "" }],
+          image_url: p.image || null,
+          pinned: false,
+        }));
+        const { error: fallbackError } = await supabase.from("outfit_suggestions").insert(fallbackRows);
+        if (fallbackError) throw fallbackError;
+      } else {
+        throw insertError;
       }
     }
 
-    const { error: insertError } = await supabase.from("outfit_suggestions").insert(rows);
-    if (insertError) throw insertError;
-
     if (userId) {
-      await recordUsage(userId, "search-fashion", trip_id, 0, rows.length * 0.002);
+      await recordUsage(userId, "search-fashion", trip_id, 0, rows.length * 0.0003);
     }
 
     return new Response(JSON.stringify({ success: true, count: rows.length }), {
