@@ -56,7 +56,7 @@ serve(async (req) => {
 
     for (const query of searches) {
       try {
-        const res = await fetch("https://api.serper.dev/search", {
+        const res = await fetch("https://google.serper.dev/search", {
           method: "POST",
           headers: {
             "X-API-KEY": serperKey,

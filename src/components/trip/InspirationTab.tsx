@@ -1,29 +1,16 @@
-import { useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { OutfitSuggestion, OutfitItem, TripEvent, WeatherData } from "@/types/database";
+import { OutfitSuggestion, OutfitItem } from "@/types/database";
 import {
-  Sparkles, Pin, ExternalLink, ShoppingBag, Shirt, Footprints,
-  Watch, Briefcase, Gem, Palette, X, ChevronLeft, ChevronRight, Heart, ArrowDown, Globe, Copy,
+  Sparkles, Pin, ShoppingBag, Heart, ArrowDown, Globe, Copy, Search,
 } from "lucide-react";
-import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { SaveToOtherBoardDialog } from "./SaveToOtherBoardDialog";
 
-const categoryIcons: Record<string, any> = {
-  Top: Shirt, Bottom: Palette, Dresses: Palette, Outerwear: Briefcase,
-  Shoes: Footprints, Accessory: Watch, Bag: Gem, Other: Shirt,
-};
-
-const retailers = [
-  { name: "Amazon", url: (q: string) => `https://www.amazon.com/s?k=${encodeURIComponent(q)}` },
-  { name: "ASOS", url: (q: string) => `https://www.asos.com/search/?q=${encodeURIComponent(q)}` },
-  { name: "NET-A-PORTER", url: (q: string) => `https://www.net-a-porter.com/en-us/shop/search/${encodeURIComponent(q)}` },
-  { name: "Zara", url: (q: string) => `https://www.zara.com/us/en/search?searchTerm=${encodeURIComponent(q)}` },
-];
 
 interface InspirationTabProps {
   tripId: string;
@@ -42,10 +29,9 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [searchingWeb, setSearchingWeb] = useState(false);
-  const [feedOpen, setFeedOpen] = useState(false);
-  const [startIndex, setStartIndex] = useState(0);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
   const [saveToOtherOutfit, setSaveToOtherOutfit] = useState<OutfitSuggestion | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: outfits = [] } = useQuery({
     queryKey: ["outfit-suggestions", tripId],
@@ -60,24 +46,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
       return data as unknown as OutfitSuggestion[];
     },
   });
-
-  const { data: events = [] } = useQuery({
-    queryKey: ["trip-events", tripId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("trip_events").select("*").eq("trip_id", tripId);
-      if (error) throw error;
-      return data as TripEvent[];
-    },
-  });
-
-  const { data: weather = [] } = useQuery({
-    queryKey: ["weather", tripId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("weather_data").select("*").eq("trip_id", tripId).order("date", { ascending: true }).limit(7);
-      if (error) throw error;
-      return data as WeatherData[];
-    },
-  });
+  console.log("Outfits from DB:", outfits.length, outfits.map(o => ({ id: o.id, title: o.title, image_url: o.image_url })));
 
   const getInvokeErrorMessage = async (err: any, fallback = "Request failed") => {
     if (err?.context && typeof err.context.json === "function") {
@@ -91,18 +60,28 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
     return err?.message || fallback;
   };
 
-  const searchWebFashion = async (occasion?: string) => {
+  const searchWebFashion = async (occasion?: string, searchQuery?: string) => {
     setSearchingWeb(true);
     try {
       const { data, error } = await supabase.functions.invoke("search-fashion", {
-        body: { trip_id: tripId, destination: trip.destination, country: trip.country, trip_type: trip.trip_type, occasion: occasion || null, start_date: trip.start_date, end_date: trip.end_date },
+        body: {
+          trip_id: tripId,
+          destination: trip.destination,
+          country: trip.country,
+          trip_type: trip.trip_type,
+          occasion: occasion || null,
+          start_date: trip.start_date,
+          end_date: trip.end_date,
+          user_search_query: searchQuery || userSearchQuery || null,
+        },
       });
       if (error) {
         const msg = (data as { error?: string })?.error || error.message;
         throw new Error(msg);
       }
-      queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
-      toast({ title: "Looks added!", description: occasion ? "More similar styles from the web." : "Real fashion inspiration from the web has been added to your feed." });
+      await queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId] });
+      await queryClient.refetchQueries({ queryKey: ["outfit-suggestions", tripId] });
+      toast({ title: "Looks added!", description: occasion ? "More similar styles from the web." : "Editorial fashion inspiration has been added to your feed." });
     } catch (err: any) {
       const message = err?.message || (await getInvokeErrorMessage(err, "Could not fetch web inspiration right now."));
       toast({ title: "Error", description: message, variant: "destructive" });
@@ -139,39 +118,56 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
     }
   };
 
-  const scroll = (dir: "left" | "right") => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: dir === "left" ? -320 : 320, behavior: "smooth" });
-    }
+  // Debounced search query handler
+  const handleSearchInput = (value: string) => {
+    setUserSearchQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length < 2) return;
+    debounceRef.current = setTimeout(() => {
+      searchWebFashion(undefined, value.trim());
+    }, 800);
   };
 
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
             <Sparkles size={14} className="text-primary" /> Get the Look
           </h2>
           <p className="text-xs text-muted-foreground/70 font-body mt-1">
-            Real street-style looks from the web for {trip.destination}
+            Editorial fashion inspiration for {trip.destination}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {outfits.length > 0 && (
-            <>
-              <button onClick={() => scroll("left")} className="p-2 rounded-lg hover:bg-secondary transition-colors">
-                <ChevronLeft size={16} className="text-muted-foreground" />
-              </button>
-              <button onClick={() => scroll("right")} className="p-2 rounded-lg hover:bg-secondary transition-colors">
-                <ChevronRight size={16} className="text-muted-foreground" />
-              </button>
-            </>
-          )}
-          <Button variant="champagne-outline" size="sm" onClick={() => searchWebFashion()} disabled={searchingWeb}>
-            <Globe size={14} className={searchingWeb ? "animate-spin" : ""} />
-            {searchingWeb ? "Finding looks..." : outfits.length > 0 ? "Find More" : "Get Looks"}
-          </Button>
-        </div>
+        <Button variant="champagne-outline" size="sm" onClick={() => searchWebFashion()} disabled={searchingWeb}>
+          <Globe size={14} className={searchingWeb ? "animate-spin" : ""} />
+          {searchingWeb ? "Finding looks..." : outfits.length > 0 ? "Find More" : "Get Looks"}
+        </Button>
+      </div>
+
+      {/* Search bar */}
+      <div className="relative">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 pointer-events-none" />
+        <input
+          type="text"
+          value={userSearchQuery}
+          onChange={(e) => handleSearchInput(e.target.value)}
+          placeholder="Refine your style... (e.g. minimal linen, old money, coastal grandmother)"
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
+        />
+        {searchingWeb && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-primary/70 font-body animate-pulse">
+            searching…
+          </span>
+        )}
       </div>
 
       {outfits.length === 0 ? (
@@ -179,7 +175,7 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
           <Sparkles size={40} className="text-primary mx-auto mb-4 opacity-40" />
           <h3 className="font-heading text-xl mb-2">Styled for {trip.destination}</h3>
           <p className="text-muted-foreground font-body text-sm mb-6 max-w-md mx-auto">
-            Real street-style looks, curated for your trip. One tap and we&apos;ll find what&apos;s trending where you&apos;re going.
+            Editorial fashion inspiration from Vogue, Farfetch, and more — curated for your trip.
           </p>
           <Button variant="champagne" onClick={() => searchWebFashion()} disabled={searchingWeb}>
             <Globe size={16} />
@@ -187,110 +183,39 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
           </Button>
           {searchingWeb && (
             <p className="text-xs text-muted-foreground/60 font-body mt-4 animate-pulse">
-              Searching the web for real fashion inspiration…
+              Searching editorial sources for your style…
             </p>
           )}
         </div>
       ) : (
         <>
-          {/* Horizontal Carousel */}
-          <div
-            ref={scrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
-            style={{ scrollSnapType: "x mandatory" }}
-          >
-            {outfits.map((outfit, i) => (
-              <div
+          {/* Masonry Grid */}
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
+            {outfits.map((outfit) => (
+              <MasonryCard
                 key={outfit.id}
-                onClick={() => { setStartIndex(i); setFeedOpen(true); }}
-                className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-champagne transition-all duration-500"
-                style={{ scrollSnapAlign: "start" }}
-              >
-                <div className="group-hover:[&_img]:scale-105 transition-transform duration-700">
-                  <ImageWithFallback
-                    src={outfit.image_url}
-                    alt={outfit.title}
-                    fallbackIcon={Sparkles}
-                    aspectClass="aspect-[3/4]"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-[10px] tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</span>
-                    {outfit.price && (
-                      <span className="text-sm font-body text-primary font-medium">{outfit.price}</span>
-                    )}
-                  </div>
-                  <h3 className="font-heading text-2xl leading-tight text-foreground">{outfit.title}</h3>
-                  {outfit.store && (
-                    <p className="text-[10px] text-muted-foreground font-body mt-0.5">{outfit.store}</p>
-                  )}
-                </div>
-                {outfit.pinned && (
-                  <div className="absolute top-3 right-3">
-                    <Pin size={14} className="text-primary fill-primary" />
-                  </div>
-                )}
-              </div>
+                outfit={outfit}
+                onTogglePin={togglePin}
+                onPinToBoard={pinToBoard}
+                onSaveToOtherBoard={() => setSaveToOtherOutfit(outfit)}
+              />
             ))}
           </div>
 
-          <p className="text-xs text-muted-foreground/50 font-body text-center">
-            Tap a look to explore · Scroll for more
-          </p>
+          {/* Load more */}
+          <div className="pt-2 text-center">
+            <Button
+              variant="champagne-outline"
+              size="sm"
+              onClick={() => seeMoreLikeThis(outfits[outfits.length - 1])}
+              disabled={searchingWeb}
+            >
+              <ArrowDown size={14} className={searchingWeb ? "animate-bounce" : ""} />
+              {searchingWeb ? "Loading more looks..." : "Load More Looks"}
+            </Button>
+          </div>
         </>
       )}
-
-      {/* Instagram-style Vertical Feed Overlay */}
-      <AnimatePresence>
-        {feedOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background overflow-y-auto"
-          >
-            {/* Sticky header */}
-            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-              <h3 className="text-sm tracking-[0.15em] uppercase text-muted-foreground font-body flex items-center gap-2">
-                <Sparkles size={12} className="text-primary" /> Style Feed
-              </h3>
-              <button onClick={() => setFeedOpen(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">
-                <X size={18} className="text-foreground" />
-              </button>
-            </div>
-
-            {/* Feed */}
-            <div className="max-w-lg mx-auto pb-20 pt-4">
-              {outfits.slice(startIndex).concat(outfits.slice(0, startIndex)).map((outfit) => (
-                <FeedCard
-                  key={outfit.id}
-                  outfit={outfit}
-                  onTogglePin={togglePin}
-                  onPinToBoard={pinToBoard}
-                  onSaveToOtherBoard={() => setSaveToOtherOutfit(outfit)}
-                  onSeeMore={seeMoreLikeThis}
-                  loading={searchingWeb}
-                />
-              ))}
-
-              {/* Load more prompt */}
-              <div className="p-8 text-center">
-                <Button
-                  variant="champagne-outline"
-                  size="sm"
-                  onClick={() => seeMoreLikeThis(outfits[outfits.length - 1])}
-                  disabled={searchingWeb}
-                >
-                  <ArrowDown size={14} className={searchingWeb ? "animate-bounce" : ""} />
-                  {searchingWeb ? "Loading more looks..." : "Load More Looks"}
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {saveToOtherOutfit && (
         <SaveToOtherBoardDialog
@@ -311,144 +236,96 @@ const InspirationTab = ({ tripId, trip }: InspirationTabProps) => {
   );
 };
 
-/* ── Full-screen Feed Card (Instagram-style) ── */
+/* ── Masonry Card with hover overlay ── */
 
-const FeedCard = ({
-  outfit, onTogglePin, onPinToBoard, onSaveToOtherBoard, onSeeMore, loading,
+const MasonryCard = ({
+  outfit,
+  onTogglePin,
+  onPinToBoard,
+  onSaveToOtherBoard,
 }: {
   outfit: OutfitSuggestion;
   onTogglePin: (o: OutfitSuggestion) => void;
   onPinToBoard: (o: OutfitSuggestion) => void;
   onSaveToOtherBoard: () => void;
-  onSeeMore: (o: OutfitSuggestion) => void;
-  loading: boolean;
 }) => {
-  const [shopOpen, setShopOpen] = useState<number | null>(null);
-  const [expanded, setExpanded] = useState(false);
-  const items = (outfit.items || []) as OutfitItem[];
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      className="rounded-2xl overflow-hidden bg-card mx-4 mb-5"
-    >
-      {/* Image */}
-      <ImageWithFallback
-        src={outfit.image_url}
+    <div className="break-inside-avoid mb-3 relative group cursor-pointer rounded-lg overflow-hidden bg-muted min-h-[200px]">
+      {/* Shimmer placeholder — hidden once image loads */}
+      <div className="absolute inset-0 animate-pulse bg-muted" />
+      {/* Image — natural dimensions for Pinterest-style height variation */}
+      <img
+        src={outfit.image_url ?? undefined}
         alt={outfit.title}
-        fallbackIcon={Sparkles}
-        aspectClass="w-full aspect-[3/4]"
+        className="w-full block relative"
+        loading="eager"
+        onLoad={(e) => {
+          const placeholder = e.currentTarget.previousSibling as HTMLElement | null;
+          if (placeholder) placeholder.style.display = "none";
+        }}
+        onError={(e) => {
+          const el = e.currentTarget;
+          el.style.display = "none";
+          const placeholder = el.previousSibling as HTMLElement | null;
+          if (placeholder) placeholder.style.display = "none";
+          const fallback = document.createElement("div");
+          fallback.className = "w-full bg-secondary/80 flex flex-col items-center justify-center p-3 text-center";
+          fallback.style.minHeight = "200px";
+          fallback.innerHTML = `<p class="text-foreground text-xs font-semibold leading-snug">${outfit.title}</p>${outfit.store ? `<p class="text-muted-foreground text-[10px] mt-0.5">${outfit.store}</p>` : ""}`;
+          el.parentElement?.insertBefore(fallback, el.nextSibling);
+        }}
       />
 
-      {/* Action bar */}
-      <div className="px-4 pt-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={() => onTogglePin(outfit)} className="p-1.5 hover:scale-110 transition-transform" title={outfit.pinned ? "Unpin" : "Pin"}>
-            <Heart size={22} className={outfit.pinned ? "text-primary fill-primary" : "text-foreground"} />
-          </button>
-          <button onClick={() => onPinToBoard(outfit)} className="p-1.5 hover:scale-110 transition-transform" title="Pin to this trip's board">
-            <Pin size={20} className="text-foreground" />
-          </button>
-          <button onClick={onSaveToOtherBoard} className="p-1.5 hover:scale-110 transition-transform" title="Save to another trip's board">
-            <Copy size={18} className="text-foreground" />
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          {outfit.product_url && (
-            <a
-              href={outfit.product_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-champagne text-primary-foreground text-xs font-body tracking-wide hover:opacity-90 transition-opacity"
-            >
-              <ShoppingBag size={12} /> Shop
-            </a>
+      {/* Hover overlay */}
+      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-3">
+        {/* Top: source badge + heart toggle */}
+        <div className="flex items-start justify-between">
+          {outfit.store && (
+            <span className="text-[10px] tracking-[0.15em] uppercase font-body px-2 py-1 rounded-md bg-black/40 text-[#ca975c]">
+              {outfit.store}
+            </span>
           )}
           <button
-            onClick={() => onSeeMore(outfit)}
-            disabled={loading}
-            className="text-xs text-primary font-body tracking-wide hover:underline disabled:opacity-50"
+            onClick={(e) => { e.stopPropagation(); onTogglePin(outfit); }}
+            className="p-1 ml-auto transition-transform hover:scale-110"
+            title={outfit.pinned ? "Unpin" : "Pin"}
           >
-            {loading ? "Loading..." : "See more"}
+            <Heart size={16} className={outfit.pinned ? "text-[#ca975c] fill-[#ca975c]" : "text-white"} />
           </button>
         </div>
-      </div>
 
-      {/* Caption */}
-      <div className="px-4 pt-2 pb-4">
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <span className="text-[10px] tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</span>
-          {outfit.price && (
-            <span className="text-sm font-body text-primary font-medium">{outfit.price}</span>
-          )}
+        {/* Bottom: title + actions */}
+        <div>
+          <p className="text-white text-xs font-body leading-snug mb-2 line-clamp-2">{outfit.title}</p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); onPinToBoard(outfit); }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-body transition-colors"
+            >
+              <Pin size={11} /> Pin to Board
+            </button>
+            {outfit.product_url && (
+              <a
+                href={outfit.product_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#ca975c]/80 hover:bg-[#ca975c] text-white text-[11px] font-body transition-colors"
+              >
+                <ShoppingBag size={11} /> Shop This
+              </a>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); onSaveToOtherBoard(); }}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors ml-auto"
+              title="Save to another trip"
+            >
+              <Copy size={11} />
+            </button>
+          </div>
         </div>
-        <h3 className="font-heading text-2xl leading-tight mb-1">{outfit.title}</h3>
-        {outfit.store && (
-          <p className="text-xs text-muted-foreground font-body mb-1">{outfit.store}</p>
-        )}
-        {outfit.description && (
-          <p className="text-sm text-muted-foreground font-body leading-relaxed">{outfit.description}</p>
-        )}
-
-        {/* Items */}
-        <div className="mt-4 space-y-1.5">
-          {items.slice(0, expanded ? items.length : 3).map((item, i) => {
-            const Icon = categoryIcons[item.category] || Shirt;
-            return (
-              <div key={i} className="flex items-center justify-between bg-secondary/40 rounded-lg px-3 py-2.5 group">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon size={14} className="text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-body truncate">{item.name}</p>
-                    <p className="text-xs text-muted-foreground font-body">
-                      {item.brand_suggestion && <span className="text-primary/80">{item.brand_suggestion}</span>}
-                      {item.brand_suggestion && item.color && <span> · </span>}
-                      {item.color}
-                    </p>
-                  </div>
-                </div>
-                <div className="relative shrink-0 ml-2">
-                  {outfit.product_url ? (
-                    <a href={outfit.product_url} target="_blank" rel="noopener noreferrer"
-                      className="p-2 rounded-lg hover:bg-secondary transition-colors inline-flex">
-                      <ShoppingBag size={14} className="text-primary" />
-                    </a>
-                  ) : (
-                    <>
-                      <button onClick={() => setShopOpen(shopOpen === i ? null : i)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
-                        <ShoppingBag size={14} className="text-primary" />
-                      </button>
-                      {shopOpen === i && (
-                        <div className="absolute right-0 top-full mt-1 z-50">
-                          <div className="bg-card border border-border rounded-xl shadow-xl p-1.5 min-w-[160px]">
-                            <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-body px-3 py-1.5">Shop this item</p>
-                            {retailers.map((r) => (
-                              <a key={r.name} href={r.url(item.search_terms)} target="_blank" rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-3 py-2 text-xs font-body hover:bg-secondary rounded-lg transition-colors">
-                                <ExternalLink size={10} className="text-muted-foreground" />
-                                {r.name}
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {items.length > 3 && (
-          <button onClick={() => setExpanded(!expanded)} className="text-xs text-primary/70 font-body mt-2 hover:text-primary transition-colors">
-            {expanded ? "Show less" : `+${items.length - 3} more items`}
-          </button>
-        )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

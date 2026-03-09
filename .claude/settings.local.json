@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for f in fetch-weather google-places fetch-destination-image create-checkout create-portal stripe-webhook generate-outfits suggest-packing fetch-trends suggest-activities search-fashion)",
+      "Bash(do echo \"=== $f ===\")",
+      "Read(//c/Users/Kelwyn/OneDrive/MoodMiles/supabase/functions/$f/**)",
+      "Bash(done)",
+      "Bash(npx supabase:*)",
+      "Bash(npx tsx:*)",
+      "WebFetch(domain:serper.dev)"
+    ]
+  }
+}

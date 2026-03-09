@@ -5,21 +5,21 @@ import { parseBody, searchFashionSchema, type SearchFashionBody, ValidationError
 import { extractUserIdFromJwt } from "../_shared/auth.ts";
 import { checkRateLimit, recordUsage, RateLimitError } from "../_shared/rate-limit.ts";
 
-interface SerperShoppingResult {
+interface SerperImageResult {
   title?: string;
-  price?: string;
-  extractedPrice?: number;
-  image?: string;
-  link?: string;
+  imageUrl?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  thumbnailUrl?: string;
+  thumbnailWidth?: number;
+  thumbnailHeight?: number;
   source?: string;
-  productId?: string;
-  rating?: number;
-  reviews?: number;
+  link?: string;
+  googleUrl?: string;
 }
 
-interface SerperShoppingResponse {
-  shopping_results?: SerperShoppingResult[];
-  searchMetadata?: { totalResults?: string };
+interface SerperImageResponse {
+  images?: SerperImageResult[];
 }
 
 serve(async (req) => {
@@ -44,7 +44,7 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { trip_id, destination, country, trip_type, occasion, start_date, end_date } = parseBody<SearchFashionBody>(searchFashionSchema, body);
+    const { trip_id, destination, country, trip_type, occasion, start_date, end_date, user_search_query } = parseBody<SearchFashionBody>(searchFashionSchema, body);
 
     const userId = extractUserIdFromJwt(req);
     if (userId) {
@@ -56,20 +56,27 @@ serve(async (req) => {
     const month = dateStr ? parseInt(dateStr.slice(5, 7), 10) : new Date().getMonth() + 1;
     const season = month >= 3 && month <= 5 ? "spring" : month >= 6 && month <= 8 ? "summer" : month >= 9 && month <= 11 ? "fall" : "winter";
 
-    // Build 2-3 targeted Google Shopping queries (fast, marketplace-style)
+    const siteScope = "site:vogue.com OR site:harpersbazaar.com OR site:net-a-porter.com OR site:farfetch.com OR site:ssense.com OR site:mytheresa.com OR site:matchesfashion.com OR site:editorialist.com";
+    const userPrefix = user_search_query ? `${user_search_query} ` : "";
+
     const queries = [
-      `chic ${season} travel outfit ${destination} ${country || ""}`.trim(),
-      `elegant ${trip_type || "travel"} fashion ${season} 2025`.trim(),
-      occasion ? `${occasion} outfit ${season}` : `street style ${destination} ${season}`.trim(),
+      `${userPrefix}${season} ${destination} editorial fashion campaign ${siteScope}`,
+      `${userPrefix}${trip_type || "travel"} outfit ${season} 2024 luxury editorial ${siteScope}`,
+      `${userPrefix}${destination} street style ${season} high fashion ${siteScope}`,
+      occasion
+        ? `${userPrefix}${occasion} outfit ${season} luxury editorial ${siteScope}`
+        : `${userPrefix}resort wear ${season} editorial ${siteScope}`,
+      `${userPrefix}${destination} ${country || ""} fashion week street style ${season} ${siteScope}`.trim(),
+      `${userPrefix}elevated ${season} travel wardrobe ${destination} editorial ${siteScope}`,
     ].filter((q) => q.length > 10);
 
-    const allProducts: SerperShoppingResult[] = [];
+    const allResults: SerperImageResult[] = [];
     const seenLinks = new Set<string>();
 
-    // Run all Serper queries in parallel (faster than sequential)
-    const searchPromises = queries.slice(0, 3).map(async (query) => {
+    // Run all 6 queries in parallel
+    const searchPromises = queries.map(async (query) => {
       try {
-        const res = await fetch("https://api.serper.dev/shopping", {
+        const res = await fetch("https://google.serper.dev/images", {
           method: "POST",
           headers: {
             "X-API-KEY": SERPER_API_KEY,
@@ -88,10 +95,10 @@ serve(async (req) => {
           return [];
         }
 
-        const data = (await res.json()) as SerperShoppingResponse;
-        return data.shopping_results || [];
+        const data = (await res.json()) as SerperImageResponse;
+        return data.images || [];
       } catch (e) {
-        console.error("Serper search error for query:", query, e);
+        console.error("Serper image search error for query:", query, e);
         return [];
       }
     });
@@ -99,59 +106,56 @@ serve(async (req) => {
     const resultsArrays = await Promise.all(searchPromises);
     for (const results of resultsArrays) {
       for (const r of results) {
-        const link = r.link || r.productId;
-        if (link && !seenLinks.has(link) && r.title) {
-          seenLinks.add(link);
-          allProducts.push(r);
+        const linkKey = r.link || r.imageUrl;
+        if (linkKey && !seenLinks.has(linkKey) && r.title) {
+          seenLinks.add(linkKey);
+          allResults.push(r);
         }
       }
     }
 
-    if (allProducts.length === 0) {
+    if (allResults.length === 0) {
       return new Response(JSON.stringify({ success: true, count: 0, message: "No results found" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Map to outfit_suggestions schema (marketplace product cards)
-    const rows = allProducts.slice(0, 20).map((p) => {
-      const base: Record<string, unknown> = {
-        trip_id,
-        title: p.title || "Fashion find",
-        occasion: occasion || `${season} travel`,
-        description: p.source ? `Shop at ${p.source}` : null,
-        items: [{
-          category: "Other",
-          name: p.title || "",
-          color: "",
-          search_terms: p.title || "",
-        }],
-        image_url: p.image || null,
-        pinned: false,
-      };
-      // Marketplace columns (require migration 20260226100000)
-      if (p.price) base.price = p.price;
-      if (p.source) base.store = p.source;
-      if (p.link) base.product_url = p.link;
-      return base;
-    });
+    const rows = allResults.slice(0, 20).map((r) => ({
+      trip_id,
+      title: r.title || "Style inspiration",
+      occasion: occasion || `${season} ${trip_type || "travel"}`,
+      description: r.source ? `From ${r.source}` : null,
+      items: [{
+        category: "Other",
+        name: r.title || "",
+        color: "",
+        search_terms: r.title || "",
+      }],
+      image_url: r.imageUrl || r.thumbnailUrl || null,
+      product_url: r.link || null,
+      store: r.source || null,
+      pinned: false,
+    }));
 
+    let insertErrorMessage: string | null = null;
     const { error: insertError } = await supabase.from("outfit_suggestions").insert(rows);
     if (insertError) {
+      insertErrorMessage = insertError.message;
       // If new columns don't exist, retry with base columns only
       const isColumnError = insertError.message?.includes("column") || insertError.code === "42703";
       if (isColumnError) {
-        const fallbackRows = allProducts.slice(0, 20).map((p) => ({
+        const fallbackRows = allResults.slice(0, 20).map((r) => ({
           trip_id,
-          title: p.title || "Fashion find",
-          occasion: occasion || `${season} travel`,
-          description: p.source ? `Shop at ${p.source}` : null,
-          items: [{ category: "Other", name: p.title || "", color: "", search_terms: p.title || "" }],
-          image_url: p.image || null,
+          title: r.title || "Style inspiration",
+          occasion: occasion || `${season} ${trip_type || "travel"}`,
+          description: r.source ? `From ${r.source}` : null,
+          items: [{ category: "Other", name: r.title || "", color: "", search_terms: r.title || "" }],
+          image_url: r.imageUrl || r.thumbnailUrl || null,
           pinned: false,
         }));
         const { error: fallbackError } = await supabase.from("outfit_suggestions").insert(fallbackRows);
         if (fallbackError) throw fallbackError;
+        insertErrorMessage = `column error → fallback used: ${insertError.message}`;
       } else {
         throw insertError;
       }
@@ -161,7 +165,14 @@ serve(async (req) => {
       await recordUsage(userId, "search-fashion", trip_id, 0, rows.length * 0.0003);
     }
 
-    return new Response(JSON.stringify({ success: true, count: rows.length }), {
+    return new Response(JSON.stringify({
+      success: true,
+      count: allResults.length,
+      serper_results: allResults.length,
+      insert_attempted: rows.length,
+      sample_row: rows[0] || null,
+      insert_error: insertErrorMessage,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
