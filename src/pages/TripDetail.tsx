@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Trip } from "@/types/database";
-import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun, Camera, Receipt } from "lucide-react";
+import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun, Camera, Receipt, ImageIcon } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { getSeverity } from "@/components/trip/BriefingTab";
 import TripEditDialog from "@/components/trip/TripEditDialog";
@@ -27,6 +27,7 @@ const PlaylistTab = lazy(() => import("@/components/trip/PlaylistTab"));
 const TodayTab = lazy(() => import("@/components/trip/TodayTab"));
 const PhotosTab = lazy(() => import("@/components/trip/PhotosTab"));
 const ExpensesTab = lazy(() => import("@/components/trip/ExpensesTab"));
+const MemoriesTab = lazy(() => import("@/components/trip/MemoriesTab"));
 
 const TabSkeleton = () => (
   <div className="space-y-4 p-4">
@@ -38,7 +39,8 @@ const TabSkeleton = () => (
 
 const PLANNING_TABS = ["Overview", "Briefing", "Events", "Photos", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
 const ACTIVE_TABS = ["Today", "Photos", "Expenses", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
-type Tab = "Today" | "Photos" | "Expenses" | "Overview" | "Briefing" | "Events" | "Chat" | "Style" | "Board" | "Playlist" | "Pack";
+const COMPLETED_TABS = ["Memories", "Photos", "Expenses", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
+type Tab = "Today" | "Photos" | "Expenses" | "Memories" | "Overview" | "Briefing" | "Events" | "Chat" | "Style" | "Board" | "Playlist" | "Pack";
 
 const TripDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -109,13 +111,13 @@ const TripDetail = () => {
     if (!trip) return;
     supabase.rpc("update_trip_statuses").catch(() => {});
     if (!initialTabSet) {
-      setActiveTab(trip.status === "active" ? "Today" : "Events");
+      setActiveTab(trip.status === "completed" ? "Memories" : trip.status === "active" ? "Today" : "Events");
       setInitialTabSet(true);
     }
   }, [trip?.id, trip?.status, initialTabSet]);
 
   const tabs = useMemo<readonly Tab[]>(
-    () => (trip?.status === "active" ? ACTIVE_TABS : PLANNING_TABS),
+    () => trip?.status === "completed" ? COMPLETED_TABS : trip?.status === "active" ? ACTIVE_TABS : PLANNING_TABS,
     [trip?.status],
   );
 
@@ -525,6 +527,7 @@ const TripDetail = () => {
                 className={`px-4 md:px-5 py-3 text-sm font-body tracking-wide transition-all duration-300 relative whitespace-nowrap flex items-center gap-1.5 ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {tab === "Today" && <Sun size={12} className={activeTab === "Today" ? "text-primary" : "text-muted-foreground"} />}
+                {tab === "Memories" && <ImageIcon size={12} className={activeTab === "Memories" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Photos" && <Camera size={12} className={activeTab === "Photos" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Expenses" && <Receipt size={12} className={activeTab === "Expenses" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Briefing" && <Shield size={12} className={activeTab === "Briefing" ? "text-primary" : "text-muted-foreground"} />}
@@ -564,6 +567,9 @@ const TripDetail = () => {
           <Suspense fallback={<TabSkeleton />}>
             {activeTab === "Today" && (
               <TodayTab tripId={trip.id} trip={trip as Trip} />
+            )}
+            {activeTab === "Memories" && (
+              <MemoriesTab tripId={trip.id} trip={trip as Trip} />
             )}
             {activeTab === "Photos" && (
               <PhotosTab
