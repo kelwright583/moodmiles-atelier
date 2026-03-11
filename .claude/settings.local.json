@@ -7,7 +7,19 @@
       "Bash(done)",
       "Bash(npx supabase:*)",
       "Bash(npx tsx:*)",
-      "WebFetch(domain:serper.dev)"
+      "WebFetch(domain:serper.dev)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_54fe09583adfc6e4abfcf76c334da81d59d990bf npx supabase:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(npx tsc:*)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_f95d9aff6b3572fdb9142c2cd57f10f2756dfb46 npx supabase:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(where:*)",
+      "Read(//c/Program Files/PostgreSQL/**)",
+      "Read(//c/Program Files/**)",
+      "Bash(npm install:*)",
+      "Bash(\"C:/Users/Kelwyn/OneDrive/MoodMiles/supabase/migrations/20260311120000_notifications_insert_policy.sql\":*)"
     ]
   }
 }

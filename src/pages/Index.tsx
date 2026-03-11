@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/layout/Logo";
 import { ArrowRight, Compass, CloudSun, Shirt } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
@@ -31,8 +32,34 @@ const features = [
 ];
 
 const Index = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState<TrendingDestination | null>(null);
+
+  // Redirect logged-in users: incomplete onboarding → /onboarding, complete → /dashboard
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ["onboarding-check", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("user_id", user!.id)
+        .single();
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  useEffect(() => {
+    if (!user || profileLoading) return;
+    if (profile?.onboarding_completed === false) {
+      navigate("/onboarding", { replace: true });
+    } else if (profile?.onboarding_completed === true) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, profile, profileLoading, navigate]);
 
   const { data: trending } = useQuery<TrendingDestination[]>({
     queryKey: ["trending-landing"],

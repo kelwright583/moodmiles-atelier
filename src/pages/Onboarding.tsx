@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -41,8 +41,8 @@ const Onboarding = () => {
   const [celebrated, setCelebrated] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Redirect if already onboarded
-  const { data: profile } = useQuery({
+  // Redirect if already onboarded — must use useEffect, never call navigate() outside hooks
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
       const { data } = await supabase.from("profiles").select("onboarding_completed, name").eq("user_id", user!.id).single();
@@ -51,9 +51,18 @@ const Onboarding = () => {
     enabled: !!user,
   });
 
-  if (profile?.onboarding_completed) {
-    navigate("/dashboard", { replace: true });
-    return null;
+  useEffect(() => {
+    if (!profileLoading && profile?.onboarding_completed) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [profileLoading, profile, navigate]);
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-gradient-champagne animate-pulse" />
+      </div>
+    );
   }
 
   // ── Handle availability check ──────────────────────────────

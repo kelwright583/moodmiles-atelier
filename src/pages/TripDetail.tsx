@@ -264,6 +264,21 @@ const TripDetail = () => {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" });
 
+  // Fetch outfit image URLs for trip card — up to 3 pinned outfit suggestions
+  const { data: outfitImages = [] } = useQuery<string[]>({
+    queryKey: ["outfit-images-card", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("outfit_suggestions")
+        .select("image_url")
+        .eq("trip_id", id!)
+        .not("image_url", "is", null)
+        .limit(3);
+      return (data || []).map((r: { image_url: string }) => r.image_url).filter(Boolean);
+    },
+    enabled: !!id,
+  });
+
   const toggleVisibility = async (makePublic: boolean) => {
     if (!trip) return;
     setTogglingVisibility(true);
@@ -342,7 +357,7 @@ const TripDetail = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hidden trip card for download */}
+      {/* Hidden trip card for download — 540×960 (9:16 Instagram Stories) */}
       <div
         ref={tripCardRef}
         style={{
@@ -351,114 +366,62 @@ const TripDetail = () => {
           top: 0,
           width: "540px",
           height: "960px",
-          backgroundColor: "#1A1917",
+          backgroundColor: "#151311",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
         }}
       >
-        {trip.image_url && (
-          <img
-            src={trip.image_url}
-            alt=""
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: 0.3,
-            }}
-          />
-        )}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(0,0,0,0.4)",
-          }}
-        />
-        <div style={{ position: "relative", textAlign: "center", padding: "0 48px" }}>
-          <p
-            style={{
-              color: "#ca975c",
-              fontSize: "11px",
-              letterSpacing: "0.25em",
-              textTransform: "uppercase",
-              fontFamily: "sans-serif",
-              marginBottom: "32px",
-            }}
-          >
+        {/* Top 40% — hero image */}
+        <div style={{ position: "relative", width: "100%", height: "384px", flexShrink: 0 }}>
+          {trip.image_url && (
+            <img
+              src={trip.image_url}
+              alt=""
+              crossOrigin="anonymous"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          )}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(21,19,17,0.1) 0%, rgba(21,19,17,0.7) 100%)" }} />
+          <p style={{ position: "absolute", top: "24px", left: "0", right: "0", textAlign: "center", color: "#ca975c", fontSize: "10px", letterSpacing: "0.3em", textTransform: "uppercase", fontFamily: "sans-serif" }}>
             CONCIERGE STYLED
           </p>
-          <h1
-            style={{
-              color: "#ffffff",
-              fontSize: "64px",
-              fontFamily: "serif",
-              lineHeight: 1.1,
-              marginBottom: "20px",
-            }}
-          >
+        </div>
+
+        {/* Middle 45% — destination name, dates, outfit images */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 40px", backgroundColor: "#151311" }}>
+          <h1 style={{ color: "#f9f6f3", fontSize: "52px", fontFamily: "serif", lineHeight: 1.1, textAlign: "center", marginBottom: "12px" }}>
             {trip.destination}
           </h1>
-          <p
-            style={{
-              color: "#ca975c",
-              fontSize: "16px",
-              fontFamily: "sans-serif",
-              marginBottom: "20px",
-            }}
-          >
+          <p style={{ color: "#ca975c", fontSize: "14px", fontFamily: "sans-serif", letterSpacing: "0.1em", marginBottom: "24px" }}>
             {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
           </p>
           {trip.trip_type && (
-            <span
-              style={{
-                display: "inline-block",
-                color: "#ca975c",
-                fontSize: "11px",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                fontFamily: "sans-serif",
-                border: "1px solid rgba(202,151,92,0.4)",
-                padding: "6px 18px",
-                borderRadius: "999px",
-              }}
-            >
+            <span style={{ display: "inline-block", color: "#ca975c", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "sans-serif", border: "1px solid rgba(202,151,92,0.4)", padding: "5px 16px", borderRadius: "999px", marginBottom: "28px" }}>
               {trip.trip_type}
             </span>
           )}
+          {/* Outfit images row — up to 3 */}
+          {outfitImages.length > 0 && (
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              {outfitImages.slice(0, 3).map((url, i) => (
+                <div key={i} style={{ width: "120px", height: "150px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(202,151,92,0.3)" }}>
+                  <img src={url} alt="" crossOrigin="anonymous" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <p
-          style={{
-            position: "absolute",
-            bottom: "40px",
-            left: 0,
-            right: 0,
-            textAlign: "center",
-            color: "rgba(255,255,255,0.4)",
-            fontSize: "11px",
-            letterSpacing: "0.1em",
-            fontFamily: "sans-serif",
-          }}
-        >
-          Arrive Impeccably Everywhere
-        </p>
-        <p
-          style={{
-            position: "absolute",
-            bottom: "20px",
-            right: "24px",
-            color: "rgba(255,255,255,0.25)",
-            fontSize: "10px",
-            fontFamily: "sans-serif",
-          }}
-        >
-          concierge-styled.com
-        </p>
+
+        {/* Bottom 15% — tagline + URL */}
+        <div style={{ height: "144px", backgroundColor: "#151311", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderTop: "1px solid rgba(202,151,92,0.15)" }}>
+          <p style={{ color: "rgba(249,246,243,0.6)", fontSize: "11px", letterSpacing: "0.15em", fontFamily: "sans-serif", marginBottom: "6px" }}>
+            Arrive Impeccably Everywhere
+          </p>
+          <p style={{ color: "rgba(202,151,92,0.5)", fontSize: "10px", fontFamily: "sans-serif", letterSpacing: "0.05em" }}>
+            concierge-styled.com
+          </p>
+        </div>
       </div>
 
       {/* Hero */}
