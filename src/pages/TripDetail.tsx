@@ -109,7 +109,7 @@ const TripDetail = () => {
   // Update trip statuses and set initial tab based on trip status
   useEffect(() => {
     if (!trip) return;
-    supabase.rpc("update_trip_statuses").catch(() => {});
+    void supabase.rpc("update_trip_statuses");
     if (!initialTabSet) {
       setActiveTab(trip.status === "completed" ? "Memories" : trip.status === "active" ? "Today" : "Events");
       setInitialTabSet(true);
