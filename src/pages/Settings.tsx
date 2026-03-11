@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Camera, User, Mail, LogOut, ChevronRight, Crown, Sparkles, Check, X, Loader2, AtSign, Music } from "lucide-react";
+import { Camera, User, Mail, LogOut, ChevronRight, Crown, Sparkles, Check, X, Loader2, AtSign, Music, Copy, Inbox, Plane, Building2, Utensils, MapPin, Bus, HelpCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/layout/Navbar";
@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { Profile } from "@/types/database";
+import { Profile, ImportedBooking } from "@/types/database";
 import { Progress } from "@/components/ui/progress";
 
 const styleProfileOptions = ["Minimal", "Structured", "Tailored", "Resort", "Street", "Monochrome", "Feminine", "Masculine", "Avant-garde", "Classic"];
@@ -54,6 +54,37 @@ const Settings = () => {
     },
     enabled: !!user,
   });
+
+  // Import booking queries
+  const { data: importBookings = [], refetch: refetchBookings } = useQuery<ImportedBooking[]>({
+    queryKey: ["imported-bookings", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("imported_bookings")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("received_at", { ascending: false })
+        .limit(10);
+      return (data || []) as ImportedBooking[];
+    },
+    enabled: !!user,
+  });
+
+  const { data: userTrips = [] } = useQuery({
+    queryKey: ["user-trips-import", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trips")
+        .select("id, destination, status")
+        .eq("user_id", user!.id)
+        .in("status", ["upcoming", "active"])
+        .order("start_date", { ascending: true });
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const [importTokenCopied, setImportTokenCopied] = useState(false);
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -266,6 +297,65 @@ const Settings = () => {
   };
 
   const handleSignOut = async () => { await signOut(); navigate("/"); };
+
+  // ── Import booking handlers ───────────────────────────────────
+  const importAddress = profile ? `import+${profile.import_token || ""}@concierge-styled.com` : "";
+
+  const copyImportAddress = () => {
+    navigator.clipboard.writeText(importAddress);
+    setImportTokenCopied(true);
+    setTimeout(() => setImportTokenCopied(false), 2000);
+    toast({ title: "Import address copied" });
+  };
+
+  const assignBookingToTrip = async (bookingId: string, tripId: string) => {
+    const booking = importBookings.find((b) => b.id === bookingId);
+    if (!booking) return;
+
+    const parsed = booking.parsed_data || {};
+    const eventPayload: Record<string, any> = {
+      trip_id: tripId,
+      event_name: parsed.event_name || "Imported booking",
+      event_type: booking.parsed_type === "flight" ? "flight" : booking.parsed_type === "hotel" ? "accommodation" : booking.parsed_type === "restaurant" ? "dining" : "activity",
+      event_date: parsed.event_date || null,
+      event_time: parsed.event_time || null,
+      location: parsed.location || null,
+      venue_name: parsed.venue_name || null,
+      booking_reference: parsed.booking_reference || null,
+      booking_status: "confirmed",
+      notes: parsed.notes || null,
+    };
+
+    if (booking.parsed_type === "flight" && parsed.flight_number) {
+      eventPayload.flight_number = parsed.flight_number;
+    }
+
+    const { data: newEvent } = await supabase.from("trip_events").insert(eventPayload).select("id").single();
+
+    await supabase.from("imported_bookings").update({
+      trip_id: tripId,
+      event_id: newEvent?.id || null,
+      status: "assigned",
+    }).eq("id", bookingId);
+
+    refetchBookings();
+    toast({ title: "Booking assigned to trip" });
+  };
+
+  const ignoreBooking = async (bookingId: string) => {
+    await supabase.from("imported_bookings").update({ status: "ignored" }).eq("id", bookingId);
+    refetchBookings();
+    toast({ title: "Booking ignored" });
+  };
+
+  const BOOKING_ICONS: Record<string, typeof Plane> = {
+    flight: Plane,
+    hotel: Building2,
+    restaurant: Utensils,
+    activity: MapPin,
+    transfer: Bus,
+    other: HelpCircle,
+  };
 
   const handleManageSubscription = async () => {
     if (!user) return;
@@ -632,6 +722,79 @@ const Settings = () => {
                   {!import.meta.env.VITE_SPOTIFY_CLIENT_ID && (
                     <p className="text-[10px] text-muted-foreground/60 font-body mt-1">VITE_SPOTIFY_CLIENT_ID not configured</p>
                   )}
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* ── Booking Email Import ── */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="space-y-4">
+            <div className="glass-card rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Inbox size={14} className="text-primary" />
+                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body">Booking Import</label>
+              </div>
+              <p className="text-xs text-muted-foreground font-body mb-4">
+                Forward booking confirmations to your personal import address. We'll parse them automatically and add them to your itinerary.
+              </p>
+
+              {/* Import address */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex-1 bg-secondary rounded-lg px-4 h-11 flex items-center">
+                  <span className="text-sm font-body text-foreground truncate">{importAddress || "Loading..."}</span>
+                </div>
+                <Button variant="champagne-outline" size="sm" onClick={copyImportAddress} disabled={!importAddress}>
+                  {importTokenCopied ? <Check size={14} /> : <Copy size={14} />}
+                </Button>
+              </div>
+
+              {/* Recent imports */}
+              {importBookings.length > 0 && (
+                <div>
+                  <h4 className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-2">Recent Imports</h4>
+                  <div className="space-y-2">
+                    {importBookings.map((booking) => {
+                      const Icon = BOOKING_ICONS[booking.parsed_type || "other"] || HelpCircle;
+                      const parsed = booking.parsed_data || {};
+                      return (
+                        <div key={booking.id} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Icon size={14} className="text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-body text-foreground truncate">{parsed.event_name || "Booking"}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] text-muted-foreground font-body capitalize">{booking.parsed_type || "other"}</span>
+                              {parsed.event_date && <span className="text-[10px] text-muted-foreground font-body">{parsed.event_date}</span>}
+                              <span className={`text-[10px] font-body px-1.5 py-0.5 rounded-full ${
+                                booking.status === "assigned" ? "bg-emerald-500/20 text-emerald-400"
+                                : booking.status === "ignored" ? "bg-muted-foreground/20 text-muted-foreground"
+                                : "bg-primary/20 text-primary"
+                              }`}>{booking.status}</span>
+                            </div>
+
+                            {booking.status === "pending" && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <select
+                                  onChange={(e) => { if (e.target.value) assignBookingToTrip(booking.id, e.target.value); }}
+                                  defaultValue=""
+                                  className="flex-1 bg-secondary border border-border rounded-lg px-3 h-8 text-xs font-body text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
+                                >
+                                  <option value="" disabled>Assign to trip...</option>
+                                  {userTrips.map((t: any) => (
+                                    <option key={t.id} value={t.id}>{t.destination}</option>
+                                  ))}
+                                </select>
+                                <button onClick={() => ignoreBooking(booking.id)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors" title="Ignore">
+                                  <Trash2 size={12} className="text-muted-foreground" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

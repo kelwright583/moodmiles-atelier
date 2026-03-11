@@ -19,6 +19,7 @@ export interface Profile {
   onboarding_completed: boolean;
   handle_set: boolean;
   profile_completion_score: number;
+  import_token: string | null;
 }
 
 export interface Trip {
@@ -277,4 +278,16 @@ export interface TripExpense {
   notes: string | null;
   expense_date: string;
   created_at: string;
+}
+
+export interface ImportedBooking {
+  id: string;
+  user_id: string;
+  raw_email: string | null;
+  parsed_type: "flight" | "hotel" | "restaurant" | "activity" | "transfer" | "other" | null;
+  parsed_data: Record<string, any> | null;
+  trip_id: string | null;
+  event_id: string | null;
+  status: "pending" | "assigned" | "ignored";
+  received_at: string;
 }
