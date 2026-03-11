@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Trip } from "@/types/database";
-import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun } from "lucide-react";
+import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun, Camera } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { getSeverity } from "@/components/trip/BriefingTab";
 import TripEditDialog from "@/components/trip/TripEditDialog";
@@ -25,6 +25,7 @@ const ChatTab = lazy(() => import("@/components/trip/ChatTab"));
 const StyleTab = lazy(() => import("@/components/trip/StyleTab"));
 const PlaylistTab = lazy(() => import("@/components/trip/PlaylistTab"));
 const TodayTab = lazy(() => import("@/components/trip/TodayTab"));
+const PhotosTab = lazy(() => import("@/components/trip/PhotosTab"));
 
 const TabSkeleton = () => (
   <div className="space-y-4 p-4">
@@ -34,9 +35,9 @@ const TabSkeleton = () => (
   </div>
 );
 
-const PLANNING_TABS = ["Overview", "Briefing", "Events", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
-const ACTIVE_TABS = ["Today", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
-type Tab = "Today" | "Overview" | "Briefing" | "Events" | "Chat" | "Style" | "Board" | "Playlist" | "Pack";
+const PLANNING_TABS = ["Overview", "Briefing", "Events", "Photos", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
+const ACTIVE_TABS = ["Today", "Photos", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
+type Tab = "Today" | "Photos" | "Overview" | "Briefing" | "Events" | "Chat" | "Style" | "Board" | "Playlist" | "Pack";
 
 const TripDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -523,6 +524,7 @@ const TripDetail = () => {
                 className={`px-4 md:px-5 py-3 text-sm font-body tracking-wide transition-all duration-300 relative whitespace-nowrap flex items-center gap-1.5 ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {tab === "Today" && <Sun size={12} className={activeTab === "Today" ? "text-primary" : "text-muted-foreground"} />}
+                {tab === "Photos" && <Camera size={12} className={activeTab === "Photos" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Briefing" && <Shield size={12} className={activeTab === "Briefing" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Events" && <CalendarDays size={12} className={activeTab === "Events" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Chat" && <MessageCircle size={12} className={activeTab === "Chat" ? "text-primary" : "text-muted-foreground"} />}
@@ -560,6 +562,12 @@ const TripDetail = () => {
           <Suspense fallback={<TabSkeleton />}>
             {activeTab === "Today" && (
               <TodayTab tripId={trip.id} trip={trip as Trip} />
+            )}
+            {activeTab === "Photos" && (
+              <PhotosTab
+                tripId={trip.id}
+                trip={{ destination: trip.destination, user_id: trip.user_id }}
+              />
             )}
             {activeTab === "Overview" && (
               <OverviewTab

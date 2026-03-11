@@ -251,3 +251,15 @@ export interface TripMessage {
   edited_at: string | null;
   created_at: string;
 }
+
+export interface TripPhoto {
+  id: string;
+  trip_id: string;
+  uploaded_by: string;
+  storage_path: string;
+  caption: string | null;
+  width: number | null;
+  height: number | null;
+  taken_at: string | null;
+  created_at: string;
+}
