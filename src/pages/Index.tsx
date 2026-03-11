@@ -247,7 +247,7 @@ const Index = () => {
             I travel <span className="text-gradient-champagne italic">differently</span>
           </h2>
           <p className="text-muted-foreground mb-10 font-body leading-relaxed">
-            Join Concierge Global. Intelligent, beautiful, private.
+            Join Concierge Styled. Intelligent, beautiful, private.
           </p>
           <Link to="/auth" className="btn-hero-cta inline-flex items-center justify-center gap-3 font-body">
             Start Planning
@@ -261,7 +261,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Logo size="sm" className="text-foreground" />
           <p className="text-xs text-muted-foreground font-body">
-            © 2026 Concierge Global. All rights reserved.
+            © 2026 Concierge Styled. All rights reserved.
           </p>
         </div>
       </footer>

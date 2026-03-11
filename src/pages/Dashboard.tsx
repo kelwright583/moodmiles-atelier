@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, ArrowRight, TrendingUp, MapPin, Sparkles, X, ChevronRight, Crown, Plane } from "lucide-react";
+import { Calendar, ArrowRight, TrendingUp, MapPin, Sparkles, X, ChevronRight, Crown, Plane, Users, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShimmerSkeleton } from "@/components/ui/shimmer-skeleton";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { Trip } from "@/types/database";
+import { Trip, Profile } from "@/types/database";
+import { Progress } from "@/components/ui/progress";
 
 interface TrendingItem {
   city: string;
@@ -37,6 +38,71 @@ function getCountdown(startDate: string, endDate: string, destination: string): 
   return destination;
 }
 
+const BANNER_DISMISS_KEY = "moodmiles_profile_banner_dismissed_until";
+
+function isBannerDismissed(): boolean {
+  const until = localStorage.getItem(BANNER_DISMISS_KEY);
+  if (!until) return false;
+  return Date.now() < parseInt(until, 10);
+}
+
+const ProfileCompletionBanner = ({ profile }: { profile: Profile }) => {
+  const [dismissed, setDismissed] = useState(() => isBannerDismissed());
+
+  if (dismissed || (profile.profile_completion_score ?? 0) >= 100) return null;
+
+  const score = profile.profile_completion_score ?? 0;
+  const missing: { label: string; key: string }[] = [];
+  if (!profile.name) missing.push({ label: "Add name", key: "name" });
+  if (!profile.handle) missing.push({ label: "Choose handle", key: "handle" });
+  if (!profile.avatar_url) missing.push({ label: "Add photo", key: "photo" });
+  if (!profile.home_city) missing.push({ label: "Add home city", key: "city" });
+  if (!profile.style_vibe) missing.push({ label: "Set style", key: "style" });
+
+  const dismiss = () => {
+    localStorage.setItem(BANNER_DISMISS_KEY, String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+    setDismissed(true);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass-card rounded-xl p-4 mb-8 border border-primary/10"
+    >
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div className="min-w-0">
+          <p className="text-xs tracking-[0.15em] uppercase text-primary font-body mb-0.5">Profile</p>
+          <p className="text-sm font-body text-foreground">
+            Complete your profile — {score}% done
+          </p>
+        </div>
+        <button
+          onClick={dismiss}
+          className="p-1 rounded hover:bg-secondary transition-colors flex-shrink-0 mt-0.5"
+          aria-label="Dismiss"
+        >
+          <X size={14} className="text-muted-foreground" />
+        </button>
+      </div>
+
+      <Progress value={score} className="h-1 mb-3" />
+
+      <div className="flex flex-wrap gap-2">
+        {missing.map((item) => (
+          <Link
+            key={item.key}
+            to={`/settings#${item.key}`}
+            className="text-xs font-body px-3 py-1.5 rounded-full bg-secondary hover:bg-secondary/80 text-foreground transition-colors"
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
 const Dashboard = () => {
   const [showTrendingFeed, setShowTrendingFeed] = useState(false);
   const navigate = useNavigate();
@@ -47,11 +113,11 @@ const Dashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("name, avatar_url, subscription_tier, style_profile")
+        .select("name, avatar_url, subscription_tier, style_profile, handle, home_city, style_vibe, profile_completion_score, onboarding_completed")
         .eq("user_id", user!.id)
         .single();
       if (error) throw error;
-      return data;
+      return data as Profile;
     },
     enabled: !!user,
   });
@@ -62,10 +128,50 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from("trips")
         .select("*")
+        .eq("user_id", user!.id)
         .order("start_date", { ascending: true });
       if (error) throw error;
       return data as Trip[];
     },
+    enabled: !!user,
+  });
+
+  const { data: sharedTrips = [] } = useQuery({
+    queryKey: ["shared-trips", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trip_collaborators")
+        .select("role, trip_id")
+        .eq("user_id", user!.id)
+        .eq("status", "accepted");
+      if (!data || data.length === 0) return [];
+
+      const tripIds = data.map((c: any) => c.trip_id);
+      const roleMap = Object.fromEntries(data.map((c: any) => [c.trip_id, c.role]));
+
+      const { data: tripData } = await supabase
+        .from("trips")
+        .select("id, destination, country, start_date, end_date, image_url, trip_type, user_id")
+        .in("id", tripIds)
+        .order("start_date", { ascending: true });
+
+      if (!tripData) return [];
+
+      const hostIds = [...new Set(tripData.map((t: any) => t.user_id))];
+      const { data: hostProfiles } = await supabase
+        .from("profiles")
+        .select("user_id, name, avatar_url")
+        .in("user_id", hostIds);
+
+      const profileMap = Object.fromEntries((hostProfiles || []).map((p: any) => [p.user_id, p]));
+
+      return tripData.map((t: any) => ({
+        ...t,
+        role: roleMap[t.id],
+        hostProfile: profileMap[t.user_id] || null,
+      }));
+    },
+    enabled: !!user,
   });
 
   const { data: trending = [] } = useQuery<TrendingItem[]>({
@@ -92,7 +198,7 @@ const Dashboard = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-10 md:mb-16"
+            className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-10 md:mb-12"
           >
             <div className="flex items-center gap-4">
               {profile?.avatar_url ? (
@@ -115,6 +221,9 @@ const Dashboard = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* Profile completion banner */}
+          {profile && <ProfileCompletionBanner profile={profile} />}
 
           {/* Trips */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-20">
@@ -158,11 +267,23 @@ const Dashboard = () => {
                           />
                         ) : null}
                         <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
-                        <div className="absolute top-4 right-4">
+                        <div className="absolute top-4 right-4 flex items-center gap-2">
+                          {trip.is_public && (
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-2 py-0.5 font-body">
+                              Public
+                            </span>
+                          )}
                           <span className="text-xs tracking-[0.15em] uppercase bg-secondary/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-primary font-body">
                             {trip.trip_type || "Trip"}
                           </span>
                         </div>
+                        <button
+                          onClick={(e) => { e.preventDefault(); navigate(`/trip/${trip.id}`); }}
+                          className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Share trip"
+                        >
+                          <Share2 size={13} className="text-muted-foreground" />
+                        </button>
                       </div>
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-3">
@@ -189,6 +310,74 @@ const Dashboard = () => {
             )}
           </motion.section>
 
+          {/* Shared with me */}
+          {(sharedTrips.length > 0) && (
+            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mb-20">
+              <div className="flex items-center gap-2 mb-8">
+                <Users size={14} className="text-primary" />
+                <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body">Shared with Me</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {sharedTrips.map((trip: any) => (
+                  <Link to={`/trip/${trip.id}`} key={trip.id}>
+                    <div className="group glass-card rounded-2xl overflow-hidden hover:shadow-champagne hover:scale-[1.01] transition-all duration-500 cursor-pointer border border-dashed border-primary/30">
+                      <div className="relative h-48 overflow-hidden bg-secondary">
+                        {trip.image_url ? (
+                          <img
+                            src={trip.image_url}
+                            alt={trip.destination}
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                        ) : null}
+                        <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+                        <div className="absolute top-4 right-4 flex items-center gap-2">
+                          <span className="text-xs tracking-[0.15em] uppercase bg-primary/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-primary font-body border border-primary/30">
+                            Shared
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="text-2xl md:text-3xl font-heading">{trip.destination}</h3>
+                            <p className="text-sm text-muted-foreground font-body">{trip.country}</p>
+                          </div>
+                          <ArrowRight size={18} className="text-primary mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <div className="flex items-center justify-between text-xs font-body">
+                          <span className="text-muted-foreground flex items-center gap-1.5">
+                            <Calendar size={12} className="text-primary" />
+                            {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
+                          </span>
+                          <span className="text-xs tracking-[0.12em] uppercase text-muted-foreground bg-secondary px-2 py-0.5 rounded-full capitalize">
+                            {trip.role}
+                          </span>
+                        </div>
+                        {trip.hostProfile && (
+                          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+                            <div className="w-6 h-6 rounded-full overflow-hidden bg-secondary border border-border flex-shrink-0">
+                              {trip.hostProfile.avatar_url ? (
+                                <img src={trip.hostProfile.avatar_url} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-[10px] font-heading text-muted-foreground">
+                                    {(trip.hostProfile.name || "?")[0].toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-xs font-body text-muted-foreground">Trip by {trip.hostProfile.name || "host"}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
           {/* Trending */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <div className="flex items-center justify-between mb-8">
@@ -213,10 +402,7 @@ const Dashboard = () => {
                   transition={{ delay: 0.5 + i * 0.1 }}
                   className="glass-card rounded-xl overflow-hidden hover:shadow-champagne transition-all duration-500 group/card"
                 >
-                  <button
-                    onClick={() => setShowTrendingFeed(true)}
-                    className="w-full text-left"
-                  >
+                  <button onClick={() => setShowTrendingFeed(true)} className="w-full text-left">
                     <div className="relative h-32 bg-secondary overflow-hidden">
                       {t.image_url && (
                         <img
@@ -231,17 +417,13 @@ const Dashboard = () => {
                         <MapPin size={14} className="text-primary" />
                       </div>
                     </div>
-
                     <div className="p-5">
                       <p className="text-xl font-heading">{t.city}</p>
                     </div>
                   </button>
                   <div className="px-5 pb-5 pt-0">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/create-trip?destination=${encodeURIComponent(t.city)}`);
-                      }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/create-trip?destination=${encodeURIComponent(t.city)}`); }}
                       className="flex items-center gap-2 text-xs text-primary font-body tracking-wide hover:underline opacity-0 group-hover/card:opacity-100 transition-opacity"
                     >
                       <Plane size={12} /> Create trip to {t.city}
@@ -264,7 +446,6 @@ const Dashboard = () => {
             className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm"
           >
             <div className="h-full flex flex-col">
-              {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <TrendingUp size={16} className="text-primary" />
@@ -275,8 +456,6 @@ const Dashboard = () => {
                   <X size={20} className="text-muted-foreground" />
                 </button>
               </div>
-
-              {/* Scrollable feed */}
               <div className="flex-1 overflow-y-auto pt-4 pb-20">
                 <div className="max-w-xl mx-auto space-y-5 px-4">
                   {trending.map((t, i) => (
@@ -289,12 +468,7 @@ const Dashboard = () => {
                     >
                       <div className="relative h-24 bg-secondary overflow-hidden flex items-center justify-center">
                         {t.image_url && (
-                          <img
-                            src={t.image_url}
-                            alt={`${t.city} trend image`}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            loading="lazy"
-                          />
+                          <img src={t.image_url} alt={`${t.city} trend image`} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-card/80 via-card/10 to-transparent" />
                         <MapPin size={28} className="relative text-primary/70" />
@@ -302,10 +476,7 @@ const Dashboard = () => {
                       <div className="p-5">
                         <h3 className="text-2xl font-heading mb-3">{t.city}</h3>
                         <button
-                          onClick={() => {
-                            setShowTrendingFeed(false);
-                            navigate(`/create-trip?destination=${encodeURIComponent(t.city)}`);
-                          }}
+                          onClick={() => { setShowTrendingFeed(false); navigate(`/create-trip?destination=${encodeURIComponent(t.city)}`); }}
                           className="flex items-center gap-2 mt-3 text-xs text-primary font-body tracking-wide hover:underline"
                         >
                           <Plane size={12} /> Create trip to {t.city}

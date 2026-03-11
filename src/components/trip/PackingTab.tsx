@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PackingItem } from "@/types/database";
-import { Briefcase, Plus, Trash2, Check, Minus, Sparkles, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { Briefcase, Plus, Trash2, Check, Minus, Sparkles, Loader2, ChevronDown, ChevronRight, Repeat2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,6 +11,9 @@ import { toast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 
 const packingCategories = ["Tops", "Bottoms", "Dresses", "Outerwear", "Shoes", "Accessories", "Underwear", "Sleepwear", "Swimwear", "Toiletries", "Tech", "Documents", "Flight Comfort", "Layering"];
+
+const FORMAL_DRESS_CODES = ["black tie", "cocktail", "gala", "wedding", "formal", "white tie", "black-tie"];
+const RENTAL_CATEGORIES = ["Dress", "Outerwear", "Bottom"];
 
 interface PackingTabProps {
   tripId: string;
@@ -32,7 +35,10 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
   const [category, setCategory] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [generating, setGenerating] = useState(false);
+  const [generatingLeaveItems, setGeneratingLeaveItems] = useState(false);
+  const [leaveItemsCollapsed, setLeaveItemsCollapsed] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const hasTriedLeaveGeneration = useRef(false);
 
   const { data: items = [] } = useQuery({
     queryKey: ["packing-items", tripId],
@@ -42,6 +48,64 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
       return data as PackingItem[];
     },
   });
+
+  // Detect formal events for rental suggestions
+  const { data: formalEvents = [] } = useQuery({
+    queryKey: ["formal-events", tripId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trip_events")
+        .select("id, name, event_name, dress_code, date")
+        .eq("trip_id", tripId)
+        .not("dress_code", "is", null);
+      if (!data) return [];
+      return data.filter((e: any) => {
+        const code = (e.dress_code || "").toLowerCase();
+        return FORMAL_DRESS_CODES.some((fc) => code.includes(fc));
+      });
+    },
+  });
+
+  // Fetch rental products when formal events exist
+  const { data: rentalProducts = [] } = useQuery({
+    queryKey: ["rental-suggestions", tripId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("affiliate_products")
+        .select("id, name, brand, price, currency, image_url, affiliate_url, category, source")
+        .eq("is_rental", true)
+        .in("category", RENTAL_CATEGORIES)
+        .not("image_url", "is", null)
+        .not("affiliate_url", "is", null)
+        .limit(6);
+      return data || [];
+    },
+    enabled: formalEvents.length > 0,
+  });
+
+  const leaveItems = items.filter((i) => i.category === "leave_behind");
+  const regularItems = items.filter((i) => i.category !== "leave_behind");
+
+  // Auto-generate leave-behind items when list is loaded and empty
+  useEffect(() => {
+    if (!hasTriedLeaveGeneration.current && items.length >= 0 && leaveItems.length === 0) {
+      hasTriedLeaveGeneration.current = true;
+      generateLeaveItems();
+    }
+  }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const generateLeaveItems = async () => {
+    if (generatingLeaveItems) return;
+    setGeneratingLeaveItems(true);
+    try {
+      await supabase.functions.invoke("generate-leave-behind", { body: { trip_id: tripId } });
+      queryClient.invalidateQueries({ queryKey: ["packing-items", tripId] });
+    } catch {
+      // Non-blocking — fail silently
+    } finally {
+      setGeneratingLeaveItems(false);
+    }
+  };
 
   const generateSuggestions = async () => {
     setGenerating(true);
@@ -96,8 +160,8 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
     });
   };
 
-  const packedCount = items.filter((i) => i.is_packed).length;
-  const totalCount = items.length;
+  const packedCount = regularItems.filter((i) => i.is_packed).length;
+  const totalCount = regularItems.length;
   const progress = totalCount > 0 ? (packedCount / totalCount) * 100 : 0;
   const hasCelebratedRef = useRef(false);
 
@@ -113,8 +177,8 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
     if (progress < 100) hasCelebratedRef.current = false;
   }, [progress, totalCount]);
 
-  // Group by category
-  const grouped = items.reduce((acc, item) => {
+  // Group by category (regular items only — leave_behind shown separately)
+  const grouped = regularItems.reduce((acc, item) => {
     const cat = item.category || "Other";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(item);
@@ -199,6 +263,46 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
         </div>
       )}
 
+      {/* Leave These At Home */}
+      {(leaveItems.length > 0 || generatingLeaveItems) && (
+        <div className="mb-8">
+          <button
+            onClick={() => setLeaveItemsCollapsed(!leaveItemsCollapsed)}
+            className="flex items-center gap-2 w-full text-left mb-3"
+          >
+            {leaveItemsCollapsed ? <ChevronRight size={14} className="text-red-400" /> : <ChevronDown size={14} className="text-red-400" />}
+            <h3 className="text-xs tracking-[0.15em] uppercase text-red-400 font-body flex items-center gap-1.5">
+              <XCircle size={12} /> Leave These At Home
+            </h3>
+          </button>
+          {!leaveItemsCollapsed && (
+            generatingLeaveItems && leaveItems.length === 0 ? (
+              <div className="flex items-center gap-2 py-3 text-xs text-muted-foreground font-body animate-pulse">
+                <Loader2 size={12} className="animate-spin" /> Generating recommendations…
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {leaveItems.map((item) => {
+                  let parsed: { item: string; reason: string } = { item: item.name, reason: "" };
+                  try { parsed = JSON.parse(item.name); } catch { /* use raw name */ }
+                  return (
+                    <div key={item.id} className="flex gap-3 pl-3 border-l-2 border-red-500/30 py-1">
+                      <XCircle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-body font-medium text-foreground">{parsed.item}</p>
+                        {parsed.reason && (
+                          <p className="text-xs font-body text-muted-foreground mt-0.5 leading-relaxed">{parsed.reason}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          )}
+        </div>
+      )}
+
       {totalCount === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
           <Sparkles size={32} className="mx-auto text-muted-foreground/30 mb-4" />
@@ -253,7 +357,124 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
               </div>
             );
           })}
+
+          {/* Rental opportunities for formal events */}
+          {formalEvents.length > 0 && (
+            <RentalOpportunitiesCard events={formalEvents} products={rentalProducts} />
+          )}
         </div>
+      )}
+    </motion.div>
+  );
+};
+
+/* ── Rental Opportunities Card ── */
+
+interface RentalProduct {
+  id: string;
+  name: string;
+  brand: string | null;
+  price: number | null;
+  currency: string | null;
+  image_url: string | null;
+  affiliate_url: string | null;
+  category: string | null;
+  source: string;
+}
+
+const RentalOpportunitiesCard = ({
+  events,
+  products,
+}: {
+  events: { id: string; name?: string | null; event_name?: string | null; dress_code?: string | null; date?: string | null }[];
+  products: RentalProduct[];
+}) => {
+  const eventNames = events
+    .map((e) => e.name || e.event_name)
+    .filter(Boolean)
+    .join(", ");
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass-card rounded-2xl p-5 border border-emerald-600/20"
+    >
+      <div className="flex items-start gap-3 mb-4">
+        <div className="w-9 h-9 rounded-xl bg-emerald-600/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Repeat2 size={16} className="text-emerald-500" />
+        </div>
+        <div>
+          <p className="text-xs tracking-[0.15em] uppercase text-emerald-500 font-body mb-0.5">Consider Renting</p>
+          <p className="text-sm font-body text-foreground leading-snug">
+            You have {events.length > 1 ? `${events.length} formal events` : "a formal event"}
+            {eventNames ? ` (${eventNames})` : ""} — renting saves money and luggage space.
+          </p>
+          <p className="text-xs text-muted-foreground font-body mt-1">
+            Rent the look for the night, not the wardrobe for life.
+          </p>
+        </div>
+      </div>
+
+      {products.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {products.slice(0, 3).map((product) => {
+            const currency = product.currency || "USD";
+            const symbol = currency === "GBP" ? "£" : currency === "EUR" ? "€" : "$";
+            const sourceName = product.source === "renttherunway" ? "Rent the Runway"
+              : product.source === "byrotation" ? "By Rotation"
+              : product.source;
+
+            return (
+              <a
+                key={product.id}
+                href={product.affiliate_url ?? "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block rounded-xl overflow-hidden bg-secondary hover:ring-1 hover:ring-emerald-600/40 transition-all"
+              >
+                <div className="aspect-[3/4] bg-muted relative overflow-hidden">
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="eager"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Repeat2 size={24} className="text-muted-foreground/30" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                    <span className="text-[9px] tracking-wide uppercase font-body text-emerald-400">
+                      {sourceName}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-2.5">
+                  <p className="text-xs font-body text-foreground leading-snug line-clamp-2">{product.name}</p>
+                  {product.brand && (
+                    <p className="text-[10px] text-muted-foreground font-body mt-0.5">{product.brand}</p>
+                  )}
+                  <div className="flex items-center justify-between mt-1.5">
+                    {product.price ? (
+                      <span className="text-xs font-body text-emerald-500 font-medium">
+                        {symbol}{product.price.toLocaleString()} / 4 days
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground font-body">See price</span>
+                    )}
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground font-body text-center py-3">
+          Sync rental products to see suggestions here.
+        </p>
       )}
     </motion.div>
   );

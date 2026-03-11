@@ -30,7 +30,12 @@ serve(async (req) => {
 
   try {
     const SERPER_API_KEY = Deno.env.get("SERPER_API_KEY");
-    if (!SERPER_API_KEY) throw new Error("SERPER_API_KEY not configured");
+    if (!SERPER_API_KEY) {
+      return new Response(
+        JSON.stringify({ success: false, count: 0, error: "SERPER_API_KEY not configured — add it in Supabase secrets", images: [] }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -56,21 +61,33 @@ serve(async (req) => {
     const month = dateStr ? parseInt(dateStr.slice(5, 7), 10) : new Date().getMonth() + 1;
     const season = month >= 3 && month <= 5 ? "spring" : month >= 6 && month <= 8 ? "summer" : month >= 9 && month <= 11 ? "fall" : "winter";
 
-    const siteScope = "site:vogue.com OR site:harpersbazaar.com OR site:net-a-porter.com OR site:farfetch.com OR site:ssense.com OR site:mytheresa.com OR site:matchesfashion.com OR site:editorialist.com";
     const userPrefix = user_search_query ? `${user_search_query} ` : "";
 
+    const editorialScope = "site:vogue.com OR site:harpersbazaar.com OR site:editorialist.com OR site:whowhatwear.com";
+    const shoppableScope = "site:net-a-porter.com OR site:farfetch.com OR site:ssense.com OR site:mytheresa.com OR site:matchesfashion.com OR site:asos.com OR site:zara.com OR site:hm.com";
+
     const queries = [
-      `${userPrefix}${season} ${destination} editorial fashion campaign ${siteScope}`,
-      `${userPrefix}${trip_type || "travel"} outfit ${season} 2024 luxury editorial ${siteScope}`,
-      `${userPrefix}${destination} street style ${season} high fashion ${siteScope}`,
-      occasion
-        ? `${userPrefix}${occasion} outfit ${season} luxury editorial ${siteScope}`
-        : `${userPrefix}resort wear ${season} editorial ${siteScope}`,
-      `${userPrefix}${destination} ${country || ""} fashion week street style ${season} ${siteScope}`.trim(),
-      `${userPrefix}elevated ${season} travel wardrobe ${destination} editorial ${siteScope}`,
+      // Editorial — high fashion inspiration
+      `${userPrefix}${season} ${destination} fashion editorial ${editorialScope}`,
+      `${userPrefix}${trip_type || "travel"} outfit ${season} 2024 editorial ${editorialScope}`,
+      `${userPrefix}${occasion ? occasion + " outfit " + season : "street style " + destination + " " + season} ${editorialScope}`,
+      // Shoppable — real products users can buy
+      `${userPrefix}${season} ${destination} outfit ideas shop ${shoppableScope}`,
+      `${userPrefix}${trip_type || "travel"} fashion ${season} buy online ${shoppableScope}`,
+      `${userPrefix}elevated ${season} wardrobe ${destination} ${shoppableScope}`,
     ].filter((q) => q.length > 10);
 
+    // Fetch existing image_urls for this trip to avoid DB-level duplicates
+    const { data: existingRows } = await supabase
+      .from("outfit_suggestions")
+      .select("image_url")
+      .eq("trip_id", trip_id);
+    const existingImageUrls = new Set<string>(
+      (existingRows || []).map((r: { image_url: string | null }) => r.image_url).filter(Boolean) as string[]
+    );
+
     const allResults: SerperImageResult[] = [];
+    const seenImageUrls = new Set<string>();
     const seenLinks = new Set<string>();
 
     // Run all 6 queries in parallel
@@ -106,11 +123,14 @@ serve(async (req) => {
     const resultsArrays = await Promise.all(searchPromises);
     for (const results of resultsArrays) {
       for (const r of results) {
-        const linkKey = r.link || r.imageUrl;
-        if (linkKey && !seenLinks.has(linkKey) && r.title) {
-          seenLinks.add(linkKey);
-          allResults.push(r);
-        }
+        if (!r.title) continue;
+        // Deduplicate by imageUrl AND link independently
+        if (r.imageUrl && (seenImageUrls.has(r.imageUrl) || existingImageUrls.has(r.imageUrl))) continue;
+        if (r.link && seenLinks.has(r.link)) continue;
+        if (!r.imageUrl && !r.link) continue;
+        if (r.imageUrl) seenImageUrls.add(r.imageUrl);
+        if (r.link) seenLinks.add(r.link);
+        allResults.push(r);
       }
     }
 
@@ -176,9 +196,9 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = err instanceof Error ? err.message : ((err as any)?.message || JSON.stringify(err));
     const status = err instanceof RateLimitError ? 429 : err instanceof ValidationError ? 400 : 500;
-    console.error("Error:", err);
+    console.error("search-fashion error:", err);
     return new Response(JSON.stringify({ error: msg }), {
       status, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

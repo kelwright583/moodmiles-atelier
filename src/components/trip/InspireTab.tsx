@@ -36,12 +36,21 @@ interface InspireTabProps {
     longitude: number | null;
     start_date: string;
     end_date: string;
+    user_id: string;
+    trip_theme?: string | null;
   };
+  initialSearch?: string;
+  initialEventId?: string;
 }
 
-const InspireTab = ({ tripId, trip }: InspireTabProps) => (
+const InspireTab = ({ tripId, trip, initialSearch, initialEventId }: InspireTabProps) => (
   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 md:space-y-16">
-    <InspirationTab tripId={tripId} trip={trip} />
+    <InspirationTab
+      tripId={tripId}
+      trip={trip}
+      initialSearch={initialSearch}
+      initialEventId={initialEventId}
+    />
     <ExperiencesSection tripId={tripId} trip={trip} />
     <MoodBoardSection tripId={tripId} />
   </motion.div>
@@ -266,6 +275,7 @@ const MoodBoardSection = ({ tripId }: { tripId: string }) => {
         description: description || null,
         notes: notes || null,
         order_index: items.length,
+        pinned_by: user?.id || null,
       });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["board-items", tripId] });

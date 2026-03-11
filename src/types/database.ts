@@ -10,6 +10,15 @@ export interface Profile {
   subscription_tier: string;
   created_at: string;
   updated_at: string;
+  // v2 identity fields
+  handle: string | null;
+  bio: string | null;
+  home_city: string | null;
+  style_vibe: string | null;
+  nationality: string | null;
+  onboarding_completed: boolean;
+  handle_set: boolean;
+  profile_completion_score: number;
 }
 
 export interface Trip {
@@ -29,6 +38,10 @@ export interface Trip {
   origin_longitude?: number | null;
   image_url: string | null;
   created_at: string;
+  trip_theme: string | null;
+  theme_colors: string[] | null;
+  is_public: boolean;
+  share_token: string;
 }
 
 export interface WeatherData {
@@ -83,6 +96,7 @@ export interface Flight {
   document_url: string | null;
   notes: string | null;
   order_index: number;
+  is_shared: boolean;
   created_at: string;
 }
 
@@ -92,9 +106,29 @@ export interface TripEvent {
   event_name: string;
   event_type: string | null;
   event_date: string | null;
+  event_time: string | null;
   location: string | null;
   is_pinned: boolean;
   notes: string | null;
+  dress_code: string | null;
+  category: string | null;
+  venue_name: string | null;
+  venue_address: string | null;
+  venue_place_id: string | null;
+  booking_status: "researching" | "booked" | "confirmed" | "cancelled" | null;
+  booking_reference: string | null;
+  booking_url: string | null;
+  cost_per_person: number | null;
+  currency: string | null;
+  share_token: string | null;
+  created_at: string;
+}
+
+export interface EventAttendee {
+  id: string;
+  event_id: string;
+  user_id: string;
+  status: "going" | "maybe" | "declined";
   created_at: string;
 }
 
@@ -106,6 +140,7 @@ export interface BoardItem {
   notes: string | null;
   order_index: number;
   created_at: string;
+  pinned_by: string | null;
 }
 
 export interface OutfitItem {
@@ -128,6 +163,19 @@ export interface OutfitSuggestion {
   store: string | null;
   product_url: string | null;
   pinned: boolean;
+  source: string | null;
+  created_at: string;
+}
+
+export interface TripCollaborator {
+  id: string;
+  trip_id: string;
+  user_id: string | null;
+  invited_email: string | null;
+  role: "host" | "collaborator" | "viewer";
+  status: "pending" | "accepted" | "declined";
+  invited_by: string | null;
+  invite_token: string | null;
   created_at: string;
 }
 
@@ -146,5 +194,53 @@ export interface ActivitySuggestion {
   booking_url: string | null;
   is_promoted: boolean;
   promoted_by: string | null;
+  created_at: string;
+}
+
+export interface EventLook {
+  id: string;
+  trip_id: string;
+  event_id: string;
+  user_id: string;
+  image_url: string | null;
+  outfit_suggestion_id: string | null;
+  created_at: string;
+}
+
+export interface TripPoll {
+  id: string;
+  trip_id: string;
+  question: string;
+  created_by: string;
+  closes_at: string | null;
+  created_at: string;
+}
+
+export interface PollOption {
+  id: string;
+  poll_id: string;
+  option_text: string;
+  image_url: string | null;
+  order_index: number;
+  created_at: string;
+}
+
+export interface PollVote {
+  id: string;
+  poll_id: string;
+  option_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export interface TripMessage {
+  id: string;
+  trip_id: string;
+  user_id: string;
+  content: string | null;
+  image_url: string | null;
+  pinned_outfit_id: string | null;
+  reactions: Record<string, string[]>;
+  edited_at: string | null;
   created_at: string;
 }

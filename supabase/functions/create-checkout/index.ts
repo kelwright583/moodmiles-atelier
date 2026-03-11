@@ -3,8 +3,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
-const LUXE_PRICE_ID = Deno.env.get("STRIPE_LUXE_PRICE_ID")!;
-
 serve(async (req) => {
   const preflight = handleCorsPreflightRequest(req);
   if (preflight) return preflight;
@@ -21,6 +19,9 @@ serve(async (req) => {
     }
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const LUXE_PRICE_ID = Deno.env.get("STRIPE_LUXE_PRICE_ID");
+    const ATELIER_PRICE_ID = Deno.env.get("STRIPE_ATELIER_PRICE_ID");
+
     if (!stripeKey || !LUXE_PRICE_ID) {
       return new Response(JSON.stringify({ error: "Stripe not configured" }), {
         status: 500,
@@ -67,14 +68,30 @@ serve(async (req) => {
       });
     }
 
+    // Determine plan from request body
+    let plan = "luxe";
+    try {
+      const body = await req.json().catch(() => ({}));
+      if (body?.plan === "atelier") plan = "atelier";
+    } catch { /* default to luxe */ }
+
+    const priceId = plan === "atelier" && ATELIER_PRICE_ID ? ATELIER_PRICE_ID : LUXE_PRICE_ID;
+
+    if (plan === "atelier" && !ATELIER_PRICE_ID) {
+      return new Response(JSON.stringify({ error: "Atelier plan not yet configured — STRIPE_ATELIER_PRICE_ID missing" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
-      line_items: [{ price: LUXE_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${Deno.env.get("SITE_URL") || "http://localhost:8080"}/dashboard?success=subscription`,
       cancel_url: `${Deno.env.get("SITE_URL") || "http://localhost:8080"}/settings`,
-      metadata: { user_id: user.id },
-      subscription_data: { metadata: { user_id: user.id } },
+      metadata: { user_id: user.id, tier: plan },
+      subscription_data: { metadata: { user_id: user.id, tier: plan } },
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

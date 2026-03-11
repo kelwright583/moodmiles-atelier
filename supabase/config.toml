@@ -5,3 +5,42 @@ verify_jwt = false
 
 [functions.fetch-trends]
 verify_jwt = false
+
+[functions.search-fashion]
+verify_jwt = false
+
+[functions.get-shoppable-outfits]
+verify_jwt = false
+
+[functions.generate-briefing]
+verify_jwt = false
+
+[functions.sync-affiliate-products]
+verify_jwt = false
+
+[functions.check-dress-codes]
+verify_jwt = false
+
+[functions.generate-leave-behind]
+verify_jwt = false
+
+[functions.check-handle]
+verify_jwt = false
+
+[functions.complete-onboarding]
+verify_jwt = false
+
+[functions.invite-collaborator]
+verify_jwt = false
+
+[functions.accept-invite]
+verify_jwt = false
+
+[functions.get-invite-details]
+verify_jwt = false
+
+[functions.get-event-details]
+verify_jwt = false
+
+[functions.vote-poll]
+verify_jwt = false

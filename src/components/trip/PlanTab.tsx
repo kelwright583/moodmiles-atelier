@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Flight, TripEvent, WeatherData, ActivitySuggestion } from "@/types/database";
 import {
   Calendar, MapPin, Plus, Pin, PinOff, Trash2, CloudSun, Droplets, Wind, RefreshCw, Sun, Cloud, CloudRain, Snowflake, CloudLightning, CloudFog,
-  Plane, ExternalLink, FileText, ChevronLeft, ChevronRight,
+  Plane, ExternalLink, FileText, ChevronLeft, ChevronRight, AlertTriangle, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,14 @@ const BOOKING_SITES = [
   { name: "Kayak", url: "https://www.kayak.com" },
 ];
 
+interface DressCodeAlert {
+  id: string;
+  event_id: string;
+  severity: string;
+  headline?: string;
+  detail?: string;
+}
+
 interface PlanTabProps {
   tripId: string;
   trip: {
@@ -42,19 +50,15 @@ interface PlanTabProps {
     start_date: string;
     end_date: string;
   };
+  onNavigateTo?: (tab: string) => void;
 }
 
-const PlanTab = ({ tripId, trip }: PlanTabProps) => {
+const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [eventOpen, setEventOpen] = useState(false);
   const [flightOpen, setFlightOpen] = useState(false);
-  const [eventName, setEventName] = useState("");
-  const [eventType, setEventType] = useState("");
-  const [eventDate, setEventDate] = useState("");
-  const [eventLocation, setEventLocation] = useState("");
   const [flightAirline, setFlightAirline] = useState("");
   const [flightNumber, setFlightNumber] = useState("");
   const [depAirport, setDepAirport] = useState("");
@@ -105,6 +109,24 @@ const PlanTab = ({ tripId, trip }: PlanTabProps) => {
     },
   });
 
+  const { data: dressCodeAlerts = [] } = useQuery({
+    queryKey: ["dress-code-alerts", tripId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("dress_code_alerts")
+        .select("id, event_id, outfit_suggestion_id, alert_message, severity, created_at")
+        .eq("trip_id", tripId);
+      return (data || []).map((a: any) => {
+        try {
+          const parsed = JSON.parse(a.alert_message);
+          return { ...a, headline: parsed.headline, detail: parsed.detail };
+        } catch {
+          return { ...a, headline: a.alert_message, detail: "" };
+        }
+      }) as DressCodeAlert[];
+    },
+  });
+
   const refreshWeather = async () => {
     if (!trip?.latitude || !trip?.longitude) {
       toast({ title: "No coordinates", description: "This trip doesn't have location coordinates for weather data.", variant: "destructive" });
@@ -123,24 +145,6 @@ const PlanTab = ({ tripId, trip }: PlanTabProps) => {
     } finally {
       setRefreshingWeather(false);
     }
-  };
-
-  const addEvent = async () => {
-    if (!eventName) return;
-    const { error } = await supabase.from("trip_events").insert({
-      trip_id: tripId,
-      event_name: eventName,
-      event_type: eventType || null,
-      event_date: eventDate || null,
-      location: eventLocation || null,
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
-    }
-    queryClient.invalidateQueries({ queryKey: ["trip-events", tripId] });
-    setEventOpen(false);
-    setEventName(""); setEventType(""); setEventDate(""); setEventLocation("");
   };
 
   const addFlight = async () => {
@@ -379,9 +383,9 @@ const PlanTab = ({ tripId, trip }: PlanTabProps) => {
           <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground mb-6 font-body flex items-center gap-2">
             <Pin size={14} className="text-primary" /> Pinned
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {pinnedEvents.map((e) => (
-              <EventRow key={e.id} event={e} onTogglePin={togglePin} onDelete={deleteEvent} />
+              <EventRow key={e.id} event={e} onTogglePin={togglePin} onDelete={deleteEvent} alerts={dressCodeAlerts} onNavigateTo={onNavigateTo} />
             ))}
           </div>
         </section>
@@ -393,30 +397,15 @@ const PlanTab = ({ tripId, trip }: PlanTabProps) => {
           <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
             <Calendar size={14} className="text-primary" /> Plans & Events
           </h2>
-          <Dialog open={eventOpen} onOpenChange={setEventOpen}>
-            <DialogTrigger asChild>
-              <Button variant="champagne-outline" size="sm"><Plus size={14} /> Add Event</Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-border">
-              <DialogHeader><DialogTitle className="font-heading">Add Event</DialogTitle></DialogHeader>
-              <div className="space-y-4 pt-2">
-                <Input value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="Event name" className="bg-secondary border-border h-11" />
-                <Input value={eventType} onChange={(e) => setEventType(e.target.value)} placeholder="Type (dinner, show, etc.)" className="bg-secondary border-border h-11" />
-                <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="bg-secondary border-border h-11" />
-                <Input value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} placeholder="Location" className="bg-secondary border-border h-11" />
-                <Button variant="champagne" onClick={addEvent} className="w-full">Add</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
         {otherEvents.length === 0 && pinnedEvents.length === 0 ? (
           <div className="glass-card rounded-xl p-8 text-center">
             <p className="text-muted-foreground font-body text-sm">Add dinners, shows, or experiences. Discover curated options below.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {otherEvents.map((e) => (
-              <EventRow key={e.id} event={e} onTogglePin={togglePin} onDelete={deleteEvent} />
+              <EventRow key={e.id} event={e} onTogglePin={togglePin} onDelete={deleteEvent} alerts={dressCodeAlerts} onNavigateTo={onNavigateTo} />
             ))}
           </div>
         )}
@@ -456,25 +445,106 @@ const PlanTab = ({ tripId, trip }: PlanTabProps) => {
   );
 };
 
-const EventRow = ({ event, onTogglePin, onDelete }: { event: TripEvent; onTogglePin: (e: TripEvent) => void; onDelete: (id: string) => void }) => (
-  <div className="glass-card rounded-xl p-4 md:p-5 flex items-center justify-between hover:shadow-champagne transition-all duration-300">
-    <div className="min-w-0 flex-1">
-      <h3 className="font-heading text-base truncate">{event.event_name}</h3>
-      <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-body">
-        {event.event_date && <span>{new Date(event.event_date).toLocaleDateString("en-GB", { month: "short", day: "numeric" })}</span>}
-        {event.location && <span className="flex items-center gap-1 truncate"><MapPin size={10} />{event.location}</span>}
+interface DressCodeAlertRow {
+  id: string;
+  event_id: string;
+  severity: string;
+  headline?: string;
+  detail?: string;
+}
+
+const EventRow = ({
+  event,
+  onTogglePin,
+  onDelete,
+  alerts = [],
+  onNavigateTo,
+}: {
+  event: TripEvent;
+  onTogglePin: (e: TripEvent) => void;
+  onDelete: (id: string) => void;
+  alerts?: DressCodeAlertRow[];
+  onNavigateTo?: (tab: string) => void;
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const eventAlerts = alerts.filter((a) => a.event_id === event.id);
+  const hasAlerts = eventAlerts.length > 0;
+  const topSeverity = hasAlerts
+    ? eventAlerts.some((a) => a.severity === "critical") ? "critical"
+      : eventAlerts.some((a) => a.severity === "warning") ? "warning"
+      : "info"
+    : null;
+
+  return (
+    <div>
+      <div className="glass-card rounded-xl p-4 md:p-5 flex items-center justify-between hover:shadow-champagne transition-all duration-300">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-heading text-base truncate">{event.event_name}</h3>
+            {hasAlerts && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="transition-transform hover:scale-110 flex-shrink-0"
+                aria-label="Dress code alert"
+              >
+                <AlertTriangle
+                  size={14}
+                  className={topSeverity === "critical" ? "text-red-400" : "text-amber-400"}
+                />
+              </button>
+            )}
+          </div>
+          {event.dress_code && (
+            <span className="text-[10px] text-primary/60 font-body tracking-wide">
+              Dress code: {event.dress_code}
+            </span>
+          )}
+          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground font-body">
+            {event.event_date && <span>{new Date(event.event_date).toLocaleDateString("en-GB", { month: "short", day: "numeric" })}</span>}
+            {event.location && <span className="flex items-center gap-1 truncate"><MapPin size={10} />{event.location}</span>}
+          </div>
+        </div>
+        <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
+          {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.15em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
+          <button onClick={() => onTogglePin(event)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+            {event.is_pinned ? <PinOff size={14} className="text-primary" /> : <Pin size={14} className="text-muted-foreground" />}
+          </button>
+          <button onClick={() => onDelete(event.id)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+            <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
+          </button>
+        </div>
       </div>
+
+      {/* Dress code alert panel */}
+      {expanded && hasAlerts && (
+        <div className="mt-1 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+          {eventAlerts.map((alert) => (
+            <div key={alert.id}>
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                  alert.severity === "critical" ? "bg-red-500"
+                  : alert.severity === "warning" ? "bg-amber-500"
+                  : "bg-blue-400"
+                }`} />
+                <p className="text-xs font-body font-medium text-foreground">{alert.headline}</p>
+              </div>
+              {alert.detail && (
+                <p className="text-xs font-body text-muted-foreground mt-1 ml-4 leading-relaxed">{alert.detail}</p>
+              )}
+            </div>
+          ))}
+          {onNavigateTo && (
+            <button
+              onClick={() => onNavigateTo("Inspire")}
+              className="flex items-center gap-1.5 text-xs text-primary font-body hover:underline mt-1"
+            >
+              <Sparkles size={11} /> Find a different look
+            </button>
+          )}
+        </div>
+      )}
     </div>
-    <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
-      {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.15em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
-      <button onClick={() => onTogglePin(event)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
-        {event.is_pinned ? <PinOff size={14} className="text-primary" /> : <Pin size={14} className="text-muted-foreground" />}
-      </button>
-      <button onClick={() => onDelete(event.id)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
-        <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 export default PlanTab;

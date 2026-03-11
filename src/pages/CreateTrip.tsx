@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Plane, Crown } from "lucide-react";
+import { ArrowRight, Plane, Crown, Sparkles } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,34 +19,41 @@ const CreateTrip = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Pre-fill destination from trending "Create trip" flow
   const destinationParam = searchParams.get("destination");
   useEffect(() => {
-    if (destinationParam) {
-      setDestination(destinationParam);
-    }
+    if (destinationParam) setDestination(destinationParam);
   }, [destinationParam]);
-
-  const { data: trips = [] } = useQuery({
-    queryKey: ["trips"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("trips").select("id").order("start_date", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("subscription_tier").eq("user_id", user!.id).single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("subscription_tier")
+        .eq("user_id", user!.id)
+        .single();
       if (error) throw error;
       return data;
     },
     enabled: !!user,
   });
 
-  const needsUpgrade = profile?.subscription_tier === "free" && trips.length >= 1;
+  const { data: freeTripsData } = useQuery({
+    queryKey: ["user-free-trips", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_free_trips")
+        .select("full_trips_used")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const freeTripsUsed = freeTripsData?.full_trips_used ?? 0;
+  const needsUpgrade = profile?.subscription_tier === "free" && freeTripsUsed >= 1;
+
   const [destination, setDestination] = useState("");
   const [country, setCountry] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
@@ -62,6 +69,15 @@ const CreateTrip = () => {
   const [originLng, setOriginLng] = useState<number | null>(null);
   const [showOrigin, setShowOrigin] = useState(false);
   const [showAccommodation, setShowAccommodation] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const handlePlaceSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
+    setDestination(place.city);
+    setCountry(place.country);
+    setLatitude(place.lat);
+    setLongitude(place.lng);
+  };
 
   const handleOriginSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
     setOriginCity(place.city);
@@ -69,13 +85,18 @@ const CreateTrip = () => {
     setOriginLat(place.lat);
     setOriginLng(place.lng);
   };
-  const [loading, setLoading] = useState(false);
 
-  const handlePlaceSelect = (place: { city: string; country: string; lat: number; lng: number }) => {
-    setDestination(place.city);
-    setCountry(place.country);
-    setLatitude(place.lat);
-    setLongitude(place.lng);
+  const handleUpgradeToLuxe = async () => {
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout");
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,20 +128,25 @@ const CreateTrip = () => {
         .single();
       if (error) throw error;
 
-      // Fetch weather in background if we have coordinates
+      // Record free trip usage for free tier users
+      if (profile?.subscription_tier === "free") {
+        await supabase.from("user_free_trips").upsert(
+          { user_id: user!.id, full_trips_used: freeTripsUsed + 1 },
+          { onConflict: "user_id" },
+        );
+        queryClient.invalidateQueries({ queryKey: ["user-free-trips", user?.id] });
+      }
+
       if (latitude && longitude) {
         supabase.functions.invoke("fetch-weather", {
           body: { trip_id: data.id, latitude, longitude, start_date: startDate, end_date: endDate },
         }).catch(console.error);
       }
 
-      // Fetch destination image for trip card (runs in background)
       supabase.functions.invoke("fetch-destination-image", {
         body: { trip_id: data.id, destination, country: country || null },
       }).then(({ data: imgData }) => {
-        if (imgData?.image_url) {
-          queryClient.invalidateQueries({ queryKey: ["trips"] });
-        }
+        if (imgData?.image_url) queryClient.invalidateQueries({ queryKey: ["trips"] });
       }).catch(console.error);
 
       queryClient.invalidateQueries({ queryKey: ["trips"] });
@@ -139,22 +165,30 @@ const CreateTrip = () => {
         <main className="pt-24 md:pt-28 pb-16 md:pb-20 px-4 md:px-6">
           <div className="max-w-xl mx-auto text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-12">
-              <Crown size={48} className="mx-auto mb-6 text-primary" />
-              <h1 className="text-2xl md:text-3xl font-heading mb-4">Unlock unlimited trips</h1>
-              <p className="text-muted-foreground font-body mb-8">
-                Your first trip is on us. Upgrade to Luxe for $7.99/month and plan as many journeys as you like — with full AI styling, outfit inspiration, and smart packing for every one.
+              <div className="w-16 h-16 rounded-full bg-gradient-champagne flex items-center justify-center mx-auto mb-6">
+                <Crown size={28} className="text-primary-foreground" />
+              </div>
+              <p className="text-xs tracking-[0.3em] uppercase text-primary font-body mb-3">Concierge Luxe</p>
+              <h1 className="text-2xl md:text-3xl font-heading mb-4 leading-tight">
+                Your next adventure<br />awaits
+              </h1>
+              <p className="text-muted-foreground font-body mb-8 leading-relaxed">
+                You've planned your first trip with Concierge Styled. Ready to unlock unlimited trips, group collaboration, and your personal style feed? Join Luxe from $14.99/month.
               </p>
-              <Link to="/settings">
-                <Button variant="champagne" size="xl">
-                  Upgrade to Luxe
-                  <ArrowRight size={18} className="ml-2" />
+              <div className="flex flex-col gap-3">
+                <Button variant="champagne" size="xl" onClick={handleUpgradeToLuxe} disabled={checkoutLoading} className="w-full">
+                  <Sparkles size={16} />
+                  {checkoutLoading ? "Opening checkout…" : "Join Concierge Luxe"}
+                  <ArrowRight size={16} />
                 </Button>
-              </Link>
-              <p className="text-sm text-muted-foreground mt-6 font-body">
-                <button type="button" onClick={() => navigate("/dashboard")} className="text-primary hover:underline">
-                  Back to dashboard
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard")}
+                  className="text-sm text-muted-foreground font-body hover:text-foreground transition-colors py-2"
+                >
+                  Maybe later
                 </button>
-              </p>
+              </div>
             </motion.div>
           </div>
         </main>
@@ -175,7 +209,7 @@ const CreateTrip = () => {
           </motion.div>
 
           <motion.form initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
-            {/* Travelling From — optional, collapsible */}
+            {/* Travelling From */}
             <div>
               {showOrigin ? (
                 <>
@@ -215,6 +249,7 @@ const CreateTrip = () => {
                 </div>
               </div>
             </div>
+
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Departure</label>
@@ -225,6 +260,7 @@ const CreateTrip = () => {
                 <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-secondary border-border h-12 text-foreground font-body" required />
               </div>
             </div>
+
             <div>
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-3 block font-body">Type of Trip</label>
               <div className="flex flex-wrap gap-2">
@@ -238,6 +274,7 @@ const CreateTrip = () => {
                 <Input value={customType} onChange={(e) => setCustomType(e.target.value)} placeholder="Describe your trip type..." className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body mt-3" />
               )}
             </div>
+
             <div>
               {showAccommodation ? (
                 <>
@@ -253,6 +290,7 @@ const CreateTrip = () => {
                 </button>
               )}
             </div>
+
             <div className="pt-4">
               <Button variant="champagne" size="xl" type="submit" className="w-full md:w-auto" disabled={loading}>
                 <Plane size={18} />

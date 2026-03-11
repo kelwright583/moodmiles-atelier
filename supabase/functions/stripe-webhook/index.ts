@@ -46,13 +46,21 @@ serve(async (req) => {
         const sub = await stripe.subscriptions.retrieve(subscriptionId);
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
 
+        // Resolve tier: prefer session metadata → subscription metadata → price ID lookup → fallback "luxe"
+        const ATELIER_PRICE_ID = Deno.env.get("STRIPE_ATELIER_PRICE_ID");
+        const sessionTier = session.metadata?.tier;
+        const subTier = sub.metadata?.tier;
+        const priceId = sub.items.data[0]?.price?.id;
+        const tierFromPrice = ATELIER_PRICE_ID && priceId === ATELIER_PRICE_ID ? "atelier" : "luxe";
+        const tier = sessionTier || subTier || tierFromPrice;
+
         await supabase.from("stripe_subscriptions").upsert(
           {
             user_id: userId,
             stripe_subscription_id: subscriptionId,
             stripe_customer_id: customerId,
             status: sub.status,
-            tier: "luxe",
+            tier,
             current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
             current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
             updated_at: new Date().toISOString(),
@@ -60,7 +68,7 @@ serve(async (req) => {
           { onConflict: "stripe_subscription_id" },
         );
 
-        await supabase.from("profiles").update({ subscription_tier: "luxe" }).eq("user_id", userId);
+        await supabase.from("profiles").update({ subscription_tier: tier }).eq("user_id", userId);
         break;
       }
 

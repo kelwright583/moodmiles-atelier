@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import NotificationBell from "@/components/NotificationBell";
 
 interface NavbarProps {
   transparent?: boolean;
@@ -66,6 +67,8 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
               <Button variant="champagne" size="sm">Enter</Button>
             </Link>
           ) : user ? (
+            <div className="flex items-center gap-2">
+            <NotificationBell />
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
@@ -104,6 +107,7 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
                   </div>
                 </motion.div>
               )}
+            </div>
             </div>
           ) : (
             <Link to="/auth">

@@ -269,9 +269,9 @@ For each, provide: name, description (2-3 sentences), category (Culture, Dining,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = err instanceof Error ? err.message : ((err as any)?.message || JSON.stringify(err));
     const status = err instanceof RateLimitError ? 429 : err instanceof ValidationError ? 400 : 500;
-    console.error("Error:", err);
+    console.error("suggest-activities error:", err);
     return new Response(JSON.stringify({ error: msg }), {
       status, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
