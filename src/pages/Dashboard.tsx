@@ -311,12 +311,12 @@ const Dashboard = () => {
           </motion.section>
 
           {/* Shared with me */}
-          {(sharedTrips.length > 0) && (
-            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mb-20">
-              <div className="flex items-center gap-2 mb-8">
-                <Users size={14} className="text-primary" />
-                <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body">Shared with Me</h2>
-              </div>
+          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mb-20">
+            <div className="flex items-center gap-2 mb-8">
+              <Users size={14} className="text-primary" />
+              <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body">Shared with Me</h2>
+            </div>
+          {sharedTrips.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {sharedTrips.map((trip: any) => (
                   <Link to={`/trip/${trip.id}`} key={trip.id}>
@@ -375,8 +375,16 @@ const Dashboard = () => {
                   </Link>
                 ))}
               </div>
-            </motion.section>
+          ) : (
+            <div className="glass-card rounded-2xl p-10 text-center">
+              <Users size={32} className="text-primary mx-auto mb-3 opacity-40" />
+              <h3 className="font-heading text-lg mb-1">No shared trips yet</h3>
+              <p className="text-sm text-muted-foreground font-body max-w-sm mx-auto">
+                When someone invites you to collaborate on a trip, it will appear here.
+              </p>
+            </div>
           )}
+          </motion.section>
 
           {/* Trending */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>

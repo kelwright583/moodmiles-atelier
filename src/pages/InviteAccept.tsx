@@ -43,7 +43,7 @@ const CollabOnboardingOverlay = ({ onDone }: { onDone: () => void }) => {
     try {
       const { data } = await supabase.functions.invoke("check-handle", { body: { handle: h } });
       setHandleStatus(data?.available ? "available" : "taken");
-    } catch { setHandleStatus("idle"); }
+    } catch { setHandleStatus("idle"); toast({ title: "Could not check handle", description: "Please try again.", variant: "destructive" }); }
   };
 
   const handleInput = (value: string) => {
@@ -227,8 +227,10 @@ const InviteAccept = () => {
           setTimeout(() => navigate(`/trip/${data.trip_id}`), 1500);
         }
       } catch (err: any) {
-        setErrorMsg(err.message || "Something went wrong");
+        const msg = err.message || "Something went wrong";
+        setErrorMsg(msg);
         setAcceptState("error");
+        toast({ title: "Couldn't join trip", description: msg, variant: "destructive" });
       }
     })();
   }, [user, authLoading, token]);

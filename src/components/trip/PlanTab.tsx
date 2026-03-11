@@ -505,7 +505,7 @@ const EventRow = ({
           </div>
         </div>
         <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
-          {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.15em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
+          {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.2em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
           <button onClick={() => onTogglePin(event)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
             {event.is_pinned ? <PinOff size={14} className="text-primary" /> : <Pin size={14} className="text-muted-foreground" />}
           </button>

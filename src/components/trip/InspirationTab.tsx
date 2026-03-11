@@ -71,7 +71,7 @@ const MemberAvatar = ({
   faded?: boolean;
 }) => {
   const sizeClass = size === "sm" ? "w-6 h-6 text-[9px]" : size === "lg" ? "w-10 h-10 text-sm" : "w-8 h-8 text-xs";
-  const ringClass = ring ? "ring-2 ring-[#ca975c] ring-offset-1 ring-offset-background" : "";
+  const ringClass = ring ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : "";
   const fadedClass = faded ? "opacity-30" : "";
   if (profile?.avatar_url) {
     return (
@@ -1133,12 +1133,12 @@ const MasonryCard = ({
             return (
               <div className="flex flex-col gap-0.5">
                 {isEditorial && (
-                  <span className="text-[9px] tracking-[0.15em] uppercase font-body px-1.5 py-0.5 rounded bg-black/50 text-[#ca975c] w-fit">
+                  <span className="text-[9px] tracking-[0.2em] uppercase font-body px-1.5 py-0.5 rounded bg-black/50 text-primary w-fit">
                     Editorial
                   </span>
                 )}
                 {isShoppable && (
-                  <span className="text-[9px] tracking-[0.15em] uppercase font-body px-1.5 py-0.5 rounded bg-black/50 text-green-400 w-fit">
+                  <span className="text-[9px] tracking-[0.2em] uppercase font-body px-1.5 py-0.5 rounded bg-black/50 text-green-400 w-fit">
                     Shop
                   </span>
                 )}
@@ -1151,7 +1151,7 @@ const MasonryCard = ({
             className="p-1 ml-auto transition-transform hover:scale-110"
             title={outfit.pinned ? "Unpin" : "Pin"}
           >
-            <Heart size={16} className={outfit.pinned ? "text-[#ca975c] fill-[#ca975c]" : "text-white"} />
+            <Heart size={16} className={outfit.pinned ? "text-primary fill-primary" : "text-white"} />
           </button>
         </div>
 
@@ -1170,7 +1170,7 @@ const MasonryCard = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#ca975c]/80 hover:bg-[#ca975c] text-white text-[11px] font-body transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/80 hover:bg-primary text-white text-[11px] font-body transition-colors"
               >
                 <ShoppingBag size={11} /> Shop This
               </a>
@@ -1238,7 +1238,7 @@ const ShopTheLookCard = ({
       <div className="glass-card rounded-2xl p-5">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <p className="text-xs tracking-[0.15em] uppercase text-primary font-body">{outfit.occasion}</p>
+            <p className="text-xs tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</p>
             <h3 className="font-heading text-lg leading-snug">{outfit.title}</h3>
           </div>
         </div>
@@ -1254,7 +1254,7 @@ const ShopTheLookCard = ({
       {/* Outfit header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs tracking-[0.15em] uppercase text-primary font-body">{outfit.occasion}</p>
+          <p className="text-xs tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</p>
           <h3 className="font-heading text-lg leading-snug">{outfit.title}</h3>
           {outfit.description && (
             <p className="text-xs text-muted-foreground font-body mt-1 leading-relaxed line-clamp-2">
@@ -1347,7 +1347,7 @@ const ShopTheLookCard = ({
                         ? "bg-emerald-600/10 text-emerald-500"
                         : isResale
                         ? "bg-violet-600/10 text-violet-400"
-                        : "bg-[#ca975c]/10 text-[#ca975c]"
+                        : "bg-primary/10 text-primary"
                     }`}>
                       {isRental ? "Rent This" : isResale ? "Buy Pre-loved" : "Buy"}
                     </span>

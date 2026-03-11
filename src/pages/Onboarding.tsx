@@ -85,6 +85,7 @@ const Onboarding = () => {
       }
     } catch {
       setHandleStatus("idle");
+      toast({ title: "Could not check handle", description: "Please try again in a moment.", variant: "destructive" });
     }
   };
 

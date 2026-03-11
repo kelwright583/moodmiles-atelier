@@ -215,7 +215,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
                   {/* Promoted badge */}
                   {activity.is_promoted && (
                     <div className="absolute top-3 left-3">
-                      <span className="text-[9px] tracking-[0.15em] uppercase bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full font-body">Promoted</span>
+                      <span className="text-[9px] tracking-[0.2em] uppercase bg-primary/90 text-primary-foreground px-2 py-0.5 rounded-full font-body">Promoted</span>
                     </div>
                   )}
                   <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -256,7 +256,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
             className="fixed inset-0 z-50 bg-background overflow-y-auto"
           >
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-              <h3 className="text-sm tracking-[0.15em] uppercase text-muted-foreground font-body flex items-center gap-2">
+              <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
                 <MapPin size={12} className="text-primary" /> Experiences in {trip.destination}
               </h3>
               <button onClick={() => setFeedOpen(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">
@@ -412,7 +412,7 @@ const ActivityFeedCard = ({
             <span className="text-sm font-body text-primary font-medium">{activity.price_from}</span>
           )}
           {activity.is_promoted && (
-            <span className="text-[9px] tracking-[0.15em] uppercase text-primary font-body bg-primary/10 px-2 py-0.5 rounded-full">Promoted</span>
+            <span className="text-[9px] tracking-[0.2em] uppercase text-primary font-body bg-primary/10 px-2 py-0.5 rounded-full">Promoted</span>
           )}
         </div>
         <h3 className="font-heading text-2xl leading-tight mb-1">{activity.name}</h3>
@@ -456,7 +456,7 @@ const EventRow = ({ event, onTogglePin, onDelete }: { event: TripEvent; onToggle
       )}
     </div>
     <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
-      {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.15em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
+      {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.2em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
       <button onClick={() => onTogglePin(event)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
         {event.is_pinned ? <PinOff size={14} className="text-primary" /> : <Pin size={14} className="text-muted-foreground" />}
       </button>

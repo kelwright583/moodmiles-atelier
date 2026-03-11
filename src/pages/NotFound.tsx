@@ -1,5 +1,7 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
+import { motion } from "framer-motion";
+import { Compass } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -9,14 +11,27 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-center px-6"
+      >
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
+          <Compass size={28} className="text-primary" />
+        </div>
+        <h1 className="font-heading text-5xl mb-3">404</h1>
+        <p className="text-muted-foreground font-body mb-6">
+          This page doesn't exist — let's get you back on track.
+        </p>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-sm font-body text-background bg-gradient-champagne px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+        >
+          Return Home
+        </Link>
+      </motion.div>
     </div>
   );
 };

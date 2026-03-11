@@ -485,9 +485,13 @@ const ChatTab = ({ tripId, trip }: ChatTabProps) => {
         style={{ scrollbarWidth: "thin" }}
       >
         {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-xs text-muted-foreground font-body text-center py-12">
-              No messages yet. Say hello to the group!
+          <div className="flex flex-col items-center justify-center h-full py-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+              <MessageCircle size={24} className="text-primary" />
+            </div>
+            <h3 className="font-heading text-lg mb-1">Start the conversation</h3>
+            <p className="text-xs text-muted-foreground font-body max-w-[240px]">
+              Your group chat lives here — coordinate outfits, share finds, and plan together.
             </p>
           </div>
         )}

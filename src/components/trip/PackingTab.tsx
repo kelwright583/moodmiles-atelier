@@ -218,7 +218,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
               <div className="space-y-4 pt-2">
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Item name" className="bg-secondary border-border h-11 text-foreground placeholder:text-muted-foreground font-body" />
                 <div>
-                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Category</label>
+                  <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block font-body">Category</label>
                   <div className="flex flex-wrap gap-2">
                     {packingCategories.map((c) => (
                       <button key={c} type="button" onClick={() => setCategory(c)} className={`px-3 py-1.5 rounded-full text-xs font-body transition-all ${category === c ? "bg-gradient-champagne text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{c}</button>
@@ -226,7 +226,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Quantity</label>
+                  <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block font-body">Quantity</label>
                   <div className="flex items-center gap-3">
                     <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center"><Minus size={14} /></button>
                     <span className="text-lg font-heading w-8 text-center">{quantity}</span>
@@ -271,7 +271,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
             className="flex items-center gap-2 w-full text-left mb-3"
           >
             {leaveItemsCollapsed ? <ChevronRight size={14} className="text-red-400" /> : <ChevronDown size={14} className="text-red-400" />}
-            <h3 className="text-xs tracking-[0.15em] uppercase text-red-400 font-body flex items-center gap-1.5">
+            <h3 className="text-xs tracking-[0.2em] uppercase text-red-400 font-body flex items-center gap-1.5">
               <XCircle size={12} /> Leave These At Home
             </h3>
           </button>
@@ -325,7 +325,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
               <div key={cat}>
                 <button onClick={() => toggleCategory(cat)} className="flex items-center gap-2 w-full text-left mb-3 group">
                   {isCollapsed ? <ChevronRight size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-                  <h3 className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body">{cat}</h3>
+                  <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">{cat}</h3>
                   <span className="text-xs text-primary font-body ml-auto">{catPacked}/{catItems.length}</span>
                 </button>
                 <AnimatePresence>
@@ -405,7 +405,7 @@ const RentalOpportunitiesCard = ({
           <Repeat2 size={16} className="text-emerald-500" />
         </div>
         <div>
-          <p className="text-xs tracking-[0.15em] uppercase text-emerald-500 font-body mb-0.5">Consider Renting</p>
+          <p className="text-xs tracking-[0.2em] uppercase text-emerald-500 font-body mb-0.5">Consider Renting</p>
           <p className="text-sm font-body text-foreground leading-snug">
             You have {events.length > 1 ? `${events.length} formal events` : "a formal event"}
             {eventNames ? ` (${eventNames})` : ""} — renting saves money and luggage space.

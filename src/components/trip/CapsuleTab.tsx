@@ -61,7 +61,7 @@ const CapsuleTab = ({ tripId }: { tripId: string }) => {
             <DialogHeader><DialogTitle className="font-heading">Add Wardrobe Item</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Category</label>
+                <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block font-body">Category</label>
                 <div className="flex flex-wrap gap-2">
                   {categories.map((c) => (
                     <button key={c} type="button" onClick={() => setCategory(c)} className={`px-3 py-1.5 rounded-full text-xs font-body transition-all ${category === c ? "bg-gradient-champagne text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>{c}</button>
@@ -71,7 +71,7 @@ const CapsuleTab = ({ tripId }: { tripId: string }) => {
               <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description (e.g. Tailored wool trousers, cashmere knit)" className="bg-secondary border-border h-11 text-foreground placeholder:text-muted-foreground font-body" />
               <Input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Colour palette (e.g. Camel / Charcoal)" className="bg-secondary border-border h-11 text-foreground placeholder:text-muted-foreground font-body" />
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Style Tags</label>
+                <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block font-body">Style Tags</label>
                 <div className="flex flex-wrap gap-2">
                   {styleTags.map((tag) => (
                     <button key={tag} type="button" onClick={() => toggleTag(tag)} className={`px-3 py-1 rounded-full text-xs font-body transition-all ${selectedTags.includes(tag) ? "bg-gradient-champagne text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{tag}</button>
@@ -99,7 +99,7 @@ const CapsuleTab = ({ tripId }: { tripId: string }) => {
               <div className="w-full aspect-[3/4] rounded-lg bg-secondary mb-4 flex items-center justify-center">
                 <Shirt size={32} className="text-muted-foreground/30" />
               </div>
-              <span className="text-xs tracking-[0.15em] uppercase text-primary font-body">{item.category}</span>
+              <span className="text-xs tracking-[0.2em] uppercase text-primary font-body">{item.category}</span>
               <p className="text-sm font-body text-foreground mt-2 leading-relaxed">{item.description}</p>
               {item.color && <p className="text-xs text-muted-foreground font-body mt-2">Palette: {item.color}</p>}
               <div className="flex flex-wrap gap-1.5 mt-3">

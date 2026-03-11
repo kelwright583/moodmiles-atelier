@@ -222,7 +222,7 @@ const PollCard = ({ poll, options, creatorProfile, isNew }: PollCardProps) => {
                               animate={{ width: `${pct}%` }}
                               transition={{ duration: 0.6, ease: "easeOut" }}
                               className={`h-full rounded-full ${
-                                isMyVote ? "bg-[#ca975c]" : "bg-white/60"
+                                isMyVote ? "bg-primary" : "bg-white/60"
                               }`}
                             />
                           </div>

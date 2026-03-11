@@ -589,7 +589,7 @@ const EventCard = ({
               <Icon size={17} className="text-primary" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] tracking-[0.15em] uppercase text-primary font-body">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-primary font-body">
                 {getCategoryLabel(event.category)}
               </p>
               {event.event_date && (
@@ -955,7 +955,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-card/95 via-card/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <span className={`text-[10px] tracking-[0.15em] uppercase font-body ${ACTIVITY_CATEGORY_COLORS[a.category || ""] || "text-primary"}`}>{a.category}</span>
+                    <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${ACTIVITY_CATEGORY_COLORS[a.category || ""] || "text-primary"}`}>{a.category}</span>
                     <p className="font-heading text-lg leading-tight text-foreground">{a.name}</p>
                     {isActivityInEvents(a.name) && (
                       <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] text-primary font-body">
@@ -976,7 +976,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
         {expFeedOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-background overflow-y-auto">
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-              <h3 className="text-sm tracking-[0.15em] uppercase text-muted-foreground font-body flex items-center gap-2">
+              <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
                 <Globe size={12} className="text-primary" /> Experiences in {trip.destination}
               </h3>
               <button onClick={() => setExpFeedOpen(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">

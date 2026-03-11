@@ -142,7 +142,7 @@ const Settings = () => {
       if (data?.available) { setHandleStatus("available"); setHandleSuggestions([]); }
       else if (!data?.valid) { setHandleStatus("invalid"); }
       else { setHandleStatus("taken"); setHandleSuggestions(data?.suggestions || []); }
-    } catch { setHandleStatus("idle"); }
+    } catch { setHandleStatus("idle"); toast({ title: "Could not check handle", description: "Please try again in a moment.", variant: "destructive" }); }
   };
 
   const handleHandleInput = (value: string) => {

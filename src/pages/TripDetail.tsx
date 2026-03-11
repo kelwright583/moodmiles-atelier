@@ -520,7 +520,7 @@ const TripDetail = () => {
                 )}
                 {/* Gold dot on Board tab for unread poll/board notifications */}
                 {tab === "Board" && ((unreadByType["poll_created"] || 0) + (unreadByType["outfit_pinned"] || 0)) > 0 && activeTab !== "Board" && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#ca975c] flex-shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                 )}
                 {/* Green dot on Playlist tab for new tracks */}
                 {tab === "Playlist" && (unreadByType["track_added"] || 0) > 0 && activeTab !== "Playlist" && (

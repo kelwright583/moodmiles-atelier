@@ -33,7 +33,7 @@ function timeAgo(dateStr: string): string {
 function NotifIcon({ type }: { type: string }) {
   const cls = "w-4 h-4 flex-shrink-0";
   if (type === "invite_received" || type === "collaborator_joined")
-    return <User size={14} className={`${cls} text-[#ca975c]`} />;
+    return <User size={14} className={`${cls} text-primary`} />;
   if (type === "event_added")
     return <Calendar size={14} className={`${cls} text-blue-400`} />;
   if (type === "new_message")
@@ -139,7 +139,7 @@ const NotificationBell = () => {
       >
         <Bell size={16} className="text-muted-foreground" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-[#ca975c] flex items-center justify-center px-1">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-primary flex items-center justify-center px-1">
             <span className="text-[9px] font-body text-white font-medium leading-none">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
@@ -183,7 +183,7 @@ const NotificationBell = () => {
                     key={notif.id}
                     onClick={() => handleNotifClick(notif)}
                     className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-secondary/50 transition-colors border-b border-border/30 last:border-0 ${
-                      !notif.is_read ? "border-l-2 border-l-[#ca975c]" : ""
+                      !notif.is_read ? "border-l-2 border-l-primary" : ""
                     }`}
                   >
                     <div className="mt-0.5">

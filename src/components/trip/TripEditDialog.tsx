@@ -109,44 +109,44 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
         <div className="space-y-5 pt-2">
           {/* Origin */}
           <div>
-            <p className="text-xs tracking-[0.15em] uppercase text-primary mb-2 font-body">Travelling From</p>
+            <p className="text-xs tracking-[0.2em] uppercase text-primary mb-2 font-body">Travelling From</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">City</label>
+                <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5 block font-body">City</label>
                 <PlacesAutocomplete value={originCity} onChange={setOriginCity} onSelect={handleOriginSelect} />
               </div>
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">Country</label>
+                <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5 block font-body">Country</label>
                 <Input value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} placeholder="South Africa" className="bg-secondary border-border h-11 text-foreground font-body" />
               </div>
             </div>
           </div>
           {/* Destination */}
           <div>
-            <p className="text-xs tracking-[0.15em] uppercase text-primary mb-2 font-body">Destination</p>
+            <p className="text-xs tracking-[0.2em] uppercase text-primary mb-2 font-body">Destination</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">City</label>
+                <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5 block font-body">City</label>
                 <PlacesAutocomplete value={destination} onChange={setDestination} onSelect={handlePlaceSelect} />
               </div>
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">Country</label>
+                <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5 block font-body">Country</label>
                 <Input value={country} onChange={(e) => setCountry(e.target.value)} className="bg-secondary border-border h-11 text-foreground font-body" />
               </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">Departure</label>
+              <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5 block font-body">Departure</label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-secondary border-border h-11 text-foreground font-body" />
             </div>
             <div>
-              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">Return</label>
+              <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5 block font-body">Return</label>
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-secondary border-border h-11 text-foreground font-body" />
             </div>
           </div>
           <div>
-            <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Type</label>
+            <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block font-body">Type</label>
             <div className="flex flex-wrap gap-2">
               {tripTypes.map((type) => (
                 <button key={type} type="button" onClick={() => setSelectedType(type)} className={`px-3 py-1.5 rounded-full text-xs font-body transition-all duration-300 ${selectedType === type ? "bg-gradient-champagne text-primary-foreground shadow-champagne" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
@@ -156,7 +156,7 @@ const TripEditDialog = ({ trip, open, onOpenChange }: TripEditDialogProps) => {
             </div>
           </div>
           <div>
-            <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 block font-body">Accommodation</label>
+            <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5 block font-body">Accommodation</label>
             <Input value={accommodation} onChange={(e) => setAccommodation(e.target.value)} className="bg-secondary border-border h-11 text-foreground font-body" />
           </div>
           <div className="flex justify-end gap-3 pt-2">

@@ -1085,10 +1085,15 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
       {/* Board grid */}
       {filteredItems.length === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <Grid3X3 size={32} className="mx-auto text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground font-body text-sm">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+            <Palette size={24} className="text-primary" />
+          </div>
+          <h3 className="font-heading text-lg mb-1">
+            {filterUserId === "all" ? "Your mood board awaits" : "Nothing here yet"}
+          </h3>
+          <p className="text-muted-foreground font-body text-sm max-w-xs mx-auto">
             {filterUserId === "all"
-              ? "Pin looks from Inspiration, upload your own images, or add notes. Your shared style scrapbook for this trip."
+              ? "Pin outfits from Inspiration, upload your own images, or add notes — your shared style scrapbook for this trip."
               : "No board items from this member yet."}
           </p>
         </div>

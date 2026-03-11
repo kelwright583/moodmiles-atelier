@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Trip, TripEvent, OutfitSuggestion, PackingItem } from "@/types/database";
@@ -253,14 +254,20 @@ const TripLookbook = () => {
         </button>
         <Button
           onClick={handleExport}
-          className="bg-[#ca975c] text-white hover:bg-[#b8864a] font-body"
+          className="bg-primary text-white hover:bg-primary/85 font-body"
         >
           <Download size={14} /> Export as PDF
         </Button>
       </div>
 
       {/* Lookbook content — white background */}
-      <div id="lookbook-content" className="max-w-4xl mx-auto bg-white text-black rounded-lg overflow-hidden shadow-2xl">
+      <motion.div
+        id="lookbook-content"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-4xl mx-auto bg-white text-black rounded-lg overflow-hidden shadow-2xl"
+      >
 
         {/* ── Page 1: Cover ─────────────────────────────────────────────── */}
         <div className="lookbook-page cover-page relative" style={{ minHeight: "100vh", background: "#1A1917" }}>
@@ -511,7 +518,7 @@ const TripLookbook = () => {
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -64,7 +64,7 @@ const PlaylistTab = ({ tripId, trip }: PlaylistTabProps) => {
     enabled: !!user,
   });
 
-  const { data: playlistData, refetch: refetchPlaylist } = useQuery({
+  const { data: playlistData, refetch: refetchPlaylist, error: playlistError } = useQuery({
     queryKey: ["trip-playlist", tripId],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("get-playlist-tracks", {
@@ -78,6 +78,10 @@ const PlaylistTab = ({ tripId, trip }: PlaylistTabProps) => {
       };
     },
   });
+
+  useEffect(() => {
+    if (playlistError) toast({ title: "Could not load playlist", description: "Please try again later.", variant: "destructive" });
+  }, [playlistError]);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -317,7 +321,7 @@ const PlaylistTab = ({ tripId, trip }: PlaylistTabProps) => {
       {/* Track list */}
       {tracks.length > 0 && (
         <div className="space-y-1">
-          <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-3">Playlist</p>
+          <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-3">Playlist</p>
           <div className="glass-card rounded-xl overflow-hidden divide-y divide-border">
             {tracks.map((track, idx) => (
               <div key={`${track.track_uri}-${idx}`} className="flex items-center gap-3 p-3 hover:bg-secondary/50 transition-colors">
