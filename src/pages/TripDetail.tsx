@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Trip } from "@/types/database";
-import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun, Camera, Receipt, ImageIcon } from "lucide-react";
+import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun, Camera, Receipt, ImageIcon, CheckCircle2 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { getSeverity } from "@/components/trip/BriefingTab";
 import TripEditDialog from "@/components/trip/TripEditDialog";
@@ -36,6 +36,140 @@ const TabSkeleton = () => (
     <ShimmerSkeleton variant="text" className="h-8 rounded-lg w-2/3" />
   </div>
 );
+
+function getTripDayInfo(startDate: string, endDate: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+  const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const daysUntilEnd = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const currentDay = totalDays - daysUntilEnd;
+  return { currentDay, totalDays, daysLeft: daysUntilEnd + 1 };
+}
+
+const TripHero = ({
+  trip,
+  id,
+  profile,
+  formatDate,
+  onLookbook,
+  onShare,
+  onEdit,
+  onDelete,
+}: {
+  trip: Trip;
+  id: string;
+  profile: { subscription_tier?: string } | null | undefined;
+  formatDate: (d: string) => string;
+  onLookbook: () => void;
+  onShare: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) => {
+  const isActive = trip.status === "active";
+  const isCompleted = trip.status === "completed";
+  const dayInfo = isActive ? getTripDayInfo(trip.start_date, trip.end_date) : null;
+
+  return (
+    <div className={`relative overflow-hidden bg-secondary ${isActive ? "h-52 md:h-64" : "h-44 md:h-56"}`}>
+      {trip.image_url ? (
+        <>
+          <img
+            src={trip.image_url}
+            alt={trip.destination}
+            className="absolute inset-0 w-full h-full object-cover animate-ken-burns"
+            loading="eager"
+          />
+          <div className={`absolute inset-0 ${
+            isActive
+              ? "bg-gradient-to-t from-background via-background/70 to-background/30"
+              : "bg-gradient-to-t from-background via-background/60 to-background/20"
+          }`} />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
+      )}
+
+      {isActive && (
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
+      )}
+
+      <div className="absolute bottom-6 left-4 right-4 md:bottom-8 md:left-8 md:right-8 max-w-6xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-xs tracking-[0.2em] uppercase font-body ${isActive ? "text-emerald-400" : "text-primary"}`}>
+                {trip.trip_type || "Trip"}
+              </span>
+              {isActive && (
+                <span className="text-[10px] tracking-[0.15em] uppercase font-body bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Travel Mode
+                </span>
+              )}
+              {isCompleted && (
+                <span className="text-[10px] tracking-[0.15em] uppercase font-body bg-secondary/60 text-muted-foreground border border-border px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                  <CheckCircle2 size={10} />
+                  Completed
+                </span>
+              )}
+            </div>
+            <h1 className="text-3xl md:text-5xl font-heading mt-1">{trip.destination}</h1>
+
+            {isActive && dayInfo ? (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-3 text-sm font-body">
+                  <span className="flex items-center gap-1.5 text-emerald-300 font-medium">
+                    <Sun size={13} />
+                    Day {dayInfo.currentDay} of {dayInfo.totalDays}
+                  </span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-muted-foreground">
+                    {dayInfo.daysLeft} day{dayInfo.daysLeft === 1 ? "" : "s"} remaining
+                  </span>
+                </div>
+                <div className="h-1 rounded-full bg-white/10 max-w-xs overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.round((dayInfo.currentDay / dayInfo.totalDays) * 100)}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-300"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground font-body">
+                <span className="flex items-center gap-1"><Calendar size={12} className="text-primary" /> {formatDate(trip.start_date)} – {formatDate(trip.end_date)}</span>
+                {trip.country && <span className="flex items-center gap-1"><MapPin size={12} className="text-primary" /> {trip.country}</span>}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+            <button
+              onClick={onLookbook}
+              className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary transition-colors"
+              aria-label="Export lookbook"
+            >
+              <BookOpen size={14} className="text-muted-foreground" />
+            </button>
+            <button onClick={onShare} className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary transition-colors" aria-label="Share trip">
+              <Share2 size={14} className="text-muted-foreground" />
+            </button>
+            <button onClick={onEdit} className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary transition-colors" aria-label="Edit trip">
+              <Pencil size={14} className="text-muted-foreground" />
+            </button>
+            <button onClick={onDelete} className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive/20 transition-colors" aria-label="Delete trip">
+              <Trash2 size={14} className="text-muted-foreground" />
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
 
 const PLANNING_TABS = ["Overview", "Briefing", "Events", "Photos", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
 const ACTIVE_TABS = ["Today", "Photos", "Expenses", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
@@ -457,64 +591,22 @@ const TripDetail = () => {
       </div>
 
       {/* Hero */}
-      <div className="relative h-44 md:h-56 overflow-hidden bg-secondary">
-        {trip.image_url ? (
-          <>
-            <img
-              src={trip.image_url}
-              alt={trip.destination}
-              className="absolute inset-0 w-full h-full object-cover animate-ken-burns"
-              loading="eager"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
-          </>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
-        )}
-        <div className="absolute bottom-6 left-4 right-4 md:bottom-8 md:left-8 md:right-8 max-w-6xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs tracking-[0.2em] uppercase text-primary font-body">{trip.trip_type || "Trip"}</span>
-                {trip.status === "active" && (
-                  <span className="text-[10px] tracking-[0.15em] uppercase font-body bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                    Travel Mode
-                  </span>
-                )}
-              </div>
-              <h1 className="text-3xl md:text-5xl font-heading mt-1">{trip.destination}</h1>
-              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground font-body">
-                <span className="flex items-center gap-1"><Calendar size={12} className="text-primary" /> {formatDate(trip.start_date)} – {formatDate(trip.end_date)}</span>
-                {trip.country && <span className="flex items-center gap-1"><MapPin size={12} className="text-primary" /> {trip.country}</span>}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  if (profile?.subscription_tier === "atelier") {
-                    window.open(`/trip/${id}/lookbook`, "_blank");
-                  } else {
-                    setLookbookGateOpen(true);
-                  }
-                }}
-                className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary transition-colors"
-                aria-label="Export lookbook"
-              >
-                <BookOpen size={14} className="text-muted-foreground" />
-              </button>
-              <button onClick={() => setShareOpen(true)} className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary transition-colors" aria-label="Share trip">
-                <Share2 size={14} className="text-muted-foreground" />
-              </button>
-              <button onClick={() => setEditOpen(true)} className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-secondary transition-colors" aria-label="Edit trip">
-                <Pencil size={14} className="text-muted-foreground" />
-              </button>
-              <button onClick={() => setDeleteOpen(true)} className="w-9 h-9 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive/20 transition-colors" aria-label="Delete trip">
-                <Trash2 size={14} className="text-muted-foreground" />
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+      <TripHero
+        trip={trip}
+        id={id!}
+        profile={profile}
+        formatDate={formatDate}
+        onLookbook={() => {
+          if (profile?.subscription_tier === "atelier") {
+            window.open(`/trip/${id}/lookbook`, "_blank");
+          } else {
+            setLookbookGateOpen(true);
+          }
+        }}
+        onShare={() => setShareOpen(true)}
+        onEdit={() => setEditOpen(true)}
+        onDelete={() => setDeleteOpen(true)}
+      />
 
       <main className="px-4 md:px-6 pb-16 md:pb-20">
         <div className="max-w-6xl mx-auto">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, ArrowRight, TrendingUp, MapPin, Sparkles, X, ChevronRight, Crown, Plane, Users, Share2 } from "lucide-react";
+import { Calendar, ArrowRight, TrendingUp, MapPin, Sparkles, X, ChevronRight, Crown, Plane, Users, Share2, Sun, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShimmerSkeleton } from "@/components/ui/shimmer-skeleton";
 import Navbar from "@/components/layout/Navbar";
@@ -23,7 +23,7 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-function getCountdown(startDate: string, endDate: string, destination: string): string {
+function getTripTiming(startDate: string, endDate: string) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const start = new Date(startDate);
@@ -32,10 +32,12 @@ function getCountdown(startDate: string, endDate: string, destination: string): 
   end.setHours(0, 0, 0, 0);
   const daysUntilStart = Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   const daysUntilEnd = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const currentDay = totalDays - daysUntilEnd;
 
-  if (daysUntilStart > 0) return `${destination} in ${daysUntilStart} day${daysUntilStart === 1 ? "" : "s"}`;
-  if (daysUntilEnd >= 0) return `${destination} — ${daysUntilEnd + 1} day${daysUntilEnd === 0 ? "" : "s"} left`;
-  return destination;
+  if (daysUntilStart > 0) return { phase: "planning" as const, label: `In ${daysUntilStart} day${daysUntilStart === 1 ? "" : "s"}`, currentDay: 0, totalDays, daysLeft: 0 };
+  if (daysUntilEnd >= 0) return { phase: "active" as const, label: `Day ${currentDay} of ${totalDays}`, currentDay, totalDays, daysLeft: daysUntilEnd + 1 };
+  return { phase: "completed" as const, label: "Completed", currentDay: 0, totalDays, daysLeft: 0 };
 }
 
 const BANNER_DISMISS_KEY = "moodmiles_profile_banner_dismissed_until";
@@ -254,58 +256,108 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {trips.map((trip) => (
-                  <Link to={`/trip/${trip.id}`} key={trip.id}>
-                    <div className="group glass-card rounded-2xl overflow-hidden hover:shadow-champagne hover:scale-[1.01] transition-all duration-500 cursor-pointer">
-                      <div className="relative h-48 overflow-hidden bg-secondary">
-                        {trip.image_url ? (
-                          <img
-                            src={trip.image_url}
-                            alt={trip.destination}
-                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : null}
-                        <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
-                        <div className="absolute top-4 right-4 flex items-center gap-2">
-                          {trip.is_public && (
-                            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-2 py-0.5 font-body">
-                              Public
-                            </span>
-                          )}
-                          <span className="text-xs tracking-[0.15em] uppercase bg-secondary/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-primary font-body">
-                            {trip.trip_type || "Trip"}
-                          </span>
-                        </div>
-                        <button
-                          onClick={(e) => { e.preventDefault(); navigate(`/trip/${trip.id}`); }}
-                          className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          aria-label="Share trip"
-                        >
-                          <Share2 size={13} className="text-muted-foreground" />
-                        </button>
-                      </div>
-                      <div className="p-6">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="text-2xl md:text-3xl font-heading">{trip.destination}</h3>
-                            <p className="text-sm text-muted-foreground font-body">{trip.country}</p>
+                {trips.map((trip) => {
+                  const timing = getTripTiming(trip.start_date, trip.end_date);
+                  const isActive = timing.phase === "active";
+                  const isCompleted = timing.phase === "completed";
+
+                  return (
+                    <Link to={`/trip/${trip.id}`} key={trip.id}>
+                      <div className={`group glass-card rounded-2xl overflow-hidden transition-all duration-500 cursor-pointer ${
+                        isActive
+                          ? "ring-1 ring-emerald-500/40 shadow-[0_0_24px_-6px_rgba(16,185,129,0.15)] hover:shadow-[0_0_32px_-4px_rgba(16,185,129,0.25)] hover:scale-[1.01]"
+                          : isCompleted
+                            ? "opacity-75 hover:opacity-100 hover:scale-[1.01] hover:shadow-champagne"
+                            : "hover:shadow-champagne hover:scale-[1.01]"
+                      }`}>
+                        <div className="relative h-48 overflow-hidden bg-secondary">
+                          {trip.image_url ? (
+                            <img
+                              src={trip.image_url}
+                              alt={trip.destination}
+                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          ) : null}
+                          <div className={`absolute inset-0 ${isActive ? "bg-gradient-to-t from-card via-card/40 to-transparent" : "bg-gradient-to-t from-card to-transparent"}`} />
+
+                          <div className="absolute top-4 right-4 flex items-center gap-2">
+                            {trip.is_public && (
+                              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-2 py-0.5 font-body">
+                                Public
+                              </span>
+                            )}
+                            {isActive ? (
+                              <span className="text-[10px] tracking-[0.15em] uppercase font-body bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-sm">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                Travel Mode
+                              </span>
+                            ) : isCompleted ? (
+                              <span className="text-[10px] tracking-[0.15em] uppercase font-body bg-secondary/80 text-muted-foreground border border-border px-2.5 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-sm">
+                                <CheckCircle2 size={10} />
+                                Completed
+                              </span>
+                            ) : (
+                              <span className="text-xs tracking-[0.15em] uppercase bg-secondary/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-primary font-body">
+                                {trip.trip_type || "Trip"}
+                              </span>
+                            )}
                           </div>
-                          <ArrowRight size={18} className="text-primary mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                          {isActive && (
+                            <div className="absolute bottom-3 left-4 right-4">
+                              <div className="flex items-center gap-2">
+                                <Sun size={14} className="text-emerald-300 flex-shrink-0" />
+                                <span className="text-sm font-heading text-white drop-shadow-md">
+                                  {timing.label}
+                                </span>
+                                <span className="text-xs text-emerald-300/80 font-body ml-auto">
+                                  {timing.daysLeft} day{timing.daysLeft === 1 ? "" : "s"} left
+                                </span>
+                              </div>
+                              <div className="mt-2 h-1 rounded-full bg-white/10 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-300 transition-all duration-1000"
+                                  style={{ width: `${Math.round((timing.currentDay / timing.totalDays) * 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {!isActive && (
+                            <button
+                              onClick={(e) => { e.preventDefault(); navigate(`/trip/${trip.id}`); }}
+                              className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-secondary/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              aria-label="Share trip"
+                            >
+                              <Share2 size={13} className="text-muted-foreground" />
+                            </button>
+                          )}
                         </div>
-                        <div className="flex flex-col gap-1 text-xs font-body">
-                          <span className="text-primary font-medium">
-                            {getCountdown(trip.start_date, trip.end_date, trip.destination)}
-                          </span>
-                          <span className="text-muted-foreground flex items-center gap-1.5">
-                            <Calendar size={12} className="text-primary" />
-                            {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
-                          </span>
+                        <div className="p-6">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h3 className="text-2xl md:text-3xl font-heading">{trip.destination}</h3>
+                              <p className="text-sm text-muted-foreground font-body">{trip.country}</p>
+                            </div>
+                            <ArrowRight size={18} className={`mt-1 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? "text-emerald-400" : "text-primary"}`} />
+                          </div>
+                          <div className="flex flex-col gap-1 text-xs font-body">
+                            {!isActive && (
+                              <span className={`font-medium ${isCompleted ? "text-muted-foreground" : "text-primary"}`}>
+                                {timing.label}
+                              </span>
+                            )}
+                            <span className="text-muted-foreground flex items-center gap-1.5">
+                              <Calendar size={12} className={isActive ? "text-emerald-400" : "text-primary"} />
+                              {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </motion.section>
