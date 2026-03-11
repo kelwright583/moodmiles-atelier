@@ -18,8 +18,8 @@ const FloatingActionButton = () => {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.3 }}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
-        style={{ backgroundColor: "#ca975c" }}
+        className="fixed z-40 w-14 h-14 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-transform right-6"
+        style={{ backgroundColor: "#ca975c", bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
         aria-label="New Trip"
       >
         <Plus size={24} className="text-primary-foreground" />

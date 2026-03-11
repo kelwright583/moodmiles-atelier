@@ -92,6 +92,7 @@ const Index = () => {
             alt="Luxury travel fashion"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
         </div>

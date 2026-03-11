@@ -21,6 +21,8 @@ import PublicEvent from "./pages/PublicEvent";
 import SpotifyCallback from "./pages/SpotifyCallback";
 import PublicTrip from "./pages/PublicTrip";
 import FloatingActionButton from "./components/layout/FloatingActionButton";
+import InstallPrompt from "./components/InstallPrompt";
+import Offline from "./pages/Offline";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +74,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <FloatingActionButton />
+          <InstallPrompt />
           <Routes>
             {/* Public */}
             <Route path="/" element={<Index />} />
@@ -95,6 +98,7 @@ const App = () => (
             <Route path="/trip/:id" element={<ProtectedRoute><OnboardingGuard><TripDetail /></OnboardingGuard></ProtectedRoute>} />
             <Route path="/trip/:tripId/lookbook" element={<ProtectedRoute><TripLookbook /></ProtectedRoute>} />
 
+            <Route path="/offline" element={<Offline />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

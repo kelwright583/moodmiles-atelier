@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -7,14 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Trip } from "@/types/database";
 import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
-import OverviewTab from "@/components/trip/OverviewTab";
-import EventsTab from "@/components/trip/EventsTab";
-import PackingTab from "@/components/trip/PackingTab";
-import BriefingTab, { getSeverity } from "@/components/trip/BriefingTab";
-import BoardTab from "@/components/trip/BoardTab";
-import ChatTab from "@/components/trip/ChatTab";
-import StyleTab from "@/components/trip/StyleTab";
-import PlaylistTab from "@/components/trip/PlaylistTab";
+import { getSeverity } from "@/components/trip/BriefingTab";
 import TripEditDialog from "@/components/trip/TripEditDialog";
 import TripDeleteDialog from "@/components/trip/TripDeleteDialog";
 import { ShimmerSkeleton } from "@/components/ui/shimmer-skeleton";
@@ -22,6 +15,23 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { toPng } from "html-to-image";
+
+const OverviewTab = lazy(() => import("@/components/trip/OverviewTab"));
+const EventsTab = lazy(() => import("@/components/trip/EventsTab"));
+const PackingTab = lazy(() => import("@/components/trip/PackingTab"));
+const BriefingTab = lazy(() => import("@/components/trip/BriefingTab"));
+const BoardTab = lazy(() => import("@/components/trip/BoardTab"));
+const ChatTab = lazy(() => import("@/components/trip/ChatTab"));
+const StyleTab = lazy(() => import("@/components/trip/StyleTab"));
+const PlaylistTab = lazy(() => import("@/components/trip/PlaylistTab"));
+
+const TabSkeleton = () => (
+  <div className="space-y-4 p-4">
+    <ShimmerSkeleton variant="card" className="h-32 rounded-2xl" />
+    <ShimmerSkeleton variant="card" className="h-24 rounded-2xl" />
+    <ShimmerSkeleton variant="text" className="h-8 rounded-lg w-2/3" />
+  </div>
+);
 
 const tabs = ["Overview", "Briefing", "Events", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
 type Tab = typeof tabs[number];
@@ -521,75 +531,77 @@ const TripDetail = () => {
             ))}
           </div>
 
-          {activeTab === "Overview" && (
-            <OverviewTab
-              tripId={trip.id}
-              trip={{ latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date, user_id: trip.user_id, destination: trip.destination }}
-              onNavigateTo={(tab) => setActiveTab(tab as Tab)}
-            />
-          )}
-          {activeTab === "Events" && (
-            <EventsTab
-              tripId={trip.id}
-              trip={{ destination: trip.destination, country: trip.country, user_id: trip.user_id, image_url: trip.image_url, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude }}
-              onStyleEvent={handleStyleEvent}
-            />
-          )}
-          {activeTab === "Briefing" && (
-            <BriefingTab
-              tripId={trip.id}
-              trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, start_date: trip.start_date, end_date: trip.end_date }}
-            />
-          )}
-          {activeTab === "Style" && (
-            <StyleTab
-              tripId={trip.id}
-              trip={{
-                destination: trip.destination,
-                country: trip.country,
-                trip_type: trip.trip_type,
-                latitude: trip.latitude,
-                longitude: trip.longitude,
-                start_date: trip.start_date,
-                end_date: trip.end_date,
-                user_id: trip.user_id,
-                trip_theme: trip.trip_theme ?? null,
-              }}
-              initialSearch={inspireSearch}
-              initialEventId={inspireEventId}
-            />
-          )}
-          {activeTab === "Chat" && (
-            <ChatTab
-              tripId={trip.id}
-              trip={{ destination: trip.destination, user_id: trip.user_id }}
-            />
-          )}
-          {activeTab === "Board" && (
-            <BoardTab
-              tripId={trip.id}
-              trip={{
-                user_id: trip.user_id,
-                destination: trip.destination,
-                trip_theme: trip.trip_theme ?? null,
-                theme_colors: trip.theme_colors ?? null,
-              }}
-              onSearchTheme={handleSearchTheme}
-              onAddLookForEvent={(query) => handleAddLookForEvent(query)}
-            />
-          )}
-          {activeTab === "Playlist" && (
-            <PlaylistTab
-              tripId={trip.id}
-              trip={{ destination: trip.destination, trip_type: trip.trip_type, start_date: trip.start_date }}
-            />
-          )}
-          {activeTab === "Pack" && (
-            <PackingTab
-              tripId={trip.id}
-              trip={{ destination: trip.destination, country: trip.country, origin_city: trip.origin_city, origin_country: trip.origin_country, start_date: trip.start_date, end_date: trip.end_date, trip_type: trip.trip_type }}
-            />
-          )}
+          <Suspense fallback={<TabSkeleton />}>
+            {activeTab === "Overview" && (
+              <OverviewTab
+                tripId={trip.id}
+                trip={{ latitude: trip.latitude, longitude: trip.longitude, start_date: trip.start_date, end_date: trip.end_date, user_id: trip.user_id, destination: trip.destination }}
+                onNavigateTo={(tab) => setActiveTab(tab as Tab)}
+              />
+            )}
+            {activeTab === "Events" && (
+              <EventsTab
+                tripId={trip.id}
+                trip={{ destination: trip.destination, country: trip.country, user_id: trip.user_id, image_url: trip.image_url, trip_type: trip.trip_type, latitude: trip.latitude, longitude: trip.longitude }}
+                onStyleEvent={handleStyleEvent}
+              />
+            )}
+            {activeTab === "Briefing" && (
+              <BriefingTab
+                tripId={trip.id}
+                trip={{ destination: trip.destination, country: trip.country, trip_type: trip.trip_type, start_date: trip.start_date, end_date: trip.end_date }}
+              />
+            )}
+            {activeTab === "Style" && (
+              <StyleTab
+                tripId={trip.id}
+                trip={{
+                  destination: trip.destination,
+                  country: trip.country,
+                  trip_type: trip.trip_type,
+                  latitude: trip.latitude,
+                  longitude: trip.longitude,
+                  start_date: trip.start_date,
+                  end_date: trip.end_date,
+                  user_id: trip.user_id,
+                  trip_theme: trip.trip_theme ?? null,
+                }}
+                initialSearch={inspireSearch}
+                initialEventId={inspireEventId}
+              />
+            )}
+            {activeTab === "Chat" && (
+              <ChatTab
+                tripId={trip.id}
+                trip={{ destination: trip.destination, user_id: trip.user_id }}
+              />
+            )}
+            {activeTab === "Board" && (
+              <BoardTab
+                tripId={trip.id}
+                trip={{
+                  user_id: trip.user_id,
+                  destination: trip.destination,
+                  trip_theme: trip.trip_theme ?? null,
+                  theme_colors: trip.theme_colors ?? null,
+                }}
+                onSearchTheme={handleSearchTheme}
+                onAddLookForEvent={(query) => handleAddLookForEvent(query)}
+              />
+            )}
+            {activeTab === "Playlist" && (
+              <PlaylistTab
+                tripId={trip.id}
+                trip={{ destination: trip.destination, trip_type: trip.trip_type, start_date: trip.start_date }}
+              />
+            )}
+            {activeTab === "Pack" && (
+              <PackingTab
+                tripId={trip.id}
+                trip={{ destination: trip.destination, country: trip.country, origin_city: trip.origin_city, origin_country: trip.origin_country, start_date: trip.start_date, end_date: trip.end_date, trip_type: trip.trip_type }}
+              />
+            )}
+          </Suspense>
         </div>
       </main>
 

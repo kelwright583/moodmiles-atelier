@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* Concierge Global brand palette — single source of truth: #ca975c */
+    /* Concierge Styled brand palette — single source of truth: #ca975c */
     --brand-gold: #ca975c;
 
     --background: 30 11% 7%;
@@ -212,4 +212,54 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(202, 151, 92, 0.5) hsl(30 11% 7%);
   }
+}
+
+/* ── PWA & Mobile Polish ─────────────────────────────────────── */
+
+/* Safe area insets for bottom-fixed elements */
+.safe-bottom {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Prevent double-tap zoom on interactive elements */
+button, a, input, select, textarea, [role="button"], [tabindex] {
+  touch-action: manipulation;
+}
+
+/* Minimum tap target for all interactive elements */
+@media (pointer: coarse) {
+  button, a, [role="button"], [tabindex] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Suppress sticky hover on touch devices */
+@media (hover: none) {
+  .hover\:bg-secondary:hover,
+  .hover\:bg-secondary\/80:hover,
+  .hover\:border-primary\/50:hover,
+  .hover\:text-foreground:hover,
+  .hover\:underline:hover,
+  .group:hover .group-hover\:opacity-100,
+  .group:hover .group-hover\:scale-105,
+  .group:hover .group-hover\:translate-y-0 {
+    /* Reset to non-hover state on touch */
+  }
+}
+
+/* Scroll momentum on scrollable containers */
+.overflow-y-auto, .overflow-x-auto, .overflow-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Modals and sheets: never overflow screen */
+[role="dialog"], .sheet-content, [data-radix-popper-content-wrapper] {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Images below the fold */
+img[loading="lazy"] {
+  content-visibility: auto;
 }
