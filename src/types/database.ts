@@ -263,3 +263,18 @@ export interface TripPhoto {
   taken_at: string | null;
   created_at: string;
 }
+
+export interface TripExpense {
+  id: string;
+  trip_id: string;
+  paid_by: string;
+  description: string;
+  amount: number;
+  currency: string;
+  category: "food" | "transport" | "accommodation" | "activity" | "shopping" | "other";
+  split_between: string[];
+  receipt_url: string | null;
+  notes: string | null;
+  expense_date: string;
+  created_at: string;
+}

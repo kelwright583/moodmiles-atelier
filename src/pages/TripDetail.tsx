@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Trip } from "@/types/database";
-import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun, Camera } from "lucide-react";
+import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun, Camera, Receipt } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { getSeverity } from "@/components/trip/BriefingTab";
 import TripEditDialog from "@/components/trip/TripEditDialog";
@@ -26,6 +26,7 @@ const StyleTab = lazy(() => import("@/components/trip/StyleTab"));
 const PlaylistTab = lazy(() => import("@/components/trip/PlaylistTab"));
 const TodayTab = lazy(() => import("@/components/trip/TodayTab"));
 const PhotosTab = lazy(() => import("@/components/trip/PhotosTab"));
+const ExpensesTab = lazy(() => import("@/components/trip/ExpensesTab"));
 
 const TabSkeleton = () => (
   <div className="space-y-4 p-4">
@@ -36,8 +37,8 @@ const TabSkeleton = () => (
 );
 
 const PLANNING_TABS = ["Overview", "Briefing", "Events", "Photos", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
-const ACTIVE_TABS = ["Today", "Photos", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
-type Tab = "Today" | "Photos" | "Overview" | "Briefing" | "Events" | "Chat" | "Style" | "Board" | "Playlist" | "Pack";
+const ACTIVE_TABS = ["Today", "Photos", "Expenses", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
+type Tab = "Today" | "Photos" | "Expenses" | "Overview" | "Briefing" | "Events" | "Chat" | "Style" | "Board" | "Playlist" | "Pack";
 
 const TripDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -525,6 +526,7 @@ const TripDetail = () => {
               >
                 {tab === "Today" && <Sun size={12} className={activeTab === "Today" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Photos" && <Camera size={12} className={activeTab === "Photos" ? "text-primary" : "text-muted-foreground"} />}
+                {tab === "Expenses" && <Receipt size={12} className={activeTab === "Expenses" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Briefing" && <Shield size={12} className={activeTab === "Briefing" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Events" && <CalendarDays size={12} className={activeTab === "Events" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Chat" && <MessageCircle size={12} className={activeTab === "Chat" ? "text-primary" : "text-muted-foreground"} />}
@@ -565,6 +567,12 @@ const TripDetail = () => {
             )}
             {activeTab === "Photos" && (
               <PhotosTab
+                tripId={trip.id}
+                trip={{ destination: trip.destination, user_id: trip.user_id }}
+              />
+            )}
+            {activeTab === "Expenses" && (
+              <ExpensesTab
                 tripId={trip.id}
                 trip={{ destination: trip.destination, user_id: trip.user_id }}
               />
