@@ -42,6 +42,7 @@ export interface Trip {
   theme_colors: string[] | null;
   is_public: boolean;
   share_token: string;
+  status: "upcoming" | "active" | "completed";
 }
 
 export interface WeatherData {
@@ -122,6 +123,12 @@ export interface TripEvent {
   currency: string | null;
   share_token: string | null;
   created_at: string;
+  gate: string | null;
+  terminal: string | null;
+  baggage_claim: string | null;
+  flight_number: string | null;
+  flight_status: "scheduled" | "boarding" | "departed" | "en_route" | "landed" | "cancelled" | "delayed" | null;
+  flight_status_updated_at: string | null;
 }
 
 export interface EventAttendee {

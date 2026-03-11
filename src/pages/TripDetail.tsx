@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Trip } from "@/types/database";
-import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen } from "lucide-react";
+import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { getSeverity } from "@/components/trip/BriefingTab";
 import TripEditDialog from "@/components/trip/TripEditDialog";
@@ -24,6 +24,7 @@ const BoardTab = lazy(() => import("@/components/trip/BoardTab"));
 const ChatTab = lazy(() => import("@/components/trip/ChatTab"));
 const StyleTab = lazy(() => import("@/components/trip/StyleTab"));
 const PlaylistTab = lazy(() => import("@/components/trip/PlaylistTab"));
+const TodayTab = lazy(() => import("@/components/trip/TodayTab"));
 
 const TabSkeleton = () => (
   <div className="space-y-4 p-4">
@@ -33,14 +34,16 @@ const TabSkeleton = () => (
   </div>
 );
 
-const tabs = ["Overview", "Briefing", "Events", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
-type Tab = typeof tabs[number];
+const PLANNING_TABS = ["Overview", "Briefing", "Events", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
+const ACTIVE_TABS = ["Today", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
+type Tab = "Today" | "Overview" | "Briefing" | "Events" | "Chat" | "Style" | "Board" | "Playlist" | "Pack";
 
 const TripDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>("Events");
+  const [initialTabSet, setInitialTabSet] = useState(false);
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -98,6 +101,21 @@ const TripDetail = () => {
     },
     enabled: !!id,
   });
+
+  // Update trip statuses and set initial tab based on trip status
+  useEffect(() => {
+    if (!trip) return;
+    supabase.rpc("update_trip_statuses").catch(() => {});
+    if (!initialTabSet) {
+      setActiveTab(trip.status === "active" ? "Today" : "Events");
+      setInitialTabSet(true);
+    }
+  }, [trip?.id, trip?.status, initialTabSet]);
+
+  const tabs = useMemo<readonly Tab[]>(
+    () => (trip?.status === "active" ? ACTIVE_TABS : PLANNING_TABS),
+    [trip?.status],
+  );
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -452,7 +470,14 @@ const TripDetail = () => {
         <div className="absolute bottom-6 left-4 right-4 md:bottom-8 md:left-8 md:right-8 max-w-6xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
             <div>
-              <span className="text-xs tracking-[0.2em] uppercase text-primary font-body">{trip.trip_type || "Trip"}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs tracking-[0.2em] uppercase text-primary font-body">{trip.trip_type || "Trip"}</span>
+                {trip.status === "active" && (
+                  <span className="text-[10px] tracking-[0.15em] uppercase font-body bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                    Travel Mode
+                  </span>
+                )}
+              </div>
               <h1 className="text-3xl md:text-5xl font-heading mt-1">{trip.destination}</h1>
               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground font-body">
                 <span className="flex items-center gap-1"><Calendar size={12} className="text-primary" /> {formatDate(trip.start_date)} – {formatDate(trip.end_date)}</span>
@@ -497,6 +522,7 @@ const TripDetail = () => {
                 onClick={() => handleTabClick(tab)}
                 className={`px-4 md:px-5 py-3 text-sm font-body tracking-wide transition-all duration-300 relative whitespace-nowrap flex items-center gap-1.5 ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
               >
+                {tab === "Today" && <Sun size={12} className={activeTab === "Today" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Briefing" && <Shield size={12} className={activeTab === "Briefing" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Events" && <CalendarDays size={12} className={activeTab === "Events" ? "text-primary" : "text-muted-foreground"} />}
                 {tab === "Chat" && <MessageCircle size={12} className={activeTab === "Chat" ? "text-primary" : "text-muted-foreground"} />}
@@ -532,6 +558,9 @@ const TripDetail = () => {
           </div>
 
           <Suspense fallback={<TabSkeleton />}>
+            {activeTab === "Today" && (
+              <TodayTab tripId={trip.id} trip={trip as Trip} />
+            )}
             {activeTab === "Overview" && (
               <OverviewTab
                 tripId={trip.id}
