@@ -156,10 +156,10 @@ const BriefingSection = ({
 // ── Top-level disclaimer banner (always visible) ─────────────────────────────
 
 const DisclaimerBanner = () => (
-  <div className="rounded-xl border border-amber-500/30 bg-amber-500/8 px-4 py-3.5 flex gap-3">
-    <ShieldAlert size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
+  <div className="rounded-xl border border-primary/30 bg-primary/5 px-4 py-3.5 flex gap-3">
+    <ShieldAlert size={16} className="text-primary flex-shrink-0 mt-0.5" />
     <div className="min-w-0">
-      <p className="text-xs font-body text-amber-200/90 leading-relaxed">
+      <p className="text-xs font-body text-muted-foreground leading-relaxed">
         This briefing is AI-generated and refreshed monthly. Always verify entry requirements, health advice, and travel advisories with your government's official travel advisory and a qualified medical professional before travel.
       </p>
       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
@@ -167,7 +167,7 @@ const DisclaimerBanner = () => (
           href="https://www.gov.uk/foreign-travel-advice"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[11px] font-body text-amber-400 hover:text-amber-300 underline underline-offset-2 transition-colors flex items-center gap-1"
+          className="text-[11px] font-body text-primary hover:text-primary/80 underline underline-offset-2 transition-colors flex items-center gap-1"
         >
           UK: gov.uk/foreign-travel-advice <ExternalLink size={9} />
         </a>
@@ -175,7 +175,7 @@ const DisclaimerBanner = () => (
           href="https://travel.state.gov"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[11px] font-body text-amber-400 hover:text-amber-300 underline underline-offset-2 transition-colors flex items-center gap-1"
+          className="text-[11px] font-body text-primary hover:text-primary/80 underline underline-offset-2 transition-colors flex items-center gap-1"
         >
           US: travel.state.gov <ExternalLink size={9} />
         </a>
