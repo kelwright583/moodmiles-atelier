@@ -506,7 +506,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
             <DialogTitle className="font-heading">Invite to Trip</DialogTitle>
           </DialogHeader>
 
-          {myProfile && !myProfile.handle_set ? (
+          {myProfile && !myProfile.handle ? (
             <InlineHandlePrompt
               promptText="Set your @handle so your guest knows who's inviting them."
               onComplete={() => queryClient.invalidateQueries({ queryKey: ["profile", user?.id] })}
