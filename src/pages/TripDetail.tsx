@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Trip } from "@/types/database";
-import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun, Camera, Receipt, ImageIcon, CheckCircle2 } from "lucide-react";
+import { Calendar, MapPin, Pencil, Trash2, Shield, CalendarDays, Grid3X3, MessageCircle, Sparkles, Music, Share2, Copy, Check, Download, BookOpen, Sun, Camera, Receipt, ImageIcon, CheckCircle2, ChevronDown } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import { getSeverity } from "@/components/trip/BriefingTab";
 import TripEditDialog from "@/components/trip/TripEditDialog";
@@ -171,8 +171,14 @@ const TripHero = ({
   );
 };
 
-const PLANNING_TABS = ["Overview", "Briefing", "Events", "Photos", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
-const ACTIVE_TABS = ["Today", "Photos", "Expenses", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
+// Planning (upcoming) — original 8 tabs; no travel-only tabs (Photos/Expenses/Today are travel features)
+const PLANNING_TABS = ["Overview", "Briefing", "Events", "Chat", "Style", "Board", "Playlist", "Pack"] as const;
+// Active (travel mode) — split into primary travel tabs + collapsible planning section
+const TRAVEL_PRIMARY_TABS = ["Today", "Photos", "Expenses", "Chat", "Playlist"] as const;
+const TRAVEL_PLANNING_TABS = ["Events", "Style", "Board", "Pack", "Overview", "Briefing"] as const;
+// Keep ACTIVE_TABS for the useMemo (used in non-active fallback path)
+const ACTIVE_TABS = [...TRAVEL_PRIMARY_TABS, ...TRAVEL_PLANNING_TABS] as const;
+// Completed — Memories first, then travel content, then planning tabs
 const COMPLETED_TABS = ["Memories", "Photos", "Expenses", "Events", "Chat", "Style", "Board", "Playlist", "Pack", "Overview", "Briefing"] as const;
 type Tab = "Today" | "Photos" | "Expenses" | "Memories" | "Overview" | "Briefing" | "Events" | "Chat" | "Style" | "Board" | "Playlist" | "Pack";
 
@@ -190,6 +196,7 @@ const TripDetail = () => {
 
   const [lookbookGateOpen, setLookbookGateOpen] = useState(false);
   const [tabLastViewed, setTabLastViewed] = useState<Record<string, number>>({});
+  const [planningExpanded, setPlanningExpanded] = useState(false);
 
   // Tour for first-time collaborators
   const tourKey = id ? `first_collab_visit_${id}` : "";
@@ -240,15 +247,22 @@ const TripDetail = () => {
     enabled: !!id,
   });
 
-  // Update trip statuses and set initial tab based on trip status
+  // Update trip statuses then re-fetch so the React Query cache reflects the correct status
   useEffect(() => {
-    if (!trip) return;
-    void supabase.rpc("update_trip_statuses");
-    if (!initialTabSet) {
-      setActiveTab(trip.status === "completed" ? "Memories" : trip.status === "active" ? "Today" : "Events");
-      setInitialTabSet(true);
-    }
-  }, [trip?.id, trip?.status, initialTabSet]);
+    if (!trip?.id) return;
+    supabase.rpc("update_trip_statuses").then(() => {
+      queryClient.invalidateQueries({ queryKey: ["trip", id] });
+    });
+  // Run once per trip id — we don't want it re-running on every status change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trip?.id]);
+
+  // Set initial tab once we have the (possibly freshly-updated) status
+  useEffect(() => {
+    if (!trip || initialTabSet) return;
+    setActiveTab(trip.status === "completed" ? "Memories" : trip.status === "active" ? "Today" : "Events");
+    setInitialTabSet(true);
+  }, [trip?.status, initialTabSet]);
 
   const tabs = useMemo<readonly Tab[]>(
     () => trip?.status === "completed" ? COMPLETED_TABS : trip?.status === "active" ? ACTIVE_TABS : PLANNING_TABS,
@@ -429,6 +443,51 @@ const TripDetail = () => {
   });
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" });
+
+  // Auto-expand planning section when navigating to a planning tab in travel mode
+  useEffect(() => {
+    if (trip?.status === "active" && (TRAVEL_PLANNING_TABS as readonly string[]).includes(activeTab)) {
+      setPlanningExpanded(true);
+    }
+  }, [activeTab, trip?.status]);
+
+  const renderTabButton = (tab: Tab) => (
+    <button
+      key={tab}
+      onClick={() => handleTabClick(tab)}
+      className={`px-4 md:px-5 py-3 text-sm font-body tracking-wide transition-all duration-300 relative whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+    >
+      {tab === "Today" && <Sun size={12} className={activeTab === "Today" ? "text-primary" : "text-muted-foreground"} />}
+      {tab === "Memories" && <ImageIcon size={12} className={activeTab === "Memories" ? "text-primary" : "text-muted-foreground"} />}
+      {tab === "Photos" && <Camera size={12} className={activeTab === "Photos" ? "text-primary" : "text-muted-foreground"} />}
+      {tab === "Expenses" && <Receipt size={12} className={activeTab === "Expenses" ? "text-primary" : "text-muted-foreground"} />}
+      {tab === "Briefing" && <Shield size={12} className={activeTab === "Briefing" ? "text-primary" : "text-muted-foreground"} />}
+      {tab === "Events" && <CalendarDays size={12} className={activeTab === "Events" ? "text-primary" : "text-muted-foreground"} />}
+      {tab === "Chat" && <MessageCircle size={12} className={activeTab === "Chat" ? "text-primary" : "text-muted-foreground"} />}
+      {tab === "Style" && <Sparkles size={12} className={activeTab === "Style" ? "text-primary" : "text-muted-foreground"} />}
+      {tab === "Board" && <Grid3X3 size={12} className={activeTab === "Board" ? "text-primary" : "text-muted-foreground"} />}
+      {tab === "Playlist" && <Music size={12} className={activeTab === "Playlist" ? "text-primary" : "text-muted-foreground"} />}
+      {tab}
+      {tab === "Briefing" && briefingBadge && (
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+      )}
+      {tab === "Chat" && chatUnread > 0 && activeTab !== "Chat" && (
+        <span className="min-w-[16px] h-4 rounded-full bg-blue-500 text-white text-[10px] font-body flex items-center justify-center px-1 flex-shrink-0">
+          {chatUnread > 99 ? "99+" : chatUnread}
+        </span>
+      )}
+      {tab === "Events" && recentEventCount > 0 && activeTab !== "Events" && (
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+      )}
+      {tab === "Board" && ((unreadByType["poll_created"] || 0) + (unreadByType["outfit_pinned"] || 0)) > 0 && activeTab !== "Board" && (
+        <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+      )}
+      {tab === "Playlist" && (unreadByType["track_added"] || 0) > 0 && activeTab !== "Playlist" && (
+        <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+      )}
+      {activeTab === tab && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-px bg-gradient-champagne" />}
+    </button>
+  );
 
   // Fetch outfit image URLs for trip card — up to 3 pinned outfit suggestions
   const { data: outfitImages = [] } = useQuery<string[]>({
@@ -611,50 +670,41 @@ const TripDetail = () => {
       <main className="px-4 md:px-6 pb-16 md:pb-20">
         <div className="max-w-6xl mx-auto">
           {/* Tabs */}
-          <div className="flex gap-1 mt-6 md:mt-8 mb-8 md:mb-12 border-b border-border overflow-x-auto scrollbar-hide">
-            {tabs.filter((tab) => tab !== "Chat" || collabCount > 0).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => handleTabClick(tab)}
-                className={`px-4 md:px-5 py-3 text-sm font-body tracking-wide transition-all duration-300 relative whitespace-nowrap flex items-center gap-1.5 ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                {tab === "Today" && <Sun size={12} className={activeTab === "Today" ? "text-primary" : "text-muted-foreground"} />}
-                {tab === "Memories" && <ImageIcon size={12} className={activeTab === "Memories" ? "text-primary" : "text-muted-foreground"} />}
-                {tab === "Photos" && <Camera size={12} className={activeTab === "Photos" ? "text-primary" : "text-muted-foreground"} />}
-                {tab === "Expenses" && <Receipt size={12} className={activeTab === "Expenses" ? "text-primary" : "text-muted-foreground"} />}
-                {tab === "Briefing" && <Shield size={12} className={activeTab === "Briefing" ? "text-primary" : "text-muted-foreground"} />}
-                {tab === "Events" && <CalendarDays size={12} className={activeTab === "Events" ? "text-primary" : "text-muted-foreground"} />}
-                {tab === "Chat" && <MessageCircle size={12} className={activeTab === "Chat" ? "text-primary" : "text-muted-foreground"} />}
-                {tab === "Style" && <Sparkles size={12} className={activeTab === "Style" ? "text-primary" : "text-muted-foreground"} />}
-                {tab === "Board" && <Grid3X3 size={12} className={activeTab === "Board" ? "text-primary" : "text-muted-foreground"} />}
-                {tab === "Playlist" && <Music size={12} className={activeTab === "Playlist" ? "text-primary" : "text-muted-foreground"} />}
-                {tab}
-                {/* Red dot badge when briefing has critical items */}
-                {tab === "Briefing" && briefingBadge && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+          {trip.status === "active" ? (
+            // Travel mode: primary travel tabs + collapsible planning section
+            <div className="mt-6 md:mt-8 mb-8 md:mb-12">
+              <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-hide">
+                {TRAVEL_PRIMARY_TABS.filter((tab) => tab !== "Chat" || collabCount > 0).map(renderTabButton)}
+                <button
+                  onClick={() => setPlanningExpanded((v) => !v)}
+                  className={`px-4 py-3 text-sm font-body tracking-wide transition-all duration-300 relative whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${planningExpanded ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Planning
+                  <ChevronDown size={12} className={`transition-transform duration-200 ${planningExpanded ? "rotate-180" : ""}`} />
+                </button>
+              </div>
+              <AnimatePresence>
+                {planningExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-hide bg-secondary/20">
+                      {TRAVEL_PLANNING_TABS.map(renderTabButton)}
+                    </div>
+                  </motion.div>
                 )}
-                {/* Unread count badge on Chat tab */}
-                {tab === "Chat" && chatUnread > 0 && activeTab !== "Chat" && (
-                  <span className="min-w-[16px] h-4 rounded-full bg-blue-500 text-white text-[10px] font-body flex items-center justify-center px-1 flex-shrink-0">
-                    {chatUnread > 99 ? "99+" : chatUnread}
-                  </span>
-                )}
-                {/* Red dot on Events tab for new events */}
-                {tab === "Events" && recentEventCount > 0 && activeTab !== "Events" && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                )}
-                {/* Gold dot on Board tab for unread poll/board notifications */}
-                {tab === "Board" && ((unreadByType["poll_created"] || 0) + (unreadByType["outfit_pinned"] || 0)) > 0 && activeTab !== "Board" && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                )}
-                {/* Green dot on Playlist tab for new tracks */}
-                {tab === "Playlist" && (unreadByType["track_added"] || 0) > 0 && activeTab !== "Playlist" && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
-                )}
-                {activeTab === tab && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-px bg-gradient-champagne" />}
-              </button>
-            ))}
-          </div>
+              </AnimatePresence>
+            </div>
+          ) : (
+            // Planning / completed mode: single scrollable tab row
+            <div className="flex gap-1 mt-6 md:mt-8 mb-8 md:mb-12 border-b border-border overflow-x-auto scrollbar-hide">
+              {tabs.filter((tab) => tab !== "Chat" || collabCount > 0).map(renderTabButton)}
+            </div>
+          )}
 
           <Suspense fallback={<TabSkeleton />}>
             {activeTab === "Today" && (
