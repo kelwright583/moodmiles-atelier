@@ -47,7 +47,7 @@ if (typeof window !== "undefined") {
   }, { once: true });
 }
 
-const CELEBRATION_KEY = "moodmiles_styled_celebrated";
+const CELEBRATION_KEY = "conciergeStyled_styled_celebrated";
 
 function formatEventDate(dateStr: string | null): string {
   if (!dateStr) return "";

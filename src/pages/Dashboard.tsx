@@ -40,7 +40,7 @@ function getTripTiming(startDate: string, endDate: string) {
   return { phase: "completed" as const, label: "Completed", currentDay: 0, totalDays, daysLeft: 0 };
 }
 
-const BANNER_DISMISS_KEY = "moodmiles_profile_banner_dismissed_until";
+const BANNER_DISMISS_KEY = "conciergeStyled_profile_banner_dismissed_until";
 
 function isBannerDismissed(): boolean {
   const until = localStorage.getItem(BANNER_DISMISS_KEY);

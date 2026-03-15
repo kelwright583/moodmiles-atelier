@@ -1,5 +1,5 @@
 -- ============================================
--- MoodMiles Full Database Setup
+-- Concierge Styled Full Database Setup
 -- Run this entire file in Supabase SQL Editor
 -- for a fresh project
 -- ============================================

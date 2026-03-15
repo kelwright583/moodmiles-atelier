@@ -1,5 +1,5 @@
 -- ============================================================
--- MoodMiles Schema v2 — Collaboration, Commerce, Intelligence
+-- Concierge Styled Schema v2 — Collaboration, Commerce, Intelligence
 -- Migration: 20260309120000
 -- ============================================================
 
