@@ -1,13 +1,13 @@
-# MoodMiles Atelier — Product Overview & Partner Brief
+# Concierge Styled — Product Overview & Partner Brief
 
 > **For:** Business partners, marketing, and growth strategy  
-> **Purpose:** Understand what MoodMiles is, what it does, where it’s going — and where the biggest opportunities lie
+> **Purpose:** Understand what Concierge Styled is, what it does, where it’s going — and where the biggest opportunities lie
 
 ---
 
 ## Table of Contents
 
-1. [What Is MoodMiles?](#1-what-is-moodmiles)
+1. [What Is Concierge Styled?](#1-what-is-concierge-styled)
 2. [Brand & Voice](#2-brand--voice)
 3. [Current Functionality](#3-current-functionality)
 4. [Scope: What Exists vs. What’s Planned](#4-scope-what-exists-vs-whats-planned)
@@ -17,15 +17,15 @@
 
 ---
 
-## 1. What Is MoodMiles?
+## 1. What Is Concierge Styled?
 
 ### The One-Liner
 
-**MoodMiles is a luxury travel styling platform that tells you what to wear, what to do, and what to pack — before you leave.**
+**Concierge Styled is a luxury travel styling platform that tells you what to wear, what to do, and what to pack — before you leave.**
 
 ### The Longer Story
 
-MoodMiles sits at the intersection of **travel planning** and **fashion intelligence**. It’s not a generic packing app or a Pinterest board. It’s an AI-powered concierge that:
+Concierge Styled sits at the intersection of **travel planning** and **fashion intelligence**. It’s not a generic packing app or a Pinterest board. It’s an AI-powered concierge that:
 
 - Knows the weather at your destination
 - Understands your trip type (Fashion Week, Beach Escape, City Break, etc.)
@@ -44,7 +44,7 @@ Think: **Soho House membership meets Net-a-Porter curation meets a personal styl
 
 ### What Makes It Different
 
-| Competitor | What They Do | MoodMiles Advantage |
+| Competitor | What They Do | Concierge Styled Advantage |
 |-----------|--------------|----------------------|
 | PackPoint | Basic packing lists | No fashion, no AI, no style |
 | TripIt | Itinerary management | Functional, not aspirational |
@@ -52,7 +52,7 @@ Think: **Soho House membership meets Net-a-Porter curation meets a personal styl
 | Stylebook | Wardrobe management | No travel integration |
 | Stitch Fix / Trunk Club | Styled clothing | Not travel-specific |
 
-**MoodMiles is the only product that combines destination intelligence with AI-powered fashion curation.**
+**Concierge Styled is the only product that combines destination intelligence with AI-powered fashion curation.**
 
 ---
 
@@ -190,7 +190,7 @@ Think: **Soho House membership meets Net-a-Porter curation meets a personal styl
 
 ## 5. Opportunity Gaps & Partner Ideas
 
-Based on the master roadmap and partner input, these are the **gaps and opportunities** where MoodMiles can expand — and where the biggest commercial upside sits.
+Based on the master roadmap and partner input, these are the **gaps and opportunities** where Concierge Styled can expand — and where the biggest commercial upside sits.
 
 ### 5.1 Luggage
 
@@ -319,7 +319,7 @@ This is a **differentiator** — few travel apps focus on layovers as a first-cl
 | **Email sequences** | Basic | Welcome, verification — need nurture |
 | **Referral programme** | Planned | “Invite a friend → free month” |
 | **SEO content** | None | “What to wear in [city] in [month]” |
-| **Instagram / Pinterest** | None | Editorial content, “Styled by Moodmiles” |
+| **Instagram / Pinterest** | None | Editorial content, “Styled by Concierge Styled” |
 
 ### Campaign Angles (Ready to Develop)
 
@@ -357,7 +357,7 @@ This is a **differentiator** — few travel apps focus on layovers as a first-cl
 
 ### One-Page Summary for Partners
 
-**MoodMiles** = AI travel stylist. Tells you what to wear, what to do, what to pack — before you go.
+**Concierge Styled** = AI travel stylist. Tells you what to wear, what to do, what to pack — before you go.
 
 **Built:** Trip planning, weather, outfits, activities, packing, mood board. Live on Netlify.
 

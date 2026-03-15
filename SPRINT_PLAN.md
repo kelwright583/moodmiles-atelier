@@ -1,4 +1,4 @@
-# MoodMiles Atelier — Sprint Execution Plan
+# Concierge Styled — Sprint Execution Plan
 
 > **Programme Duration:** 12 weeks (6 sprints of 2 weeks each)
 > **Start Date:** Week of 24 February 2026
@@ -60,7 +60,7 @@ Sprint 6 (Wk 11–12)▓▓▓▓▓▓▓▓  B2B Foundation & MVP2 Prep
 
 | # | Ticket | Tag | Priority | Est | Acceptance Criteria |
 |---|--------|-----|----------|-----|-------------------|
-| 1.1.1 | Restrict CORS to production domain across all 8 edge functions | `SEC` | P0 | 2h | All edge functions only accept requests from `moodmiles.com` and `localhost:8080`. Wildcard `*` removed. OPTIONS preflight returns correct headers. |
+| 1.1.1 | Restrict CORS to production domain across all 8 edge functions | `SEC` | P0 | 2h | All edge functions only accept requests from `concierge-styled.com` and `localhost:8080`. Wildcard `*` removed. OPTIONS preflight returns correct headers. |
 | 1.1.2 | Add Authorization header validation to `fetch-trends` and `google-places` | `SEC` | P0 | 2h | Both functions return 401 if no valid Supabase JWT is provided. Anonymous calls rejected. |
 | 1.1.3 | Add Zod input validation to all 8 edge functions | `SEC` | P0 | 6h | Every edge function validates request body with Zod schema. Invalid inputs return 400 with descriptive error. No raw user input passed to external APIs without validation. |
 | 1.1.4 | Add per-user rate limiting infrastructure | `SEC` | P0 | 6h | New `api_usage` table tracks calls per user per function. Rate limit check runs before expensive operations. Returns 429 with retry-after header when exceeded. Default limits: 50 calls/day per function per user. |
@@ -153,7 +153,7 @@ Sprint 6 (Wk 11–12)▓▓▓▓▓▓▓▓  B2B Foundation & MVP2 Prep
 | 2.2.4 | Redesign features section (editorial layout) | `BRAND` | P0 | 6h | Replace 3-column icon grid with alternating full-width editorial layout: large image left + text right, then reversed. Parallax scroll effect on images. Three features: Destination Intelligence, Climate-Aware Capsules, Packing Optimisation. Premium photography for each. |
 | 2.2.5 | Redesign destinations section (horizontal carousel) | `BRAND` | P1 | 5h | Replace static grid with horizontal scroll carousel. Oversized 3:4 aspect ratio cards. Subtle parallax on scroll. Editorial photography (fashion + travel, not tourism stock). Hover: reveal trend text with fade animation. Section header: "Trending Amongst Members". |
 | 2.2.6 | Build "How It Works" section | `BRAND` | P1 | 4h | 3-step visual: (1) "Tell us where you're going" → (2) "We style it" → (3) "Arrive impeccably". Device mockup or app screenshots showing the actual product. Scroll-triggered step-by-step reveal animation. |
-| 2.2.7 | Build testimonial section | `BRAND` | P1 | 3h | Single large editorial-style quote. Photo of the person, name, credential. Placeholder content for now: "I never travel without checking Moodmiles first." Elegant typography, centred layout, warm background. |
+| 2.2.7 | Build testimonial section | `BRAND` | P1 | 3h | Single large editorial-style quote. Photo of the person, name, credential. Placeholder content for now: "I never travel without checking Concierge Styled first." Elegant typography, centred layout, warm background. |
 | 2.2.8 | Build membership preview section | `BRAND` | P0 | 5h | Two elegant tier cards (Luxe and Atelier). Not a SaaS pricing grid — editorial luxury style. Key features listed. "Founding member pricing" badge. CTA buttons linking to checkout. Annual pricing prominently displayed. |
 | 2.2.9 | Redesign footer | `BRAND` | P1 | 3h | Full footer with: brand story (one sentence), navigation links (About, Pricing, Privacy, Terms, Contact), social links (Instagram, Pinterest icons), newsletter email signup input, copyright. Warm border-top, not stark. |
 | 2.2.10 | Add parallax and scroll-triggered animations throughout | `BRAND` | P1 | 4h | Framer Motion `useScroll` + `useTransform` for parallax on images. `whileInView` with stagger for section reveals. Smooth scroll behaviour. No janky transitions — everything 60fps. |
@@ -218,9 +218,9 @@ Sprint 6 (Wk 11–12)▓▓▓▓▓▓▓▓  B2B Foundation & MVP2 Prep
 
 | # | Ticket | Tag | Priority | Est | Acceptance Criteria |
 |---|--------|-----|----------|-----|-------------------|
-| 3.2.1 | Build post-signup onboarding wizard | `FEAT` | P0 | 8h | Multi-step wizard after first sign-in. Step 1: "What should we call you?" (name input). Step 2: "What's your style?" (tag selector from existing style options). Step 3: "How do you travel?" (luggage size selector). Step 4: "Welcome to Moodmiles" with CTA to create first trip. Progress indicator. Skip option on each step. Saves to profile on completion. Elegant animations between steps. |
+| 3.2.1 | Build post-signup onboarding wizard | `FEAT` | P0 | 8h | Multi-step wizard after first sign-in. Step 1: "What should we call you?" (name input). Step 2: "What's your style?" (tag selector from existing style options). Step 3: "How do you travel?" (luggage size selector). Step 4: "Welcome to Concierge Styled" with CTA to create first trip. Progress indicator. Skip option on each step. Saves to profile on completion. Elegant animations between steps. |
 | 3.2.2 | Route new users to onboarding | `FEAT` | P0 | 2h | After sign-up (not sign-in), redirect to `/onboarding` instead of `/dashboard`. Check if profile has `name` set — if not, show onboarding. Set a `onboarding_completed` flag in profile. |
-| 3.2.3 | Build branded email templates | `FEAT` | P1 | 4h | Supabase email templates customised: verification email, password reset email, magic link email (future). Brand header with logo. Champagne accent colours. "Styled by Moodmiles" footer. Clean typography matching the app. |
+| 3.2.3 | Build branded email templates | `FEAT` | P1 | 4h | Supabase email templates customised: verification email, password reset email, magic link email (future). Brand header with logo. Champagne accent colours. "Styled by Concierge Styled" footer. Clean typography matching the app. |
 
 #### 3.3 Legal
 
@@ -287,7 +287,7 @@ Sprint 6 (Wk 11–12)▓▓▓▓▓▓▓▓  B2B Foundation & MVP2 Prep
 | # | Ticket | Tag | Priority | Est | Acceptance Criteria |
 |---|--------|-----|----------|-----|-------------------|
 | 4.2.1 | Add meta tags and OpenGraph tags | `GROW` | P0 | 3h | Landing page: title, description, OG image, OG title, OG description, Twitter card. Each page has appropriate `<title>`. Favicon and apple-touch-icon in brand colours. |
-| 4.2.2 | Create OG image for social sharing | `GROW` | P1 | 2h | 1200x630 branded image for OpenGraph. "MoodMiles Atelier — Arrive Impeccably Everywhere" with brand styling. Used as default OG image. |
+| 4.2.2 | Create OG image for social sharing | `GROW` | P1 | 2h | 1200x630 branded image for OpenGraph. "Concierge Styled — Arrive Impeccably Everywhere" with brand styling. Used as default OG image. |
 | 4.2.3 | Add sitemap.xml and robots.txt | `GROW` | P2 | 1h | Static sitemap listing public routes (/, /pricing, /terms, /privacy). robots.txt allowing all crawlers on public routes, blocking /dashboard, /trip, /settings. |
 
 #### 4.3 Polish & Edge Cases
@@ -306,7 +306,7 @@ Sprint 6 (Wk 11–12)▓▓▓▓▓▓▓▓  B2B Foundation & MVP2 Prep
 | # | Ticket | Tag | Priority | Est | Acceptance Criteria |
 |---|--------|-----|----------|-----|-------------------|
 | 4.4.1 | Set up CI/CD pipeline (GitHub Actions) | `OPS` | P0 | 5h | On push to `main`: install → lint → test → build → deploy to production. On push to `develop`: deploy to staging. On PR: install → lint → test → build (no deploy). Slack/Discord notification on failure. |
-| 4.4.2 | Set up staging environment | `OPS` | P0 | 4h | Separate Supabase project for staging. Staging URL (staging.moodmiles.com or similar). Stripe test mode on staging. Separate environment variables. |
+| 4.4.2 | Set up staging environment | `OPS` | P0 | 4h | Separate Supabase project for staging. Staging URL (staging.concierge-styled.com or similar). Stripe test mode on staging. Separate environment variables. |
 | 4.4.3 | Configure uptime monitoring | `OPS` | P1 | 1h | UptimeRobot or Better Uptime monitoring: landing page, Supabase API, edge function health endpoint. Alert via email + Slack on downtime. 1-minute check interval. |
 | 4.4.4 | Document deployment process | `OPS` | P1 | 2h | Clear runbook: how to deploy frontend, how to deploy edge functions, how to run migrations, how to roll back. Stored in repo as `DEPLOYMENT.md`. |
 
@@ -386,7 +386,7 @@ Sprint 6 (Wk 11–12)▓▓▓▓▓▓▓▓  B2B Foundation & MVP2 Prep
 |---|--------|-----|----------|-----|-------------------|
 | 5.4.1 | Build "About" page | `BRAND` | P1 | 3h | `/about` route. Brand story. Mission statement. Team (or founder) section. Design consistent with luxury brand. Photo or illustration. |
 | 5.4.2 | Add structured data (JSON-LD) | `GROW` | P1 | 2h | Landing page: Organization schema. Pricing page: Product schema with offers. FAQ: FAQPage schema. Helps Google rich snippets. |
-| 5.4.3 | Create "Styled by Moodmiles" social sharing cards | `GROW` | P1 | 4h | When user shares a trip or outfit (future feature), generate branded sharing card. Trip name, destination image, "Styled by Moodmiles" watermark. Downloadable as image. Luxe+ feature. |
+| 5.4.3 | Create "Styled by Concierge Styled" social sharing cards | `GROW` | P1 | 4h | When user shares a trip or outfit (future feature), generate branded sharing card. Trip name, destination image, "Styled by Concierge Styled" watermark. Downloadable as image. Luxe+ feature. |
 
 #### 5.5 Quality
 
@@ -459,7 +459,7 @@ Sprint 6 (Wk 11–12)▓▓▓▓▓▓▓▓  B2B Foundation & MVP2 Prep
 
 | # | Ticket | Tag | Priority | Est | Acceptance Criteria |
 |---|--------|-----|----------|-----|-------------------|
-| 6.4.1 | Add trip sharing (read-only link) | `FEAT` | P1 | 5h | "Share trip" button generates unique public URL. Recipient sees read-only trip overview (no auth required). Weather, outfits, activities visible. Packing list hidden. "Styled by Moodmiles" branding. Luxe+ feature. |
+| 6.4.1 | Add trip sharing (read-only link) | `FEAT` | P1 | 5h | "Share trip" button generates unique public URL. Recipient sees read-only trip overview (no auth required). Weather, outfits, activities visible. Packing list hidden. "Styled by Concierge Styled" branding. Luxe+ feature. |
 | 6.4.2 | Add .ics calendar export for trip events | `FEAT` | P2 | 3h | "Add to Calendar" button on trip events. Generates .ics file with event name, date, location. Works with Google Calendar, Apple Calendar, Outlook. |
 
 ### Sprint 6 — Summary
@@ -504,7 +504,7 @@ Sprint 6 (Wk 11–12)▓▓▓▓▓▓▓▓  B2B Foundation & MVP2 Prep
 
 | Focus | Key Deliverables |
 |-------|-----------------|
-| Self-serve advertiser dashboard | Full campaign management at business.moodmiles.com |
+| Self-serve advertiser dashboard | Full campaign management at business.concierge-styled.com |
 | Advertiser analytics | Impressions, clicks, saves, conversion tracking |
 | Stripe Connect for advertisers | Automated billing for ad campaigns |
 | Sponsored destinations | Tourism board placements in Trending and dashboard |

@@ -1,6 +1,6 @@
-# MoodMiles — New Supabase Project Setup
+# Concierge Styled — New Supabase Project Setup
 
-Follow these steps to connect a **new** Supabase project to MoodMiles.
+Follow these steps to connect a **new** Supabase project to Concierge Styled.
 
 ---
 
@@ -11,7 +11,7 @@ Follow these steps to connect a **new** Supabase project to MoodMiles.
 3. Click **"New Project"**
 4. Choose your organization
 5. Set:
-   - **Name:** MoodMiles (or any name)
+   - **Name:** Concierge Styled (or any name)
    - **Database Password:** Choose a strong password (save it)
    - **Region:** Closest to you
 6. Click **"Create new project"** and wait for it to finish

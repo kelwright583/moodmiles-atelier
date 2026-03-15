@@ -1,12 +1,12 @@
-# MoodMiles — Critical Audit & “Wow” Spec
+# Concierge Styled — Critical Audit & “Wow” Spec
 
-> **Purpose:** Objective analysis of the current product, identification of gaps, and a spec for making MoodMiles truly user-friendly, exciting, luxe, and irresistible.
+> **Purpose:** Objective analysis of the current product, identification of gaps, and a spec for making Concierge Styled truly user-friendly, exciting, luxe, and irresistible.
 
 ---
 
 ## Executive Summary
 
-MoodMiles has a **strong foundation**: clear brand, solid tech stack, and core features (weather, outfits, activities, packing, mood board) that work. The biggest opportunities lie in **closing the loop between inspiration and purchase**, **layover planning**, **UX polish**, and **luxury feel** — not just more features.
+Concierge Styled has a **strong foundation**: clear brand, solid tech stack, and core features (weather, outfits, activities, packing, mood board) that work. The biggest opportunities lie in **closing the loop between inspiration and purchase**, **layover planning**, **UX polish**, and **luxury feel** — not just more features.
 
 ---
 
@@ -157,7 +157,7 @@ MoodMiles has a **strong foundation**: clear brand, solid tech stack, and core f
 | **Referral programme** | "Invite a friend → free month." Track via unique link. |
 | **Email nurture** | Post-signup: "Complete your first trip" → "Get your first looks" → "Upgrade for unlimited." |
 | **Social proof** | "As featured in" (when available), member count, testimonials. |
-| **Demo video** | 60–90 sec "How MoodMiles works" for landing, ads, and onboarding. |
+| **Demo video** | 60–90 sec "How Concierge Styled works" for landing, ads, and onboarding. |
 | **Trip sharing** | Read-only link: "See my Paris itinerary and outfits." Shareable, private. |
 | **Lookbook export** | PDF of outfits + packing list. "Your Paris Lookbook." Atelier tier or one-time. |
 

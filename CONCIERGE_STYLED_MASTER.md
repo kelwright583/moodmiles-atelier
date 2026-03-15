@@ -1,4 +1,4 @@
-# MoodMiles Atelier — Master Roadmap
+# Concierge Styled — Master Roadmap
 
 > **Tagline:** Arrive Impeccably Everywhere
 > **Positioning:** Curated trip + fashion intelligence for the elevated traveller
@@ -32,9 +32,9 @@
 
 ## 1. Product Vision & Positioning
 
-### 1.1 What MoodMiles Is
+### 1.1 What Concierge Styled Is
 
-MoodMiles is a luxury travel styling platform that combines destination intelligence with AI-powered fashion curation. It helps elevated travellers plan not just where they're going, but how they'll arrive — with climate-aware wardrobes, curated activity suggestions, smart packing, and editorial-quality outfit inspiration.
+Concierge Styled is a luxury travel styling platform that combines destination intelligence with AI-powered fashion curation. It helps elevated travellers plan not just where they're going, but how they'll arrive — with climate-aware wardrobes, curated activity suggestions, smart packing, and editorial-quality outfit inspiration.
 
 ### 1.2 Who It's For
 
@@ -54,7 +54,7 @@ MoodMiles is a luxury travel styling platform that combines destination intellig
 
 ### 1.4 Competitive Positioning
 
-| Competitor | What They Do | Where MoodMiles Wins |
+| Competitor | What They Do | Where Concierge Styled Wins |
 |------------|-------------|---------------------|
 | **PackPoint** | Basic packing lists | No fashion intelligence, no AI, no style |
 | **TripIt** | Itinerary management | Functional, not aspirational. No wardrobe |
@@ -62,7 +62,7 @@ MoodMiles is a luxury travel styling platform that combines destination intellig
 | **Stylebook** | Wardrobe management | No travel integration, no AI generation |
 | **Trunk Club / Stitch Fix** | Styled clothing | Not travel-specific, subscription boxes not trip-aware |
 
-MoodMiles is the only product that sits at the intersection of **travel planning** and **fashion intelligence**.
+Concierge Styled is the only product that sits at the intersection of **travel planning** and **fashion intelligence**.
 
 ---
 
@@ -224,7 +224,7 @@ MoodMiles is the only product that sits at the intersection of **travel planning
 | Activity suggestions | 5 per trip |
 | Fashion search | Not available |
 | Mood board | 5 images max |
-| Branded | "Styled by Moodmiles" watermark on shares |
+| Branded | "Styled by Concierge Styled" watermark on shares |
 
 **Purpose:** Let users experience the core value. Weather + packing is cheap to serve. Enough to hook them; not enough to satisfy.
 
@@ -250,7 +250,7 @@ MoodMiles is the only product that sits at the intersection of **travel planning
 | Everything in Luxe | Yes |
 | Trip collaboration | Share with travel companions |
 | Downloadable lookbooks | PDF export of trip outfit plans |
-| "Styled by Moodmiles" cards | Premium social sharing assets |
+| "Styled by Concierge Styled" cards | Premium social sharing assets |
 | Exclusive events | Curated event invitations in-app |
 | Early access | Beta features first |
 | Concierge touches | Handpicked recommendations queue |
@@ -284,7 +284,7 @@ MoodMiles is the only product that sits at the intersection of **travel planning
 
 ### 6.1 The Vision
 
-Events, luxury brands, restaurants, and tourism boards come to MoodMiles to reach style-conscious travellers who are actively planning trips to their destination. Hyper-targeted by **city + dates + trip type**.
+Events, luxury brands, restaurants, and tourism boards come to Concierge Styled to reach style-conscious travellers who are actively planning trips to their destination. Hyper-targeted by **city + dates + trip type**.
 
 This is not generic display ads. This is: "A user is planning a resort trip to Amalfi Coast in July — show them your exclusive yacht party."
 
@@ -318,7 +318,7 @@ The `activity_suggestions` table already has:
 
 ### 6.5 Advertiser Experience (Future)
 
-1. Advertiser signs up at `business.moodmiles.com`
+1. Advertiser signs up at `business.concierge-styled.com`
 2. Creates a campaign: "Summer Sunset Party — Amalfi Coast — July 2026"
 3. Sets targeting: destination = Amalfi, dates = June-August, trip types = Resort/Romantic
 4. Uploads creative: image, description, booking link
@@ -334,7 +334,7 @@ The `activity_suggestions` table already has:
 
 | Gap | Risk | Fix |
 |-----|------|-----|
-| CORS allows `*` on all edge functions | Any site can call your APIs | Restrict to `moodmiles.com` + localhost in dev |
+| CORS allows `*` on all edge functions | Any site can call your APIs | Restrict to `concierge-styled.com` + localhost in dev |
 | No rate limiting | Cost explosion, abuse | Add per-user rate limits via Supabase or middleware |
 | `fetch-trends` and `google-places` have no auth check | Public access to paid APIs | Add Authorization header validation |
 | No input validation/sanitisation on some endpoints | Injection risk | Validate all inputs with Zod |
@@ -516,7 +516,7 @@ All imagery in the app should follow this direction:
 │  - Links: About, Pricing, Privacy, Terms        │
 │  - Social: Instagram, Pinterest                 │
 │  - Newsletter signup                            │
-│  - © 2026 Moodmiles Atelier                    │
+│  - © 2026 Concierge Styled Atelier                    │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -549,7 +549,7 @@ All imagery in the app should follow this direction:
 | CTA button | "Begin Your Journey" | "Request Early Access" or "Join the Waitlist" (exclusivity) |
 | Features header | "The Intelligence" | "The Intelligence" (keep) |
 | Destinations header | "Featured Destinations" | "Trending Amongst Members" |
-| CTA section | "Join Moodmiles. Intelligent, beautiful, private." | "Travel differently. Join the membership." |
+| CTA section | "Join Concierge Styled. Intelligent, beautiful, private." | "Travel differently. Join the membership." |
 
 ---
 
@@ -792,13 +792,13 @@ on pull request:
 
 | Channel | Strategy | Priority |
 |---------|----------|----------|
-| **Instagram** | Editorial travel/fashion content, "Styled by Moodmiles" tags | High |
+| **Instagram** | Editorial travel/fashion content, "Styled by Concierge Styled" tags | High |
 | **Pinterest** | Outfit boards, destination styling guides | High |
 | **SEO** | "What to wear in [city] in [month]" — long-tail content | Medium |
 | **Referral** | Invite a friend → both get 1 month free Luxe | High |
 | **Partnerships** | Travel influencers, fashion bloggers | Medium |
 | **PR** | Condé Nast Traveller, Vogue, ELLE | Medium |
-| **Content** | Blog: "The Moodmiles Edit" — city style guides | Medium |
+| **Content** | Blog: "The Concierge Styled Edit" — city style guides | Medium |
 
 ---
 
@@ -906,7 +906,7 @@ on pull request:
 | 3.11 | Write tests for critical paths (auth, billing, trip CRUD) | Quality | 8 hours |
 | 3.12 | Set up staging environment | DevOps | 4 hours |
 | 3.13 | Build promoted activities foundation (B2B) | Revenue | 8 hours |
-| 3.14 | Social sharing cards ("Styled by Moodmiles") | Growth | 4 hours |
+| 3.14 | Social sharing cards ("Styled by Concierge Styled") | Growth | 4 hours |
 | 3.15 | Instagram/Pinterest content templates | Growth | 4 hours |
 
 **Estimated total: ~69 hours**
@@ -1028,7 +1028,7 @@ ad_events (id, campaign_id, user_id, trip_id, event_type, created_at)
 ## 19. File Structure
 
 ```
-MoodMiles/
+Concierge Styled/
 ├── src/
 │   ├── main.tsx                          # App entry point
 │   ├── App.tsx                           # Router + providers
