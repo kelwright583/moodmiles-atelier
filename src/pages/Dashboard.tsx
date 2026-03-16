@@ -10,8 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Trip, Profile } from "@/types/database";
-import { Progress } from "@/components/ui/progress";
-
 interface TrendingItem {
   city: string;
   image_url?: string | null;
@@ -41,70 +39,6 @@ function getTripTiming(startDate: string, endDate: string) {
   return { phase: "completed" as const, label: "Completed", currentDay: 0, totalDays, daysLeft: 0 };
 }
 
-const BANNER_DISMISS_KEY = "conciergeStyled_profile_banner_dismissed_until";
-
-function isBannerDismissed(): boolean {
-  const until = localStorage.getItem(BANNER_DISMISS_KEY);
-  if (!until) return false;
-  return Date.now() < parseInt(until, 10);
-}
-
-const ProfileCompletionBanner = ({ profile }: { profile: Profile }) => {
-  const [dismissed, setDismissed] = useState(() => isBannerDismissed());
-
-  if (dismissed || (profile.profile_completion_score ?? 0) >= 100) return null;
-
-  const score = profile.profile_completion_score ?? 0;
-  const missing: { label: string; key: string }[] = [];
-  if (!profile.name) missing.push({ label: "Add name", key: "name" });
-  if (!profile.handle) missing.push({ label: "Choose handle", key: "handle" });
-  if (!profile.avatar_url) missing.push({ label: "Add photo", key: "photo" });
-  if (!profile.home_city) missing.push({ label: "Add home city", key: "city" });
-  if (!profile.style_vibe) missing.push({ label: "Set style", key: "style" });
-
-  const dismiss = () => {
-    localStorage.setItem(BANNER_DISMISS_KEY, String(Date.now() + 7 * 24 * 60 * 60 * 1000));
-    setDismissed(true);
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass-card rounded-xl p-4 mb-8 border border-primary/10"
-    >
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div className="min-w-0">
-          <p className="text-xs tracking-[0.15em] uppercase text-primary font-body mb-0.5">Profile</p>
-          <p className="text-sm font-body text-foreground">
-            Complete your profile — {score}% done
-          </p>
-        </div>
-        <button
-          onClick={dismiss}
-          className="p-1 rounded hover:bg-secondary transition-colors flex-shrink-0 mt-0.5"
-          aria-label="Dismiss"
-        >
-          <X size={14} className="text-muted-foreground" />
-        </button>
-      </div>
-
-      <Progress value={score} className="h-1 mb-3" />
-
-      <div className="flex flex-wrap gap-2">
-        {missing.map((item) => (
-          <Link
-            key={item.key}
-            to={`/settings#${item.key}`}
-            className="text-xs font-body px-3 py-1.5 rounded-full bg-secondary hover:bg-secondary/80 text-foreground transition-colors"
-          >
-            {item.label}
-          </Link>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
 
 const Dashboard = () => {
   const [showTrendingFeed, setShowTrendingFeed] = useState(false);
@@ -224,9 +158,6 @@ const Dashboard = () => {
               </div>
             </div>
           </motion.div>
-
-          {/* Profile completion banner */}
-          {profile && <ProfileCompletionBanner profile={profile} />}
 
           {/* Trips */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-20">
