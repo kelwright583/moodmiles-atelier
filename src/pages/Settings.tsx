@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { Profile, ImportedBooking } from "@/types/database";
-import { Progress } from "@/components/ui/progress";
 
 const styleProfileOptions = ["Minimal", "Structured", "Tailored", "Resort", "Street", "Monochrome", "Feminine", "Masculine", "Avant-garde", "Classic"];
 const luggageSizes = ["carry-on", "medium", "large"];
@@ -269,7 +268,8 @@ const Settings = () => {
           payload.handle = handle;
         }
       }
-      await supabase.from("profiles").update(payload).eq("user_id", user.id);
+      const { error } = await supabase.from("profiles").update(payload).eq("user_id", user.id);
+      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       queryClient.invalidateQueries({ queryKey: ["onboarding-check", user.id] });
       toast({ title: "Profile saved" });
@@ -284,7 +284,8 @@ const Settings = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await supabase.from("profiles").update({ name }).eq("user_id", user.id);
+      const { error } = await supabase.from("profiles").update({ name }).eq("user_id", user.id);
+      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast({ title: "Name updated" });
     } catch (err: unknown) {
@@ -300,7 +301,8 @@ const Settings = () => {
     if (!user) return;
     setSavingProfile(true);
     try {
-      await supabase.from("profiles").update({ style_profile: styleProfile }).eq("user_id", user.id);
+      const { error: spError } = await supabase.from("profiles").update({ style_profile: styleProfile }).eq("user_id", user.id);
+      if (spError) throw spError;
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast({ title: "Style profile updated" });
     } catch (err: unknown) {
@@ -312,7 +314,8 @@ const Settings = () => {
     if (!user) return;
     setSavingProfile(true);
     try {
-      await supabase.from("profiles").update({ luggage_size: luggageSize }).eq("user_id", user.id);
+      const { error: lsError } = await supabase.from("profiles").update({ luggage_size: luggageSize }).eq("user_id", user.id);
+      if (lsError) throw lsError;
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast({ title: "Luggage size updated" });
     } catch (err: unknown) {
@@ -475,7 +478,6 @@ const Settings = () => {
     );
   }
 
-  const completionScore = profile?.profile_completion_score ?? 0;
   const canChangeHandle = handleChanges < 2;
 
   return (
@@ -487,20 +489,6 @@ const Settings = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">Settings</p>
             <h1 className="text-3xl md:text-4xl font-heading mb-10">Your Profile</h1>
-          </motion.div>
-
-          {/* ── Profile completion score ── */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-5 mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body">Profile Completion</p>
-              <span className="text-xs font-body text-primary font-medium">{completionScore}%</span>
-            </div>
-            <Progress value={completionScore} className="h-1.5 mb-1" />
-            {completionScore < 100 && (
-              <p className="text-xs text-muted-foreground font-body mt-1.5">
-                {completionScore === 0 ? "Complete your profile for better personalisation." : "Almost there — fill in the remaining fields below."}
-              </p>
-            )}
           </motion.div>
 
           {/* ── Avatar ── */}
