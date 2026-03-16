@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Check, X, Camera, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import PlacesAutocomplete from "@/components/trip/PlacesAutocomplete";
 import { toast } from "@/hooks/use-toast";
 
 const STYLE_VIBES = [
@@ -21,6 +22,7 @@ const STYLE_VIBES = [
 ] as const;
 
 type StyleVibe = (typeof STYLE_VIBES)[number]["id"];
+type StyleVibes = StyleVibe[];
 
 const Onboarding = () => {
   const { user } = useAuth();
@@ -31,7 +33,8 @@ const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [displayName, setDisplayName] = useState("");
   const [handle, setHandle] = useState("");
-  const [styleVibe, setStyleVibe] = useState<StyleVibe | "">("");
+  const [styleVibe, setStyleVibe] = useState<StyleVibes>([]);
+  const [homeCity, setHomeCity] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [handleStatus, setHandleStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
@@ -138,7 +141,7 @@ const Onboarding = () => {
   const handleStep2Skip = () => { setHandle(""); setHandleStatus("idle"); goToStep(3); };
 
   const handleStep3Continue = () => goToStep(4);
-  const handleStep3Skip = () => { setStyleVibe(""); goToStep(4); };
+  const handleStep3Skip = () => { setStyleVibe([]); goToStep(4); };
 
   const handleFinish = async () => {
     setSubmitting(true);
@@ -151,8 +154,8 @@ const Onboarding = () => {
           display_name: displayName.trim(),
           handle: handle || undefined,
           avatar_url: avatarUrl || undefined,
-          home_city: undefined,
-          style_vibe: styleVibe || undefined,
+          home_city: homeCity || undefined,
+          style_vibe: styleVibe.length ? styleVibe.join(",") : undefined,
         },
       });
 
@@ -227,8 +230,16 @@ const Onboarding = () => {
                 onChange={(e) => setDisplayName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && displayName.trim().length >= 2 && handleStep1Continue()}
                 placeholder="Your name"
-                className="bg-secondary border-border h-12 text-lg font-body mb-6"
+                className="bg-secondary border-border h-12 text-lg font-body mb-4"
               />
+              <label className="text-xs text-muted-foreground font-body mb-1.5 block">Where are you based? <span className="opacity-50">(optional)</span></label>
+              <div className="mb-6">
+                <PlacesAutocomplete
+                  value={homeCity}
+                  onChange={setHomeCity}
+                  onSelect={(place) => setHomeCity(place.city)}
+                />
+              </div>
               <Button
                 variant="champagne"
                 className="w-full h-12"
@@ -334,9 +345,9 @@ const Onboarding = () => {
                   <button
                     key={vibe.id}
                     type="button"
-                    onClick={() => setStyleVibe(vibe.id)}
+                    onClick={() => setStyleVibe(prev => prev.includes(vibe.id) ? prev.filter(v => v !== vibe.id) : [...prev, vibe.id])}
                     className={`relative rounded-2xl p-4 text-left transition-all duration-200 border-2 ${
-                      styleVibe === vibe.id
+                      styleVibe.includes(vibe.id)
                         ? "border-primary bg-primary/5 shadow-champagne"
                         : "border-border bg-secondary/60 hover:border-border/80"
                     }`}
@@ -344,7 +355,7 @@ const Onboarding = () => {
                     <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${vibe.accent} mb-3`} />
                     <p className="text-sm font-body font-medium text-foreground">{vibe.label}</p>
                     <p className="text-[11px] text-muted-foreground font-body mt-0.5 leading-snug">{vibe.desc}</p>
-                    {styleVibe === vibe.id && (
+                    {styleVibe.includes(vibe.id) && (
                       <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-gradient-champagne flex items-center justify-center">
                         <Check size={9} className="text-primary-foreground" />
                       </div>
@@ -357,7 +368,7 @@ const Onboarding = () => {
                 variant="champagne"
                 className="w-full h-12 mb-3"
                 onClick={handleStep3Continue}
-                disabled={!styleVibe}
+                disabled={styleVibe.length === 0}
               >
                 Continue
               </Button>

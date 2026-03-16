@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { toPng } from "html-to-image";
+import { optimiseImageUrl } from "@/lib/utils";
 
 const OverviewTab = lazy(() => import("@/components/trip/OverviewTab"));
 const EventsTab = lazy(() => import("@/components/trip/EventsTab"));
@@ -78,7 +79,7 @@ const TripHero = ({
       {trip.image_url ? (
         <>
           <img
-            src={trip.image_url}
+            src={optimiseImageUrl(trip.image_url, 1200)}
             alt={trip.destination}
             className="absolute inset-0 w-full h-full object-cover animate-ken-burns"
             loading="eager"
@@ -538,7 +539,7 @@ const TripDetail = () => {
     if (!tripCardRef.current || !trip) return;
     setDownloadingCard(true);
     try {
-      const dataUrl = await toPng(tripCardRef.current, { cacheBust: true, pixelRatio: 2 });
+      const dataUrl = await toPng(tripCardRef.current, { cacheBust: true, pixelRatio: 2, fetchRequestInit: { cache: "no-cache" } });
       const link = document.createElement("a");
       link.download = `${trip.destination.replace(/\s+/g, "-").toLowerCase()}-trip-card.png`;
       link.href = dataUrl;
@@ -608,7 +609,7 @@ const TripDetail = () => {
             />
           )}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(21,19,17,0.1) 0%, rgba(21,19,17,0.7) 100%)" }} />
-          <p style={{ position: "absolute", top: "24px", left: "0", right: "0", textAlign: "center", color: "#ca975c", fontSize: "10px", letterSpacing: "0.3em", textTransform: "uppercase", fontFamily: "sans-serif" }}>
+          <p style={{ position: "absolute", top: "24px", left: "0", right: "0", textAlign: "center", color: "#cc8638", fontSize: "10px", letterSpacing: "0.3em", textTransform: "uppercase", fontFamily: "sans-serif" }}>
             CONCIERGE STYLED
           </p>
         </div>
@@ -618,11 +619,11 @@ const TripDetail = () => {
           <h1 style={{ color: "#f9f6f3", fontSize: "52px", fontFamily: "serif", lineHeight: 1.1, textAlign: "center", marginBottom: "12px" }}>
             {trip.destination}
           </h1>
-          <p style={{ color: "#ca975c", fontSize: "14px", fontFamily: "sans-serif", letterSpacing: "0.1em", marginBottom: "24px" }}>
+          <p style={{ color: "#cc8638", fontSize: "14px", fontFamily: "sans-serif", letterSpacing: "0.1em", marginBottom: "24px" }}>
             {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
           </p>
           {trip.trip_type && (
-            <span style={{ display: "inline-block", color: "#ca975c", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "sans-serif", border: "1px solid rgba(202,151,92,0.4)", padding: "5px 16px", borderRadius: "999px", marginBottom: "28px" }}>
+            <span style={{ display: "inline-block", color: "#cc8638", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "sans-serif", border: "1px solid rgba(202,151,92,0.4)", padding: "5px 16px", borderRadius: "999px", marginBottom: "28px" }}>
               {trip.trip_type}
             </span>
           )}

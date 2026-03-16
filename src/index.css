@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    /* Concierge Styled brand palette — single source of truth: #ca975c */
-    --brand-gold: #ca975c;
+    /* Concierge Styled brand palette — single source of truth: #cc8638 */
+    --brand-gold: #cc8638;
 
     --background: 30 11% 7%;
     --foreground: 30 33% 96%;
@@ -71,23 +71,23 @@
 
 @layer utilities {
   .text-gradient-champagne {
-    color: #ca975c !important;
+    color: #cc8638 !important;
     background: none !important;
     -webkit-background-clip: unset !important;
-    -webkit-text-fill-color: #ca975c !important;
+    -webkit-text-fill-color: #cc8638 !important;
     background-clip: unset !important;
   }
 
   .bg-gradient-champagne {
-    background: #ca975c !important;
+    background: #cc8638 !important;
   }
 
   .bg-gold-brand {
-    background-color: #ca975c !important;
+    background-color: #cc8638 !important;
   }
 
   .btn-hero-cta {
-    background-color: #ca975c !important;
+    background-color: #cc8638 !important;
     color: #151311 !important;
     padding: 0.75rem 2rem;
     border-radius: 9999px;
@@ -99,7 +99,7 @@
     border: 1px solid transparent;
   }
   .btn-hero-cta:hover {
-    background-color: #ca975c !important;
+    background-color: #cc8638 !important;
     opacity: 0.9;
     transform: translateY(-1px);
   }
@@ -109,11 +109,11 @@
   }
 
   .shadow-champagne {
-    box-shadow: 0 0 40px -10px rgba(202, 151, 92, 0.3);
+    box-shadow: 0 0 40px -10px rgba(204, 134, 56, 0.3);
   }
 
   .border-champagne {
-    border-color: rgba(202, 151, 92, 0.3);
+    border-color: rgba(204, 134, 56, 0.3);
   }
 
   .glass-card {
@@ -142,36 +142,36 @@
   }
 }
 
-/* Force #ca975c on every Tailwind gold/primary class — no HSL, no variables */
+/* Force #cc8638 on every Tailwind gold/primary class — no HSL, no variables */
 .text-primary {
-  color: #ca975c !important;
+  color: #cc8638 !important;
 }
 .bg-primary {
-  background-color: #ca975c !important;
+  background-color: #cc8638 !important;
 }
 .border-primary {
-  border-color: #ca975c !important;
+  border-color: #cc8638 !important;
 }
 .ring-primary {
-  --tw-ring-color: #ca975c !important;
+  --tw-ring-color: #cc8638 !important;
 }
 .text-accent {
-  color: #ca975c !important;
+  color: #cc8638 !important;
 }
 .bg-accent {
-  background-color: #ca975c !important;
+  background-color: #cc8638 !important;
 }
 .fill-primary {
-  fill: #ca975c !important;
+  fill: #cc8638 !important;
 }
 .text-champagne {
-  color: #ca975c !important;
+  color: #cc8638 !important;
 }
 .bg-champagne {
-  background-color: #ca975c !important;
+  background-color: #cc8638 !important;
 }
 .border-champagne {
-  border-color: rgba(202, 151, 92, 0.3) !important;
+  border-color: rgba(204, 134, 56, 0.3) !important;
 }
 
 /* Primary foreground stays dark */
@@ -190,13 +190,13 @@
   background: hsl(30 11% 7%);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(202, 151, 92, 0.5);
+  background: rgba(204, 134, 56, 0.5);
   border-radius: 9999px;
   min-height: 38px;
   max-height: 38px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(202, 151, 92, 0.7);
+  background: rgba(204, 134, 56, 0.7);
 }
 ::-webkit-scrollbar-button {
   height: 0;
@@ -210,7 +210,7 @@
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(202, 151, 92, 0.5) hsl(30 11% 7%);
+    scrollbar-color: rgba(204, 134, 56, 0.5) hsl(30 11% 7%);
   }
 }
 

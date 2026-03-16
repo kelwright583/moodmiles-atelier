@@ -15,7 +15,7 @@ import { QRCodeSVG } from "qrcode.react";
 const SectionHeader = ({ title }: { title: string }) => (
   <div>
     <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "28px", color: "#111", marginBottom: "8px" }}>{title}</h2>
-    <div style={{ width: "60px", height: "2px", background: "#ca975c" }} />
+    <div style={{ width: "60px", height: "2px", background: "#cc8638" }} />
   </div>
 );
 
@@ -278,17 +278,17 @@ const TripLookbook = () => {
             </div>
           )}
           <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-12 text-center text-white">
-            <p style={{ letterSpacing: "0.3em", fontSize: "11px", color: "#ca975c", fontFamily: "var(--font-body)", textTransform: "uppercase", marginBottom: "2rem" }}>
+            <p style={{ letterSpacing: "0.3em", fontSize: "11px", color: "#cc8638", fontFamily: "var(--font-body)", textTransform: "uppercase", marginBottom: "2rem" }}>
               CONCIERGE STYLED
             </p>
             <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "clamp(3rem, 8vw, 5rem)", color: "white", marginBottom: "1rem", lineHeight: 1.1 }}>
               {trip.destination}
             </h1>
-            <p style={{ color: "#ca975c", fontFamily: "var(--font-body)", fontSize: "14px", marginBottom: "0.5rem" }}>
+            <p style={{ color: "#cc8638", fontFamily: "var(--font-body)", fontSize: "14px", marginBottom: "0.5rem" }}>
               {formatDate(trip.start_date)} — {formatDate(trip.end_date)}
             </p>
             {trip.trip_type && (
-              <span style={{ border: "1px solid #ca975c", color: "#ca975c", padding: "4px 14px", borderRadius: "999px", fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "var(--font-body)" }}>
+              <span style={{ border: "1px solid #cc8638", color: "#cc8638", padding: "4px 14px", borderRadius: "999px", fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "var(--font-body)" }}>
                 {trip.trip_type}
               </span>
             )}
@@ -363,7 +363,7 @@ const TripLookbook = () => {
                 <div style={{ display: "flex", gap: "3rem" }}>
                   {/* Left: event details */}
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", color: "#ca975c", fontFamily: "var(--font-body)", marginBottom: "0.5rem" }}>
+                    <p style={{ fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", color: "#cc8638", fontFamily: "var(--font-body)", marginBottom: "0.5rem" }}>
                       Confirmed Event
                     </p>
                     <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "2rem", marginBottom: "1.5rem", color: "#111" }}>
@@ -380,7 +380,7 @@ const TripLookbook = () => {
                     {event.dress_code && (
                       <div style={{ marginTop: "1.5rem" }}>
                         <p style={{ fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#9ca3af", fontFamily: "var(--font-body)", marginBottom: "6px" }}>Dress Code</p>
-                        <span style={{ display: "inline-block", border: "1px solid #ca975c", color: "#ca975c", padding: "4px 16px", borderRadius: "999px", fontSize: "12px", fontFamily: "var(--font-body)" }}>
+                        <span style={{ display: "inline-block", border: "1px solid #cc8638", color: "#cc8638", padding: "4px 16px", borderRadius: "999px", fontSize: "12px", fontFamily: "var(--font-body)" }}>
                           {event.dress_code}
                         </span>
                       </div>
@@ -419,7 +419,7 @@ const TripLookbook = () => {
                     <p style={{ fontSize: "10px", color: "#9ca3af", fontFamily: "var(--font-body)", marginTop: "6px" }}>
                       {outfit.store}
                       {outfit.product_url && (
-                        <span> · <a href={outfit.product_url} style={{ color: "#ca975c" }}>Shop</a></span>
+                        <span> · <a href={outfit.product_url} style={{ color: "#cc8638" }}>Shop</a></span>
                       )}
                     </p>
                   )}

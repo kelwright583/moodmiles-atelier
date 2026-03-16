@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { toPng } from "html-to-image";
 import {
-  Camera, CalendarDays, Music, Moon, Sparkles, Crown,
+  Camera, CalendarDays, Music, Moon, Sparkles,
   Download, Loader2, Check, Copy, ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Trip, TripPhoto } from "@/types/database";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 
 interface MemoriesTabProps {
   tripId: string;
@@ -20,9 +21,9 @@ interface MemoriesTabProps {
 type FrameStyle = "minimal" | "editorial" | "clean";
 
 const FRAME_STYLES: Record<FrameStyle, { label: string; bg: string; text: string; accent: string }> = {
-  minimal: { label: "Minimal", bg: "#ffffff", text: "#111111", accent: "#ca975c" },
-  editorial: { label: "Editorial", bg: "#151311", text: "#f9f6f3", accent: "#ca975c" },
-  clean: { label: "Clean", bg: "#f9f6f3", text: "#151311", accent: "#ca975c" },
+  minimal: { label: "Minimal", bg: "#ffffff", text: "#111111", accent: "#cc8638" },
+  editorial: { label: "Editorial", bg: "#151311", text: "#f9f6f3", accent: "#cc8638" },
+  clean: { label: "Clean", bg: "#f9f6f3", text: "#151311", accent: "#cc8638" },
 };
 
 const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
@@ -182,15 +183,12 @@ const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
   // ─── Tier gate ────────────────────────────────────────────────────────────
   if (!hasAccess) {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-10 text-center">
-        <Crown size={32} className="text-primary mx-auto mb-4" />
-        <h3 className="font-heading text-xl mb-2">Memories is a premium feature</h3>
-        <p className="text-sm text-muted-foreground font-body max-w-sm mx-auto mb-6">
-          Upgrade to Luxe or Atelier to create beautiful Instagram carousels from your trip photos.
-        </p>
-        <Button variant="champagne" onClick={() => window.location.href = "/settings"}>
-          Upgrade
-        </Button>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl">
+        <UpgradePrompt
+          feature="Memories"
+          tier="luxe"
+          description="Create beautiful Instagram carousels from your trip photos and relive every moment."
+        />
       </motion.div>
     );
   }

@@ -142,7 +142,7 @@ const PublicTrip = () => {
               </span>
             )}
             <h1 className="text-4xl md:text-6xl font-heading text-white leading-tight">{data.destination}</h1>
-            <p className="text-sm font-body mt-2" style={{ color: "#ca975c" }}>
+            <p className="text-sm font-body mt-2" style={{ color: "#cc8638" }}>
               {formatDate(data.start_date)} – {formatDate(data.end_date)}
             </p>
           </div>
@@ -179,7 +179,7 @@ const PublicTrip = () => {
           <div className="px-4 mt-5">
             <span
               className="inline-flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase font-body px-4 py-2 rounded-full border"
-              style={{ color: "#ca975c", borderColor: "rgba(202,151,92,0.3)", background: "rgba(202,151,92,0.08)" }}
+              style={{ color: "#cc8638", borderColor: "rgba(202,151,92,0.3)", background: "rgba(202,151,92,0.08)" }}
             >
               ✦ {data.trip_theme}
             </span>

@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Camera, User, Mail, LogOut, ChevronRight, Crown, Sparkles, Check, X, Loader2, AtSign, Music, Copy, Inbox, Plane, Building2, Utensils, MapPin, Bus, HelpCircle, Trash2 } from "lucide-react";
+import { Camera, User, Mail, LogOut, ChevronRight, Crown, Sparkles, Check, X, Loader2, AtSign, Music, Copy, Inbox, Plane, Building2, Utensils, MapPin, Bus, HelpCircle, Trash2, Download, AlertTriangle, Gift, Users } from "lucide-react";
+import { UpgradeCelebration } from "@/components/UpgradeCelebration";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/layout/Navbar";
+import PlacesAutocomplete from "@/components/trip/PlacesAutocomplete";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -92,6 +95,11 @@ const Settings = () => {
   const [savingIdentity, setSavingIdentity] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationTier, setCelebrationTier] = useState("luxe");
+  const [exportingData, setExportingData] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [copiedReferral, setCopiedReferral] = useState(false);
 
   // Legacy fields
   const [name, setName] = useState("");
@@ -105,7 +113,7 @@ const Settings = () => {
   const [handle, setHandle] = useState("");
   const [bio, setBio] = useState("");
   const [homeCity, setHomeCity] = useState("");
-  const [styleVibe, setStyleVibe] = useState("");
+  const [styleVibe, setStyleVibe] = useState<string[]>([]);
   const [nationality, setNationality] = useState("");
   const [identityLoaded, setIdentityLoaded] = useState(false);
 
@@ -147,6 +155,35 @@ const Settings = () => {
     setHandleChanges(changes);
   }, [handleHistory]);
 
+  // Referral stats
+  const { data: referralStats } = useQuery({
+    queryKey: ["referrals", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("referrals")
+        .select("id, status")
+        .eq("referrer_user_id", user!.id);
+      return {
+        total: (data || []).length,
+        joined: (data || []).filter((r: any) => r.status === "completed").length,
+      };
+    },
+    enabled: !!user,
+  });
+
+  // Check for post-upgrade session_id param and show celebration
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    const success = params.get("success");
+    if (sessionId || success === "subscription") {
+      const tier = params.get("tier") || (profile?.subscription_tier ?? "luxe");
+      setCelebrationTier(tier);
+      setShowCelebration(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [profile]);
+
   // Populate form from profile
   if (profile && !nameLoaded) { setName(profile.name || ""); setNameLoaded(true); }
   if (profile && !styleProfileLoaded) { setStyleProfile(profile.style_profile || []); setStyleProfileLoaded(true); }
@@ -156,7 +193,7 @@ const Settings = () => {
     if (profile.handle) setHandleStatus("yours");
     setBio(profile.bio || "");
     setHomeCity(profile.home_city || "");
-    setStyleVibe(profile.style_vibe || "");
+    setStyleVibe(profile.style_vibe ? profile.style_vibe.split(",") : []);
     setNationality(profile.nationality || "");
     setIdentityLoaded(true);
   }
@@ -222,7 +259,7 @@ const Settings = () => {
         name,
         bio: bio || null,
         home_city: homeCity || null,
-        style_vibe: styleVibe || null,
+        style_vibe: styleVibe.length ? styleVibe.join(",") : null,
         nationality: nationality || null,
         onboarding_completed: true,
       };
@@ -297,6 +334,40 @@ const Settings = () => {
   };
 
   const handleSignOut = async () => { await signOut(); navigate("/"); };
+
+  const handleExportData = async () => {
+    setExportingData(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("export-user-data", { body: {} });
+      if (error) throw error;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `concierge-styled-data-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Data exported", description: "Your data has been downloaded." });
+    } catch (err: unknown) {
+      toast({ title: "Export failed", description: err instanceof Error ? err.message : "Please try again.", variant: "destructive" });
+    } finally {
+      setExportingData(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-user-data", { body: {} });
+      if (error) throw error;
+      await signOut();
+      navigate("/");
+      toast({ title: "Account deleted", description: "All your data has been permanently removed." });
+    } catch (err: unknown) {
+      toast({ title: "Deletion failed", description: err instanceof Error ? err.message : "Please try again.", variant: "destructive" });
+      setDeletingAccount(false);
+    }
+  };
 
   // ── Import booking handlers ───────────────────────────────────
   const importAddress = profile ? `import+${profile.import_token || ""}@concierge-styled.com` : "";
@@ -533,11 +604,10 @@ const Settings = () => {
               {/* Home city */}
               <div id="city">
                 <label className="text-xs text-muted-foreground font-body mb-1.5 block">Home city</label>
-                <Input
+                <PlacesAutocomplete
                   value={homeCity}
-                  onChange={(e) => setHomeCity(e.target.value)}
-                  placeholder="Where are you based?"
-                  className="bg-secondary border-border h-11 font-body"
+                  onChange={setHomeCity}
+                  onSelect={(place) => setHomeCity(place.city)}
                 />
               </div>
 
@@ -549,9 +619,9 @@ const Settings = () => {
                     <button
                       key={vibe.id}
                       type="button"
-                      onClick={() => setStyleVibe(vibe.id === styleVibe ? "" : vibe.id)}
+                      onClick={() => setStyleVibe(prev => prev.includes(vibe.id) ? prev.filter(v => v !== vibe.id) : [...prev, vibe.id])}
                       className={`rounded-xl p-3 text-left border transition-all text-sm ${
-                        styleVibe === vibe.id
+                        styleVibe.includes(vibe.id)
                           ? "border-primary bg-primary/5"
                           : "border-border bg-secondary/60 hover:border-border/80"
                       }`}
@@ -800,8 +870,108 @@ const Settings = () => {
             </div>
           </motion.div>
 
+          {/* ── Invite a Friend ── */}
+          {profile?.handle && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }} className="space-y-3">
+              <div className="glass-card rounded-xl p-5">
+                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-4 block">Invite a Friend</label>
+                <p className="text-sm font-body text-muted-foreground mb-4">
+                  Share your link — when a friend signs up, you both get rewarded.
+                </p>
+                <div className="bg-secondary rounded-lg p-3 flex items-center justify-between gap-3 mb-3">
+                  <p className="text-xs font-mono text-muted-foreground truncate">
+                    {typeof window !== "undefined" ? `${window.location.origin}/auth?ref=${profile.handle}` : ""}
+                  </p>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(`${window.location.origin}/auth?ref=${profile.handle}`);
+                        setCopiedReferral(true);
+                        setTimeout(() => setCopiedReferral(false), 2000);
+                      } catch {
+                        toast({ title: "Copy failed", variant: "destructive" });
+                      }
+                    }}
+                    className="flex-shrink-0 p-1.5 rounded-md hover:bg-secondary/80 transition-colors"
+                    aria-label="Copy referral link"
+                  >
+                    {copiedReferral ? <Check size={14} className="text-primary" /> : <Copy size={14} className="text-muted-foreground" />}
+                  </button>
+                </div>
+                {referralStats && (referralStats.total > 0) && (
+                  <div className="flex items-center gap-4 text-xs font-body text-muted-foreground">
+                    <span className="flex items-center gap-1.5"><Users size={11} /> {referralStats.total} invited</span>
+                    <span className="flex items-center gap-1.5"><Gift size={11} className="text-primary" /> {referralStats.joined} joined</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── Data & Account ── */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="space-y-3">
+            <div className="glass-card rounded-xl p-5">
+              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-4 block">Data & Account</label>
+              <div className="space-y-3">
+                {/* Export data */}
+                <button
+                  onClick={handleExportData}
+                  disabled={exportingData}
+                  className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-secondary transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Download size={14} className="text-muted-foreground" />
+                    <div className="text-left">
+                      <p className="text-sm font-body text-foreground">Export my data</p>
+                      <p className="text-[10px] text-muted-foreground font-body">Download all your trip data as JSON</p>
+                    </div>
+                  </div>
+                  {exportingData ? (
+                    <Loader2 size={14} className="animate-spin text-muted-foreground" />
+                  ) : (
+                    <ChevronRight size={14} className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+                  )}
+                </button>
+
+                {/* Delete account */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-red-500/5 transition-colors group">
+                      <div className="flex items-center gap-3">
+                        <AlertTriangle size={14} className="text-red-400/70" />
+                        <div className="text-left">
+                          <p className="text-sm font-body text-red-400/80">Delete account</p>
+                          <p className="text-[10px] text-muted-foreground font-body">Permanently remove all data and cancel subscription</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={14} className="text-muted-foreground/50 group-hover:text-red-400/50 transition-colors" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete account permanently?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will immediately cancel your subscription, delete all trips, outfits, board images, and personal data. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAccount}
+                        disabled={deletingAccount}
+                        className="bg-red-500 hover:bg-red-600 text-white"
+                      >
+                        {deletingAccount ? "Deleting..." : "Yes, delete everything"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Sign out */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-16 pt-8 border-t border-border">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="mt-8 pt-8 border-t border-border">
             <button onClick={handleSignOut} className="flex items-center justify-between w-full px-5 py-4 rounded-xl hover:bg-secondary transition-colors group">
               <div className="flex items-center gap-3">
                 <LogOut size={16} className="text-muted-foreground" />
@@ -812,6 +982,12 @@ const Settings = () => {
           </motion.div>
         </div>
       </main>
+
+      <UpgradeCelebration
+        open={showCelebration}
+        tier={celebrationTier}
+        onClose={() => setShowCelebration(false)}
+      />
     </div>
   );
 };
