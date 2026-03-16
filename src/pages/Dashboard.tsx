@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Calendar, ArrowRight, TrendingUp, MapPin, Sparkles, X, ChevronRight, Crown, Plane, Users, Share2, Sun, CheckCircle2 } from "lucide-react";
+import { optimiseImageUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ShimmerSkeleton } from "@/components/ui/shimmer-skeleton";
 import Navbar from "@/components/layout/Navbar";
@@ -273,7 +274,7 @@ const Dashboard = () => {
                         <div className="relative h-48 overflow-hidden bg-secondary">
                           {trip.image_url ? (
                             <img
-                              src={trip.image_url}
+                              src={optimiseImageUrl(trip.image_url, 600)}
                               alt={trip.destination}
                               className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                               loading="lazy"
@@ -376,7 +377,7 @@ const Dashboard = () => {
                       <div className="relative h-48 overflow-hidden bg-secondary">
                         {trip.image_url ? (
                           <img
-                            src={trip.image_url}
+                            src={optimiseImageUrl(trip.image_url, 600)}
                             alt={trip.destination}
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             loading="lazy"

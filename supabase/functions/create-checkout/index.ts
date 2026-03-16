@@ -68,31 +68,54 @@ serve(async (req) => {
       });
     }
 
-    // Determine plan from request body
+    // Determine plan + billing from request body
     let plan = "luxe";
+    let billing = "monthly";
+    let promoCode: string | null = null;
     try {
       const body = await req.json().catch(() => ({}));
       if (body?.plan === "atelier") plan = "atelier";
-    } catch { /* default to luxe */ }
+      if (body?.billing === "annual") billing = "annual";
+      if (body?.promo_code) promoCode = String(body.promo_code).trim();
+    } catch { /* default to luxe monthly */ }
 
-    const priceId = plan === "atelier" && ATELIER_PRICE_ID ? ATELIER_PRICE_ID : LUXE_PRICE_ID;
+    // Resolve price ID — annual prices use separate Stripe price IDs
+    const LUXE_ANNUAL_PRICE_ID = Deno.env.get("STRIPE_LUXE_ANNUAL_PRICE_ID");
+    const ATELIER_ANNUAL_PRICE_ID = Deno.env.get("STRIPE_ATELIER_ANNUAL_PRICE_ID");
 
-    if (plan === "atelier" && !ATELIER_PRICE_ID) {
-      return new Response(JSON.stringify({ error: "Atelier plan not yet configured — STRIPE_ATELIER_PRICE_ID missing" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    let priceId: string | undefined;
+    if (plan === "atelier") {
+      if (billing === "annual" && ATELIER_ANNUAL_PRICE_ID) {
+        priceId = ATELIER_ANNUAL_PRICE_ID;
+      } else if (ATELIER_PRICE_ID) {
+        priceId = ATELIER_PRICE_ID;
+      } else {
+        return new Response(JSON.stringify({ error: "Atelier plan not yet configured" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      priceId = (billing === "annual" && LUXE_ANNUAL_PRICE_ID) ? LUXE_ANNUAL_PRICE_ID : LUXE_PRICE_ID;
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const siteUrl = Deno.env.get("SITE_URL") || "http://localhost:8080";
+
+    const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       customer: customerId,
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${Deno.env.get("SITE_URL") || "http://localhost:8080"}/dashboard?success=subscription`,
-      cancel_url: `${Deno.env.get("SITE_URL") || "http://localhost:8080"}/settings`,
-      metadata: { user_id: user.id, tier: plan },
-      subscription_data: { metadata: { user_id: user.id, tier: plan } },
-    });
+      success_url: `${siteUrl}/settings?success=subscription&tier=${plan}`,
+      cancel_url: `${siteUrl}/pricing`,
+      metadata: { user_id: user.id, tier: plan, billing },
+      subscription_data: { metadata: { user_id: user.id, tier: plan, billing } },
+    };
+
+    if (promoCode) {
+      (sessionParams as Record<string, unknown>).discounts = [{ coupon: promoCode }];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

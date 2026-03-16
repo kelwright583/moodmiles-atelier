@@ -286,10 +286,15 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="border-t border-border py-12 px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <Logo size="sm" className="text-foreground" />
+          <div className="flex items-center gap-5">
+            <Link to="/pricing" className="text-xs text-muted-foreground hover:text-foreground font-body transition-colors">Pricing</Link>
+            <Link to="/terms" className="text-xs text-muted-foreground hover:text-foreground font-body transition-colors">Terms</Link>
+            <Link to="/privacy" className="text-xs text-muted-foreground hover:text-foreground font-body transition-colors">Privacy</Link>
+          </div>
           <p className="text-xs text-muted-foreground font-body">
-            © 2026 Concierge Styled. All rights reserved.
+            © 2026 Concierge Styled.
           </p>
         </div>
       </footer>

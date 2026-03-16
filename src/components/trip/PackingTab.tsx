@@ -305,8 +305,11 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
 
       {totalCount === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <Sparkles size={32} className="mx-auto text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground font-body text-sm mb-4">
+          <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mx-auto mb-5">
+            <Briefcase size={22} className="text-muted-foreground/50" />
+          </div>
+          <h3 className="text-lg font-heading mb-2">Pack like you&apos;ve done it before</h3>
+          <p className="text-muted-foreground font-body text-sm mb-6 max-w-xs mx-auto">
             One tap and we&apos;ll build a smart list from your weather, events, and trip type — so you never overpack or forget the essentials.
           </p>
           <Button variant="champagne" onClick={generateSuggestions} disabled={generating}>

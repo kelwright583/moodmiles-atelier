@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const needsVerification = searchParams.get("verify") === "1";
+  const referralHandle = searchParams.get("ref");
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -58,7 +59,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
@@ -82,11 +83,15 @@ const Auth = () => {
           email,
           password,
           options: {
-            data: { name },
+            data: { name, referral_handle: referralHandle || undefined },
             emailRedirectTo: window.location.origin,
           },
         });
         if (error) throw error;
+        // Record referral if present — non-blocking
+        if (referralHandle) {
+          supabase.functions.invoke("process-referral", { body: { referrer_handle: referralHandle, referred_email: email } }).catch(() => {});
+        }
         toast({
           title: "Check your email",
           description: "We've sent you a verification link to confirm your account.",
@@ -253,6 +258,15 @@ const Auth = () => {
               </>
             )}
           </p>
+          )}
+
+          {!isLogin && !isForgotPassword && (
+            <p className="text-center text-xs text-muted-foreground mt-4 font-body leading-relaxed">
+              By creating an account you agree to our{" "}
+              <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
+              {" "}and{" "}
+              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+            </p>
           )}
         </motion.div>
       </main>

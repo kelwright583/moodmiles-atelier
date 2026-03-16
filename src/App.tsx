@@ -5,24 +5,33 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { lazy, Suspense, useEffect } from "react";
+import { initAnalytics } from "./lib/analytics";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
-import CreateTrip from "./pages/CreateTrip";
-import TripDetail from "./pages/TripDetail";
-import TripLookbook from "./pages/TripLookbook";
-import Settings from "./pages/Settings";
-import Onboarding from "./pages/Onboarding";
-import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-import InviteAccept from "./pages/InviteAccept";
-import PublicEvent from "./pages/PublicEvent";
-import SpotifyCallback from "./pages/SpotifyCallback";
-import PublicTrip from "./pages/PublicTrip";
+import Offline from "./pages/Offline";
 import FloatingActionButton from "./components/layout/FloatingActionButton";
 import InstallPrompt from "./components/InstallPrompt";
-import Offline from "./pages/Offline";
+import { CookieConsent } from "./components/CookieConsent";
+
+// Lazy-loaded pages — reduces initial bundle size
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const CreateTrip = lazy(() => import("./pages/CreateTrip"));
+const TripDetail = lazy(() => import("./pages/TripDetail"));
+const TripLookbook = lazy(() => import("./pages/TripLookbook"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Profile = lazy(() => import("./pages/Profile"));
+const InviteAccept = lazy(() => import("./pages/InviteAccept"));
+const PublicEvent = lazy(() => import("./pages/PublicEvent"));
+const SpotifyCallback = lazy(() => import("./pages/SpotifyCallback"));
+const PublicTrip = lazy(() => import("./pages/PublicTrip"));
 
 const queryClient = new QueryClient();
 
@@ -66,41 +75,54 @@ const OnboardingGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const AppInner = () => {
+  useEffect(() => { initAnalytics(); }, []);
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <AppInner />
         <BrowserRouter>
           <FloatingActionButton />
           <InstallPrompt />
-          <Routes>
-            {/* Public */}
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/profile/:handle" element={<Profile />} />
-            <Route path="/invite/:token" element={<InviteAccept />} />
-            <Route path="/event/:share_token" element={<PublicEvent />} />
-            <Route path="/auth/spotify/callback" element={<SpotifyCallback />} />
-            <Route path="/trip/share/:shareToken" element={<PublicTrip />} />
+          <CookieConsent />
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              {/* Public */}
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/profile/:handle" element={<Profile />} />
+              <Route path="/invite/:token" element={<InviteAccept />} />
+              <Route path="/event/:share_token" element={<PublicEvent />} />
+              <Route path="/auth/spotify/callback" element={<SpotifyCallback />} />
+              <Route path="/trip/share/:shareToken" element={<PublicTrip />} />
 
-            {/* Onboarding — protected but no OnboardingGuard (is the onboarding itself) */}
-            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+              {/* Onboarding — protected but no OnboardingGuard (is the onboarding itself) */}
+              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
-            {/* Settings — protected, skip OnboardingGuard so users can edit during onboarding */}
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              {/* Settings — protected, skip OnboardingGuard so users can edit during onboarding */}
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-            {/* Main app — protected + onboarding required */}
-            <Route path="/dashboard" element={<ProtectedRoute><OnboardingGuard><Dashboard /></OnboardingGuard></ProtectedRoute>} />
-            <Route path="/create-trip" element={<ProtectedRoute><OnboardingGuard><CreateTrip /></OnboardingGuard></ProtectedRoute>} />
-            <Route path="/trip/:id" element={<ProtectedRoute><OnboardingGuard><TripDetail /></OnboardingGuard></ProtectedRoute>} />
-            <Route path="/trip/:tripId/lookbook" element={<ProtectedRoute><TripLookbook /></ProtectedRoute>} />
+              {/* Main app — protected + onboarding required */}
+              <Route path="/dashboard" element={<ProtectedRoute><OnboardingGuard><Dashboard /></OnboardingGuard></ProtectedRoute>} />
+              <Route path="/create-trip" element={<ProtectedRoute><OnboardingGuard><CreateTrip /></OnboardingGuard></ProtectedRoute>} />
+              <Route path="/trip/:id" element={<ProtectedRoute><OnboardingGuard><TripDetail /></OnboardingGuard></ProtectedRoute>} />
+              <Route path="/trip/:tripId/lookbook" element={<ProtectedRoute><TripLookbook /></ProtectedRoute>} />
 
-            <Route path="/offline" element={<Offline />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="/offline" element={<Offline />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
