@@ -268,7 +268,7 @@ const Settings = () => {
           payload.handle = handle;
         }
       }
-      const { error } = await supabase.from("profiles").update(payload).eq("user_id", user.id);
+      const { error } = await supabase.from("profiles").upsert({ user_id: user.id, ...payload }, { onConflict: "user_id" });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       queryClient.invalidateQueries({ queryKey: ["onboarding-check", user.id] });
@@ -284,7 +284,7 @@ const Settings = () => {
     if (!user) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("profiles").update({ name }).eq("user_id", user.id);
+      const { error } = await supabase.from("profiles").upsert({ user_id: user.id, name }, { onConflict: "user_id" });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast({ title: "Name updated" });
@@ -301,7 +301,7 @@ const Settings = () => {
     if (!user) return;
     setSavingProfile(true);
     try {
-      const { error: spError } = await supabase.from("profiles").update({ style_profile: styleProfile }).eq("user_id", user.id);
+      const { error: spError } = await supabase.from("profiles").upsert({ user_id: user.id, style_profile: styleProfile }, { onConflict: "user_id" });
       if (spError) throw spError;
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast({ title: "Style profile updated" });
@@ -314,7 +314,7 @@ const Settings = () => {
     if (!user) return;
     setSavingProfile(true);
     try {
-      const { error: lsError } = await supabase.from("profiles").update({ luggage_size: luggageSize }).eq("user_id", user.id);
+      const { error: lsError } = await supabase.from("profiles").upsert({ user_id: user.id, luggage_size: luggageSize }, { onConflict: "user_id" });
       if (lsError) throw lsError;
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
       toast({ title: "Luggage size updated" });
