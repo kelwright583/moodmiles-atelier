@@ -5,11 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { ActivitySuggestion, TripEvent } from "@/types/database";
 import {
   X, ChevronLeft, ChevronRight, Globe, MapPin, Star, Bookmark,
-  BookmarkCheck, Ticket, CalendarPlus, ArrowRight,
+  BookmarkCheck, Ticket, CalendarPlus,
 } from "lucide-react";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { PlanItSheet } from "@/components/trip/PlanItSheet";
 
 const categoryColors: Record<string, string> = {
   Culture: "text-purple-400",
@@ -41,6 +42,7 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
   const [generating, setGenerating] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
+  const [planActivity, setPlanActivity] = useState<ActivitySuggestion | null>(null);
 
   const { data: activities = [] } = useQuery({
     queryKey: ["activity-suggestions", tripId],
@@ -90,28 +92,21 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
     }
   };
 
-  const addToEvents = async (activity: ActivitySuggestion) => {
-    const existing = events.find((e) => e.event_name === activity.name);
-    if (existing) {
-      toast({ title: "Already in your events", description: activity.name });
-      return;
-    }
-    const { error } = await supabase.from("trip_events").insert({
-      trip_id: tripId,
-      event_name: activity.name,
-      event_type: activity.category || null,
-      location: activity.location || null,
-      notes: activity.booking_url ? `Book: ${activity.booking_url}` : (activity.source_url || null),
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return;
-    }
-    queryClient.invalidateQueries({ queryKey: ["trip-events", tripId] });
-    toast({ title: "Added to Events", description: activity.name });
+  const saveToBoard = async (activity: ActivitySuggestion) => {
+    await supabase
+      .from("activity_suggestions")
+      .update({ is_saved_to_board: true })
+      .eq("id", activity.id);
+    queryClient.invalidateQueries({ queryKey: ["activity-suggestions", tripId] });
+    toast({ title: "Saved to Board", description: activity.name });
   };
 
-  const isInEvents = (name: string) => events.some((e) => e.event_name === name);
+  const openPlanSheet = (activity: ActivitySuggestion) => setPlanActivity(activity);
+
+  const isInEvents = (activity: ActivitySuggestion) =>
+    events.some((e) => e.source_activity_id === activity.id) ||
+    events.some((e) => e.event_name === activity.name);
+
   const scroll = (dir: "left" | "right") =>
     scrollRef.current?.scrollBy({ left: dir === "left" ? -320 : 320, behavior: "smooth" });
 
@@ -187,7 +182,7 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
                     {a.category}
                   </span>
                   <h3 className="font-heading text-2xl leading-tight text-foreground">{a.name}</h3>
-                  {isInEvents(a.name) && (
+                  {isInEvents(a) && (
                     <span className="inline-flex items-center gap-1 mt-1 text-xs text-primary font-body">
                       <BookmarkCheck size={10} /> In your events
                     </span>
@@ -227,8 +222,9 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
                   <ActivityCard
                     key={a.id}
                     activity={a}
-                    isInEvents={isInEvents(a.name)}
-                    onAddToEvents={() => addToEvents(a)}
+                    isInEvents={isInEvents(a)}
+                    onSaveToBoard={() => saveToBoard(a)}
+                    onOpenPlanSheet={() => openPlanSheet(a)}
                     onNavigateToEvents={() => { setFeedOpen(false); onNavigateToEvents?.(); }}
                   />
                 ))}
@@ -236,6 +232,15 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PlanItSheet
+        activity={planActivity}
+        tripId={tripId}
+        tripStartDate={trip?.start_date || ""}
+        tripEndDate={trip?.end_date || ""}
+        onClose={() => setPlanActivity(null)}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["activity-suggestions", tripId] })}
+      />
     </motion.div>
   );
 };
@@ -243,12 +248,14 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
 const ActivityCard = ({
   activity,
   isInEvents,
-  onAddToEvents,
+  onSaveToBoard,
+  onOpenPlanSheet,
   onNavigateToEvents,
 }: {
   activity: ActivitySuggestion;
   isInEvents: boolean;
-  onAddToEvents: () => void;
+  onSaveToBoard: () => void;
+  onOpenPlanSheet: () => void;
   onNavigateToEvents: () => void;
 }) => (
   <motion.div
@@ -270,17 +277,29 @@ const ActivityCard = ({
         {isInEvents ? (
           <button
             onClick={onNavigateToEvents}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary/10 text-primary text-xs font-body"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-ink-raised border border-ink-border text-parchment-dim text-xs font-body"
           >
-            <BookmarkCheck size={12} /> In Events <ArrowRight size={12} />
+            <BookmarkCheck size={12} /> In Itinerary →
+          </button>
+        ) : activity.is_saved_to_board ? (
+          <button className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-ink-raised border border-gold/30 text-gold text-xs font-body">
+            <BookmarkCheck size={12} /> Saved to Board
           </button>
         ) : (
-          <button
-            onClick={onAddToEvents}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary hover:bg-primary/10 hover:text-primary text-muted-foreground text-xs font-body transition-colors"
-          >
-            <CalendarPlus size={12} /> Add to Events
-          </button>
+          <>
+            <button
+              onClick={onSaveToBoard}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-ink-raised border border-ink-border text-parchment-faint text-xs font-body hover:border-gold/30 hover:text-parchment-dim transition-colors"
+            >
+              <Bookmark size={12} /> Save to Board
+            </button>
+            <button
+              onClick={onOpenPlanSheet}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-gold text-ink text-xs font-body font-medium"
+            >
+              <CalendarPlus size={12} /> Plan It
+            </button>
+          </>
         )}
       </div>
       {activity.booking_url && (

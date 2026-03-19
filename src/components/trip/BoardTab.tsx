@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BoardItem, TripEvent, TripCollaborator, Profile, EventLook, TripPoll, PollOption } from "@/types/database";
+import { BoardItem, TripEvent, TripCollaborator, Profile, EventLook, TripPoll, PollOption, ActivitySuggestion } from "@/types/database";
 import {
   Grid3X3, Plus, Trash2, ImagePlus, Palette, X, Check, Sparkles,
   ChevronDown, ChevronUp, Edit2, Users, BarChart2,
@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import PollCard from "./PollCard";
+import { PlanItSheet } from "@/components/trip/PlanItSheet";
 
 const THEME_PALETTE = [
   "#1B2B4B", "#FFFFFF", "#C9975B", "#A67B5B", "#4A7B9D", "#E8D5B0",
@@ -28,6 +29,8 @@ interface BoardTabProps {
     destination: string;
     trip_theme: string | null;
     theme_colors: string[] | null;
+    start_date?: string;
+    end_date?: string;
   };
   onSearchTheme?: (query: string) => void;
   onAddLookForEvent?: (query: string) => void;
@@ -737,6 +740,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
   const fileRef = useRef<HTMLInputElement>(null);
   const [filterUserId, setFilterUserId] = useState<string | "all" | "mine">("all");
   const [pollCreateOpen, setPollCreateOpen] = useState(false);
+  const [planActivity, setPlanActivity] = useState<ActivitySuggestion | null>(null);
 
   const isHost = user?.id === trip.user_id;
 
@@ -757,6 +761,19 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
         .order("order_index");
       if (error) throw error;
       return data as BoardItem[];
+    },
+  });
+
+  const { data: savedExperiences = [] } = useQuery({
+    queryKey: ["activity-suggestions", tripId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("activity_suggestions")
+        .select("*")
+        .eq("trip_id", tripId)
+        .eq("is_saved_to_board", true)
+        .order("created_at", { ascending: false });
+      return data as ActivitySuggestion[];
     },
   });
 
@@ -909,12 +926,25 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
     return item.pinned_by === user.id || isHost;
   };
 
+  const unsaveFromBoard = async (activityId: string) => {
+    await supabase
+      .from("activity_suggestions")
+      .update({ is_saved_to_board: false })
+      .eq("id", activityId);
+    queryClient.invalidateQueries({ queryKey: ["activity-suggestions", tripId] });
+  };
+
   // Filter items
   const filteredItems = items.filter((item) => {
     if (filterUserId === "all") return true;
     if (filterUserId === "mine") return item.pinned_by === user?.id;
     return item.pinned_by === filterUserId;
   });
+
+  const boardItems = filteredItems;
+  const myItems = boardItems.filter((item) => item.pinned_by === user?.id);
+  const sharedItems = boardItems.filter((item) => item.pinned_by !== user?.id);
+  const hasCollaborators = sharedItems.length > 0;
 
   // Build collaborator list for filter pills (excluding host, which is "mine")
   const collabMembers = collaborators
@@ -1082,76 +1112,163 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
         </div>
       </div>
 
-      {/* Board grid */}
-      {filteredItems.length === 0 ? (
-        <div className="glass rounded-xl p-12 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
-            <Palette size={24} className="text-primary" />
-          </div>
-          <h3 className="font-heading text-lg mb-1">
-            {filterUserId === "all" ? "Your mood board awaits" : "Nothing here yet"}
-          </h3>
-          <p className="text-muted-foreground font-body text-sm max-w-xs mx-auto">
-            {filterUserId === "all"
-              ? "Pin outfits from Inspiration, upload your own images, or add notes — your shared style scrapbook for this trip."
-              : "No board items from this member yet."}
-          </p>
-        </div>
-      ) : (
-        <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
-          {filteredItems.map((item) => {
-            const contributor = item.pinned_by ? getProfile(item.pinned_by) : null;
-            return (
-              <div
-                key={item.id}
-                className="break-inside-avoid glass rounded-xl overflow-hidden group relative hover:glow-gold transition-all duration-300"
-              >
-                {/* Delete button */}
-                {canDelete(item) && (
-                  <button
-                    onClick={() => deleteItem(item)}
-                    className="absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-card/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Remove"
-                  >
-                    <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
-                  </button>
+      {/* Saved Experiences */}
+      {savedExperiences.length > 0 && (
+        <section className="mb-8">
+          <p className="eyebrow mb-4">Saved Experiences</p>
+          <div className="grid grid-cols-2 gap-3">
+            {savedExperiences.map((activity) => (
+              <div key={activity.id} className="relative rounded-lg overflow-hidden aspect-[4/5] bg-card border border-border group">
+                {activity.image_url && (
+                  <img src={activity.image_url} className="w-full h-full object-cover" alt={activity.name} />
                 )}
-
-                {/* Image or placeholder */}
-                {item.image_url ? (
-                  <img src={item.image_url} alt={item.description || ""} className="w-full object-cover" />
-                ) : (
-                  <div className="w-full aspect-square bg-secondary flex items-center justify-center">
-                    <Grid3X3 size={24} className="text-muted-foreground/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
+                <div className="absolute top-3 left-3">
+                  <span className="eyebrow text-[10px]">{activity.category}</span>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-3 space-y-2">
+                  <p className="font-heading text-lg leading-tight">{activity.name}</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPlanActivity(activity)}
+                      className="flex-1 py-1.5 text-xs font-body font-medium bg-gold text-ink rounded-sm"
+                    >
+                      Plan It
+                    </button>
+                    <button
+                      onClick={() => unsaveFromBoard(activity.id)}
+                      className="px-2.5 py-1.5 text-xs font-body text-parchment-faint border border-ink-border rounded-sm hover:border-gold/30 transition-colors"
+                    >
+                      Remove
+                    </button>
                   </div>
-                )}
-
-                {/* Description / notes */}
-                {(item.description || item.notes) && (
-                  <div className="p-4 pb-8">
-                    {item.description && (
-                      <p className="text-sm font-body text-foreground">{item.description}</p>
-                    )}
-                    {item.notes && (
-                      <p className="text-xs text-muted-foreground font-body mt-1">{item.notes}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Contributor avatar — bottom left */}
-                {contributor && (
-                  <div className="absolute bottom-2 left-2">
-                    <MemberAvatar
-                      profile={contributor}
-                      size="sm"
-                      ring={contributor.user_id === user?.id}
-                    />
-                  </div>
-                )}
+                </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* My Inspiration */}
+      <section className="mb-8">
+        <p className="eyebrow mb-4">My Inspiration</p>
+        {myItems.length === 0 ? (
+          <div className="glass rounded-xl p-12 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+              <Palette size={24} className="text-primary" />
+            </div>
+            <h3 className="font-heading text-lg mb-1">
+              {filterUserId === "all" ? "Your mood board awaits" : "Nothing here yet"}
+            </h3>
+            <p className="text-muted-foreground font-body text-sm max-w-xs mx-auto">
+              {filterUserId === "all"
+                ? "Pin outfits from Inspiration, upload your own images, or add notes — your shared style scrapbook for this trip."
+                : "No board items from this member yet."}
+            </p>
+          </div>
+        ) : (
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
+            {myItems.map((item) => {
+              const contributor = item.pinned_by ? getProfile(item.pinned_by) : null;
+              return (
+                <div
+                  key={item.id}
+                  className="break-inside-avoid glass rounded-xl overflow-hidden group relative hover:glow-gold transition-all duration-300"
+                >
+                  {canDelete(item) && (
+                    <button
+                      onClick={() => deleteItem(item)}
+                      className="absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-card/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove"
+                    >
+                      <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
+                    </button>
+                  )}
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.description || ""} className="w-full object-cover" />
+                  ) : (
+                    <div className="w-full aspect-square bg-secondary flex items-center justify-center">
+                      <Grid3X3 size={24} className="text-muted-foreground/20" />
+                    </div>
+                  )}
+                  {(item.description || item.notes) && (
+                    <div className="p-4 pb-8">
+                      {item.description && (
+                        <p className="text-sm font-body text-foreground">{item.description}</p>
+                      )}
+                      {item.notes && (
+                        <p className="text-xs text-muted-foreground font-body mt-1">{item.notes}</p>
+                      )}
+                    </div>
+                  )}
+                  {contributor && (
+                    <div className="absolute bottom-2 left-2">
+                      <MemberAvatar
+                        profile={contributor}
+                        size="sm"
+                        ring={contributor.user_id === user?.id}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* Shared Board */}
+      {hasCollaborators && (
+        <section className="mb-8">
+          <p className="eyebrow mb-4">Shared Board</p>
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
+            {sharedItems.map((item) => {
+              const contributor = item.pinned_by ? getProfile(item.pinned_by) : null;
+              return (
+                <div
+                  key={item.id}
+                  className="break-inside-avoid glass rounded-xl overflow-hidden group relative hover:glow-gold transition-all duration-300"
+                >
+                  {canDelete(item) && (
+                    <button
+                      onClick={() => deleteItem(item)}
+                      className="absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-card/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove"
+                    >
+                      <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
+                    </button>
+                  )}
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.description || ""} className="w-full object-cover" />
+                  ) : (
+                    <div className="w-full aspect-square bg-secondary flex items-center justify-center">
+                      <Grid3X3 size={24} className="text-muted-foreground/20" />
+                    </div>
+                  )}
+                  {(item.description || item.notes) && (
+                    <div className="p-4 pb-8">
+                      {item.description && (
+                        <p className="text-sm font-body text-foreground">{item.description}</p>
+                      )}
+                      {item.notes && (
+                        <p className="text-xs text-muted-foreground font-body mt-1">{item.notes}</p>
+                      )}
+                    </div>
+                  )}
+                  {contributor && (
+                    <div className="absolute bottom-2 left-2">
+                      <MemberAvatar
+                        profile={contributor}
+                        size="sm"
+                        ring={contributor.user_id === user?.id}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       <p className="text-xs text-muted-foreground font-body mt-6 text-center">
@@ -1183,6 +1300,15 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
         open={pollCreateOpen}
         onClose={() => setPollCreateOpen(false)}
         tripId={tripId}
+      />
+
+      <PlanItSheet
+        activity={planActivity}
+        tripId={tripId}
+        tripStartDate={trip?.start_date || ""}
+        tripEndDate={trip?.end_date || ""}
+        onClose={() => setPlanActivity(null)}
+        onSuccess={() => {}}
       />
     </motion.div>
   );

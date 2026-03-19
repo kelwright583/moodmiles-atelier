@@ -130,6 +130,8 @@ export interface TripEvent {
   flight_number: string | null;
   flight_status: "scheduled" | "boarding" | "departed" | "en_route" | "landed" | "cancelled" | "delayed" | null;
   flight_status_updated_at: string | null;
+  source_activity_id: string | null;
+  style_notes: string | null;
 }
 
 export interface EventAttendee {
@@ -203,6 +205,7 @@ export interface ActivitySuggestion {
   is_promoted: boolean;
   promoted_by: string | null;
   created_at: string;
+  is_saved_to_board: boolean;
 }
 
 export interface EventLook {

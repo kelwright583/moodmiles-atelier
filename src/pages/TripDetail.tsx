@@ -212,26 +212,22 @@ const TripDetail = () => {
   const [downloadingCard, setDownloadingCard] = useState(false);
   const tripCardRef = useRef<HTMLDivElement>(null);
 
-  const handleStyleEvent = (query: string) => {
+  const handleStyleEvent = (query: string, eventId?: string) => {
     setInspireSearch(query);
+    if (eventId) setInspireEventId(eventId);
     setActiveTab("Style");
-    requestAnimationFrame(() => setInspireSearch(""));
+    // No requestAnimationFrame. No clearing. Values persist until user leaves Style tab.
   };
 
   const handleSearchTheme = (query: string) => {
     setInspireSearch(query);
     setActiveTab("Style");
-    requestAnimationFrame(() => setInspireSearch(""));
   };
 
   const handleAddLookForEvent = (query: string, eventId?: string) => {
     setInspireSearch(query);
     if (eventId) setInspireEventId(eventId);
     setActiveTab("Style");
-    requestAnimationFrame(() => {
-      setInspireSearch("");
-      setInspireEventId("");
-    });
   };
 
   const { data: trip, isLoading } = useQuery({
@@ -379,6 +375,10 @@ const TripDetail = () => {
     const now = Date.now();
     localStorage.setItem(key, String(now));
     setTabLastViewed((prev) => ({ ...prev, [tab]: now }));
+    if (tab !== "Style") {
+      setInspireEventId("");
+      setInspireSearch("");
+    }
     setActiveTab(tab);
 
     // Mark Board / Playlist notifications as read when switching to those tabs
@@ -762,6 +762,7 @@ const TripDetail = () => {
                 }}
                 initialSearch={inspireSearch}
                 initialEventId={inspireEventId}
+                onClearEventContext={() => { setInspireEventId(""); setInspireSearch(""); }}
               />
             )}
             {activeTab === "Chat" && (

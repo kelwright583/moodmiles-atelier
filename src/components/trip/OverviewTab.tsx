@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { WeatherData, TripCollaborator, Flight } from "@/types/database";
 import {
   CloudSun, Droplets, Wind, RefreshCw, Sun, Cloud, CloudRain, Snowflake,
-  CloudLightning, CloudFog, AlertTriangle, CheckCircle2, Users, Clock,
+  CloudLightning, CloudFog, CheckCircle2, Users, Clock,
   Crown, Eye, User, Copy, Check, X, Loader2, Plus, Plane, FileText, ExternalLink, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -83,13 +83,6 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
     },
   });
 
-  const { data: dressCodeAlerts = [] } = useQuery({
-    queryKey: ["dress-code-alerts", tripId],
-    queryFn: async () => {
-      const { data } = await supabase.from("dress_code_alerts").select("id, event_id, severity, alert_message").eq("trip_id", tripId);
-      return data || [];
-    },
-  });
 
   const { data: collaborators = [] } = useQuery({
     queryKey: ["trip-collaborators", tripId],
@@ -330,31 +323,6 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
         </div>
       </section>
 
-      {/* Trip Readiness */}
-      <section>
-        <h2 className="eyebrow text-muted-foreground mb-4 flex items-center gap-2">
-          <CheckCircle2 size={14} className="text-primary" /> Trip Readiness
-        </h2>
-        <div className="glass rounded-xl p-4 space-y-3">
-          <div className="flex items-center justify-between cursor-pointer group" onClick={() => onNavigateTo?.("Events")}>
-            <div className="flex items-center gap-3">
-              {dressCodeAlerts.length > 0 ? (
-                <AlertTriangle size={14} className={dressCodeAlerts.some((a: any) => a.severity === "critical") ? "text-red-400" : "text-amber-400"} />
-              ) : (
-                <CheckCircle2 size={14} className="text-live-text" />
-              )}
-              <span className="text-sm font-body text-foreground">Dress code alerts</span>
-            </div>
-            {dressCodeAlerts.length > 0 ? (
-              <span className="text-xs font-body text-amber-400 group-hover:underline">
-                {dressCodeAlerts.length} alert{dressCodeAlerts.length !== 1 ? "s" : ""} — tap to review
-              </span>
-            ) : (
-              <span className="text-xs font-body text-live-text">All outfits cleared</span>
-            )}
-          </div>
-        </div>
-      </section>
 
       {/* Flights */}
       <section>

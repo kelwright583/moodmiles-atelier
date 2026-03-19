@@ -33,6 +33,7 @@ interface InspirationTabProps {
   };
   initialSearch?: string;
   initialEventId?: string;
+  onClearEventContext?: () => void;
 }
 
 type Mode = "editorial" | "shop" | "coordinate";
@@ -363,13 +364,12 @@ const PinToSheet = ({
   const [assigning, setAssigning] = useState(false);
 
   const { data: events = [] } = useQuery({
-    queryKey: ["trip-events-dress-code-pin", tripId],
+    queryKey: ["trip-events-pin", tripId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trip_events")
         .select("*")
         .eq("trip_id", tripId)
-        .not("dress_code", "is", null)
         .order("event_date", { ascending: true });
       if (error) throw error;
       return data as TripEvent[];
@@ -462,7 +462,7 @@ const PinToSheet = ({
                 <div className="pt-2 space-y-2 px-1">
                   {events.length === 0 ? (
                     <p className="text-xs text-muted-foreground font-body text-center py-4">
-                      No events with dress codes found.
+                      No events found. Add events in the Events tab.
                     </p>
                   ) : (
                     events.map((event) => (
@@ -521,7 +521,7 @@ const PinToSheet = ({
 };
 
 /* ── InspirationTab ── */
-const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: InspirationTabProps) => {
+const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEventContext }: InspirationTabProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [mode, setMode] = useState<Mode>("editorial");
@@ -534,7 +534,6 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
   const [preSelectedEventId, setPreSelectedEventId] = useState(initialEventId || "");
   const initialSearchFiredRef = useRef(false);
   const [showPwaPrompt, setShowPwaPrompt] = useState(false);
-  const [dressAlertCard, setDressAlertCard] = useState<{ headline: string; detail: string; severity: string } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Editorial outfits
@@ -574,6 +573,21 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
       return data as unknown as OutfitSuggestion[];
     },
     retry: 1,
+  });
+
+  // Context event query (when navigated from "Style this event")
+  const { data: contextEvent } = useQuery({
+    queryKey: ["event-context", initialEventId],
+    queryFn: async () => {
+      if (!initialEventId) return null;
+      const { data } = await supabase
+        .from("trip_events")
+        .select("id, event_name, event_date, style_notes")
+        .eq("id", initialEventId)
+        .single();
+      return data;
+    },
+    enabled: !!initialEventId,
   });
 
   const getInvokeErrorMessage = async (err: any, fallback = "Request failed") => {
@@ -681,6 +695,30 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
     queryClient.invalidateQueries({ queryKey: ["outfit-suggestions", tripId, "editorial"] });
   };
 
+  const assignLookToEvent = async (outfit: OutfitSuggestion, eventId: string) => {
+    if (!user) return;
+    await supabase.from("event_looks").upsert(
+      {
+        trip_id: tripId,
+        event_id: eventId,
+        user_id: user.id,
+        image_url: outfit.image_url,
+        outfit_suggestion_id: outfit.id,
+      },
+      { onConflict: "event_id,user_id" }
+    );
+    queryClient.invalidateQueries({ queryKey: ["event-looks", tripId] });
+  };
+
+  const handlePinOutfit = async (outfit: OutfitSuggestion) => {
+    if (initialEventId) {
+      await assignLookToEvent(outfit, initialEventId);
+      toast({ title: "Look saved to event" });
+    } else {
+      setPinTarget(outfit);
+    }
+  };
+
   const pinToBoard = async (outfit: OutfitSuggestion) => {
     if (!user) return;
     try {
@@ -696,19 +734,6 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["board-items", tripId] });
       toast({ title: "Pinned to Board!", description: `"${outfit.title}" saved to your mood board.` });
-
-      // Check dress codes after pinning (non-blocking)
-      try {
-        const { data: checkData } = await supabase.functions.invoke("check-dress-codes", {
-          body: { trip_id: tripId },
-        });
-        if (checkData?.new_alerts > 0 && checkData?.alerts?.length > 0) {
-          const alert = checkData.alerts[0];
-          setDressAlertCard({ headline: alert.headline, detail: alert.detail, severity: alert.severity });
-        }
-      } catch {
-        // Non-blocking — ignore
-      }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -737,6 +762,30 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      {/* Event context banner */}
+      {contextEvent && (
+        <div className="flex items-center justify-between px-4 py-3 bg-ink-raised border border-gold/20 rounded-sm mb-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Sparkles size={13} className="text-gold flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] eyebrow text-parchment-faint">Styling for</p>
+              <p className="text-sm font-heading truncate">{contextEvent.event_name}</p>
+              {contextEvent.style_notes && (
+                <p className="text-xs text-parchment-faint font-body italic leading-relaxed mt-0.5 line-clamp-2">
+                  {contextEvent.style_notes}
+                </p>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClearEventContext}
+            className="p-1.5 text-parchment-faint hover:text-parchment transition-colors flex-shrink-0"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -898,7 +947,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
                     key={outfit.id}
                     outfit={outfit}
                     onTogglePin={togglePin}
-                    onPinToBoard={(o) => setPinTarget(o)}
+                    onPinToBoard={handlePinOutfit}
                     onSaveToOtherBoard={() => setSaveToOtherOutfit(outfit)}
                   />
                 ))}
@@ -956,7 +1005,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
                   key={outfit.id}
                   outfit={outfit}
                   filter={shopFilter}
-                  onPinToBoard={(o) => setPinTarget(o)}
+                  onPinToBoard={handlePinOutfit}
                 />
               ))}
             </div>
@@ -976,44 +1025,6 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
             searchWebFashion(undefined, searchQuery);
           }}
         />
-      )}
-
-      {/* Dress code alert card — shown after pinning when conflicts detected */}
-      {dressAlertCard && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass rounded-2xl p-4 border border-amber-500/30 bg-amber-500/5"
-        >
-          <div className="flex items-start gap-3">
-            <AlertTriangle
-              size={16}
-              className={`flex-shrink-0 mt-0.5 ${dressAlertCard.severity === "critical" ? "text-red-400" : "text-amber-400"}`}
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-body font-medium text-foreground">{dressAlertCard.headline}</p>
-              {dressAlertCard.detail && (
-                <p className="text-xs text-muted-foreground font-body mt-1 leading-relaxed">{dressAlertCard.detail}</p>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-3 mt-3">
-            <Button
-              variant="champagne-outline"
-              size="sm"
-              onClick={() => { setDressAlertCard(null); searchWebFashion(); }}
-              disabled={searchingWeb}
-            >
-              <Globe size={12} /> Find something else
-            </Button>
-            <button
-              onClick={() => setDressAlertCard(null)}
-              className="text-xs text-muted-foreground font-body hover:text-foreground transition-colors"
-            >
-              This is fine
-            </button>
-          </div>
-        </motion.div>
       )}
 
       {/* PWA install prompt */}

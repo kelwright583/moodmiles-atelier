@@ -3,13 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { TripEvent, EventAttendee, ActivitySuggestion } from "@/types/database";
+import { TripEvent, EventAttendee, ActivitySuggestion, EventLook } from "@/types/database";
 import {
   Utensils, Waves, Music, Camera, Car, Star, Plus, Edit2, Share2, Sparkles,
   ChevronDown, ChevronUp, Copy, Check, CalendarPlus, X, Loader2,
   ExternalLink, Trash2, MapPin, Globe, ChevronLeft, ChevronRight,
-  BookmarkCheck, Ticket,
+  BookmarkCheck, Ticket, Bookmark,
 } from "lucide-react";
+import { PlanItSheet } from "@/components/trip/PlanItSheet";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -550,20 +551,28 @@ const EventCard = ({
   profilesById,
   canEdit,
   destination,
+  trip,
   onEdit,
   onShare,
   onDelete,
   onStyleEvent,
+  myLook,
+  generatingStyleNotes,
+  onGenerateStyleNotes,
 }: {
   event: TripEvent;
   attendees: EventAttendee[];
   profilesById: Record<string, { name: string | null; avatar_url: string | null }>;
   canEdit: boolean;
   destination: string;
+  trip: EventsTabProps["trip"];
   onEdit: () => void;
   onShare: () => void;
   onDelete: () => void;
-  onStyleEvent: (query: string) => void;
+  onStyleEvent: (query: string, eventId?: string) => void;
+  myLook?: EventLook | undefined;
+  generatingStyleNotes?: string | null;
+  onGenerateStyleNotes?: (event: TripEvent) => void;
 }) => {
   const Icon = getCategoryIcon(event.category);
   const isCancelled = event.booking_status === "cancelled";
@@ -705,6 +714,58 @@ const EventCard = ({
             )}
           </div>
         )}
+
+        {/* Look display */}
+        {(() => {
+          const look = myLook;
+          return look ? (
+            <div className="flex items-center gap-2.5 pt-3 border-t border-ink-border">
+              <div className="w-10 h-10 rounded-sm overflow-hidden flex-shrink-0 bg-ink-raised">
+                {look.image_url && (
+                  <img src={look.image_url} className="w-full h-full object-cover" alt="Your look" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] eyebrow text-parchment-faint">Your look</p>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onStyleEvent(`${event.event_name} ${event.dress_code || ""} ${trip?.destination || ""}`.trim(), event.id); }}
+                  className="text-xs text-gold font-body hover:underline"
+                >
+                  Change look →
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="pt-3 border-t border-ink-border">
+              <button
+                onClick={(e) => { e.stopPropagation(); onStyleEvent(`${event.event_name} ${trip?.destination || ""}`.trim(), event.id); }}
+                className="text-xs text-parchment-faint font-body hover:text-gold transition-colors flex items-center gap-1.5"
+              >
+                <Sparkles size={11} /> Style this event
+              </button>
+            </div>
+          );
+        })()}
+
+        {/* Style notes */}
+        {event.event_date && (
+          <div>
+            {event.style_notes ? (
+              <p className="text-xs text-parchment-dim font-body leading-relaxed italic">
+                {event.style_notes}
+              </p>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); onGenerateStyleNotes?.(event); }}
+                disabled={generatingStyleNotes === event.id}
+                className="text-xs text-parchment-faint font-body hover:text-gold transition-colors flex items-center gap-1"
+              >
+                <Sparkles size={10} />
+                {generatingStyleNotes === event.id ? "Getting style notes…" : "Get style notes"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Bottom action bar */}
@@ -712,7 +773,7 @@ const EventCard = ({
         {/* Dress code pill — tappable to style */}
         {event.dress_code && (
           <button
-            onClick={() => onStyleEvent(`${event.dress_code} ${destination} outfit`)}
+            onClick={() => onStyleEvent(`${event.dress_code} ${destination} outfit`, event.id)}
             className="inline-flex items-center gap-1.5 text-xs font-body text-primary border border-primary/30 px-2.5 py-1 rounded-full hover:bg-primary/5 transition-colors"
           >
             <Sparkles size={10} />
@@ -727,7 +788,7 @@ const EventCard = ({
             <Share2 size={12} /> Share
           </button>
           <button
-            onClick={() => onStyleEvent(`${event.event_name} ${event.dress_code || ""} ${destination}`.trim())}
+            onClick={() => onStyleEvent(`${event.event_name} ${event.venue_name || ""} ${trip?.destination || ""}`.trim(), event.id)}
             className="flex items-center gap-1.5 text-xs font-body text-background bg-gold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity font-medium"
           >
             <Sparkles size={12} /> Style This Event
@@ -751,7 +812,7 @@ interface EventsTabProps {
     latitude?: number | null;
     longitude?: number | null;
   };
-  onStyleEvent?: (query: string) => void;
+  onStyleEvent?: (query: string, eventId?: string) => void;
 }
 
 const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
@@ -763,6 +824,8 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
   const [addOpen, setAddOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TripEvent | null>(null);
   const [sharingEvent, setSharingEvent] = useState<TripEvent | null>(null);
+  const [generatingStyleNotes, setGeneratingStyleNotes] = useState<string | null>(null);
+  const [planActivity, setPlanActivity] = useState<ActivitySuggestion | null>(null);
   // Activity / experience discovery state
   const [generatingActivities, setGeneratingActivities] = useState(false);
   const [expFeedOpen, setExpFeedOpen] = useState(false);
@@ -850,6 +913,65 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
     },
   });
 
+  // Event looks
+  const { data: eventLooks = [] } = useQuery({
+    queryKey: ["event-looks", tripId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("event_looks")
+        .select("*")
+        .eq("trip_id", tripId);
+      return data as EventLook[];
+    },
+  });
+
+  const myLook = (eventId: string) =>
+    eventLooks.find((l) => l.event_id === eventId && l.user_id === user?.id);
+
+  const generateStyleNotes = async (event: TripEvent) => {
+    setGeneratingStyleNotes(event.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-style-notes", {
+        body: {
+          event_name: event.event_name,
+          category: event.event_type || null,
+          venue_name: event.venue_name || null,
+          event_date: event.event_date || null,
+          destination: trip?.destination || "",
+          country: trip?.country || null,
+        },
+      });
+      if (error) throw error;
+      await supabase
+        .from("trip_events")
+        .update({ style_notes: data.style_notes })
+        .eq("id", event.id);
+      queryClient.invalidateQueries({ queryKey: ["trip-events", tripId] });
+    } catch (err: any) {
+      toast({ title: "Could not generate style notes", description: err.message, variant: "destructive" });
+    } finally {
+      setGeneratingStyleNotes(null);
+    }
+  };
+
+  const saveToBoard = async (activity: ActivitySuggestion) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase.from("board_items").insert({
+        trip_id: tripId,
+        description: activity.name,
+        notes: activity.description || null,
+        order_index: 0,
+        pinned_by: user.id,
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["board-items", tripId] });
+      toast({ title: "Saved to Board", description: activity.name });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
   const generateActivities = async () => {
     setGeneratingActivities(true);
     try {
@@ -866,23 +988,6 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
     }
   };
 
-  const addActivityToEvents = async (activity: ActivitySuggestion) => {
-    if (events.some((e) => e.event_name === activity.name)) {
-      toast({ title: "Already in your events", description: activity.name });
-      return;
-    }
-    const { error } = await supabase.from("trip_events").insert({
-      trip_id: tripId,
-      event_name: activity.name,
-      event_type: activity.category || null,
-      location: activity.location || null,
-      notes: activity.booking_url ? `Book: ${activity.booking_url}` : (activity.source_url || null),
-    });
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    queryClient.invalidateQueries({ queryKey: ["trip-events", tripId] });
-    toast({ title: "Added to events", description: activity.name });
-  };
-
   const isActivityInEvents = (name: string) => events.some((e) => e.event_name === name);
   const scrollExp = (dir: "left" | "right") =>
     expScrollRef.current?.scrollBy({ left: dir === "left" ? -300 : 300, behavior: "smooth" });
@@ -893,7 +998,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
   const upcoming = events.filter((e) => !e.event_date || new Date(e.event_date + "T00:00") >= today);
   const past = events.filter((e) => e.event_date && new Date(e.event_date + "T00:00") < today);
 
-  const handleStyleEvent = (query: string) => onStyleEvent?.(query);
+  const handleStyleEvent = (query: string, eventId?: string) => onStyleEvent?.(query, eventId);
 
   const deleteEvent = async (id: string) => {
     await supabase.from("trip_events").delete().eq("id", id);
@@ -987,15 +1092,20 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
               {[...activities.slice(expFeedStart), ...activities.slice(0, expFeedStart)].map((a) => (
                 <motion.div key={a.id} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} className="rounded-2xl overflow-hidden bg-card mx-4 mb-5">
                   <ImageWithFallback src={a.image_url} alt={a.name} fallbackIcon={MapPin} aspectClass="w-full aspect-[4/5]" />
-                  <div className="px-4 pt-3 flex items-center justify-between">
+                  <div className="px-4 pt-3 flex items-center gap-2 flex-wrap">
                     {isActivityInEvents(a.name) ? (
                       <button onClick={() => setExpFeedOpen(false)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary/10 text-primary text-xs font-body">
                         <BookmarkCheck size={12} /> In your plan
                       </button>
                     ) : (
-                      <button onClick={() => addActivityToEvents(a)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary hover:bg-primary/10 hover:text-primary text-muted-foreground text-xs font-body transition-colors">
-                        <Plus size={12} /> Add to my plan
-                      </button>
+                      <>
+                        <button onClick={() => saveToBoard(a)} className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-ink-raised border border-ink-border text-parchment-faint text-xs font-body hover:border-gold/30 hover:text-parchment-dim transition-colors">
+                          <Bookmark size={12} /> Save to Board
+                        </button>
+                        <button onClick={() => { setPlanActivity(a); setExpFeedOpen(false); }} className="flex items-center gap-1.5 px-3 py-2 rounded-sm bg-gold text-ink text-xs font-body font-medium">
+                          <CalendarPlus size={12} /> Plan It
+                        </button>
+                      </>
                     )}
                     {a.booking_url && (
                       <a href={a.booking_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold text-primary-foreground text-xs font-body">
@@ -1061,10 +1171,14 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                   profilesById={profilesById}
                   canEdit={canEdit}
                   destination={trip.destination}
+                  trip={trip}
                   onEdit={() => setEditingEvent(e)}
                   onShare={() => setSharingEvent(e)}
                   onDelete={() => deleteEvent(e.id)}
                   onStyleEvent={handleStyleEvent}
+                  myLook={myLook(e.id)}
+                  generatingStyleNotes={generatingStyleNotes}
+                  onGenerateStyleNotes={generateStyleNotes}
                 />
               ))}
             </AnimatePresence>
@@ -1095,10 +1209,14 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                         profilesById={profilesById}
                         canEdit={canEdit}
                         destination={trip.destination}
+                        trip={trip}
                         onEdit={() => setEditingEvent(e)}
                         onShare={() => setSharingEvent(e)}
                         onDelete={() => deleteEvent(e.id)}
                         onStyleEvent={handleStyleEvent}
+                        myLook={myLook(e.id)}
+                        generatingStyleNotes={generatingStyleNotes}
+                        onGenerateStyleNotes={generateStyleNotes}
                       />
                     ))}
                   </AnimatePresence>
@@ -1134,6 +1252,18 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
         event={sharingEvent}
         destination={trip.destination}
         onClose={() => setSharingEvent(null)}
+      />
+
+      <PlanItSheet
+        activity={planActivity}
+        tripId={tripId}
+        tripStartDate={""}
+        tripEndDate={""}
+        onClose={() => setPlanActivity(null)}
+        onSuccess={() => {
+          setPlanActivity(null);
+          queryClient.invalidateQueries({ queryKey: ["trip-events", tripId] });
+        }}
       />
     </motion.div>
   );

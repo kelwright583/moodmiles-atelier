@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Flight, TripEvent, WeatherData, ActivitySuggestion } from "@/types/database";
 import {
   Calendar, MapPin, Plus, Pin, PinOff, Trash2, CloudSun, Droplets, Wind, RefreshCw, Sun, Cloud, CloudRain, Snowflake, CloudLightning, CloudFog,
-  Plane, ExternalLink, FileText, ChevronLeft, ChevronRight, AlertTriangle, Sparkles,
+  Plane, ExternalLink, FileText, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,14 +30,6 @@ const BOOKING_SITES = [
   { name: "Skyscanner", url: "https://www.skyscanner.net" },
   { name: "Kayak", url: "https://www.kayak.com" },
 ];
-
-interface DressCodeAlert {
-  id: string;
-  event_id: string;
-  severity: string;
-  headline?: string;
-  detail?: string;
-}
 
 interface PlanTabProps {
   tripId: string;
@@ -109,23 +101,6 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
     },
   });
 
-  const { data: dressCodeAlerts = [] } = useQuery({
-    queryKey: ["dress-code-alerts", tripId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("dress_code_alerts")
-        .select("id, event_id, outfit_suggestion_id, alert_message, severity, created_at")
-        .eq("trip_id", tripId);
-      return (data || []).map((a: any) => {
-        try {
-          const parsed = JSON.parse(a.alert_message);
-          return { ...a, headline: parsed.headline, detail: parsed.detail };
-        } catch {
-          return { ...a, headline: a.alert_message, detail: "" };
-        }
-      }) as DressCodeAlert[];
-    },
-  });
 
   const refreshWeather = async () => {
     if (!trip?.latitude || !trip?.longitude) {
@@ -385,7 +360,7 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
           </h2>
           <div className="space-y-2">
             {pinnedEvents.map((e) => (
-              <EventRow key={e.id} event={e} onTogglePin={togglePin} onDelete={deleteEvent} alerts={dressCodeAlerts} onNavigateTo={onNavigateTo} />
+              <EventRow key={e.id} event={e} onTogglePin={togglePin} onDelete={deleteEvent} onNavigateTo={onNavigateTo} />
             ))}
           </div>
         </section>
@@ -405,7 +380,7 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
         ) : (
           <div className="space-y-2">
             {otherEvents.map((e) => (
-              <EventRow key={e.id} event={e} onTogglePin={togglePin} onDelete={deleteEvent} alerts={dressCodeAlerts} onNavigateTo={onNavigateTo} />
+              <EventRow key={e.id} event={e} onTogglePin={togglePin} onDelete={deleteEvent} onNavigateTo={onNavigateTo} />
             ))}
           </div>
         )}
@@ -445,35 +420,17 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
   );
 };
 
-interface DressCodeAlertRow {
-  id: string;
-  event_id: string;
-  severity: string;
-  headline?: string;
-  detail?: string;
-}
-
 const EventRow = ({
   event,
   onTogglePin,
   onDelete,
-  alerts = [],
   onNavigateTo,
 }: {
   event: TripEvent;
   onTogglePin: (e: TripEvent) => void;
   onDelete: (id: string) => void;
-  alerts?: DressCodeAlertRow[];
   onNavigateTo?: (tab: string) => void;
 }) => {
-  const [expanded, setExpanded] = useState(false);
-  const eventAlerts = alerts.filter((a) => a.event_id === event.id);
-  const hasAlerts = eventAlerts.length > 0;
-  const topSeverity = hasAlerts
-    ? eventAlerts.some((a) => a.severity === "critical") ? "critical"
-      : eventAlerts.some((a) => a.severity === "warning") ? "warning"
-      : "info"
-    : null;
 
   return (
     <div>
@@ -481,18 +438,6 @@ const EventRow = ({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="font-heading text-base truncate">{event.event_name}</h3>
-            {hasAlerts && (
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className="transition-transform hover:scale-110 flex-shrink-0"
-                aria-label="Dress code alert"
-              >
-                <AlertTriangle
-                  size={14}
-                  className={topSeverity === "critical" ? "text-red-400" : "text-amber-400"}
-                />
-              </button>
-            )}
           </div>
           {event.dress_code && (
             <span className="text-xs text-primary/60 font-body tracking-wide">
@@ -515,34 +460,6 @@ const EventRow = ({
         </div>
       </div>
 
-      {/* Dress code alert panel */}
-      {expanded && hasAlerts && (
-        <div className="mt-1 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
-          {eventAlerts.map((alert) => (
-            <div key={alert.id}>
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                  alert.severity === "critical" ? "bg-red-500"
-                  : alert.severity === "warning" ? "bg-amber-500"
-                  : "bg-blue-400"
-                }`} />
-                <p className="text-xs font-body font-medium text-foreground">{alert.headline}</p>
-              </div>
-              {alert.detail && (
-                <p className="text-xs font-body text-muted-foreground mt-1 ml-4 leading-relaxed">{alert.detail}</p>
-              )}
-            </div>
-          ))}
-          {onNavigateTo && (
-            <button
-              onClick={() => onNavigateTo("Inspire")}
-              className="flex items-center gap-1.5 text-xs text-primary font-body hover:underline mt-1"
-            >
-              <Sparkles size={11} /> Find a different look
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 };
