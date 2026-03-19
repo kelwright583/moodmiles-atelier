@@ -301,7 +301,7 @@ const Index = () => {
             <Link to="/privacy" className="text-xs font-body font-light text-parchment-faint hover:text-parchment-dim transition-colors">Privacy</Link>
           </div>
           <p className="text-xs font-body font-light text-parchment-faint">
-            © 2026 Concierge
+            © 2026 Concierge Styled
           </p>
         </div>
       </footer>

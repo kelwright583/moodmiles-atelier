@@ -18,6 +18,7 @@ const Logo = ({ className = "", size = "md" }: LogoProps) => (
   >
     <span className="text-parchment">Conc</span>
     <span className="text-gold italic">ierge</span>
+    <span className="text-parchment"> Styled</span>
   </Link>
 );
 
