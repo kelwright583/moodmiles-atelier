@@ -746,23 +746,23 @@ const EventCard = ({
                 + Add more
               </button>
             </div>
-            <div className="columns-2 gap-1.5 space-y-1.5">
+            <div className="grid grid-cols-3 gap-1">
               {(allLooks ?? []).filter(l => l.image_url).map((look) => (
                 <div
                   key={look.id}
-                  className="relative break-inside-avoid rounded-md overflow-hidden bg-ink-raised group"
+                  className="relative rounded overflow-hidden bg-ink-raised aspect-[2/3] group"
                 >
                   <img
                     src={look.image_url!}
                     alt="Look"
-                    className="w-full block object-cover"
+                    className="w-full h-full object-cover"
                   />
                   {onRemoveLook && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onRemoveLook(look.id); }}
-                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <X size={11} className="text-white" />
+                      <X size={9} className="text-white" />
                     </button>
                   )}
                 </div>
