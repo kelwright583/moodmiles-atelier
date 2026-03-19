@@ -561,6 +561,7 @@ const EventCard = ({
   sourceActivityImageUrl,
   generatingStyleNotes,
   onGenerateStyleNotes,
+  onRemoveLook,
 }: {
   event: TripEvent;
   attendees: EventAttendee[];
@@ -577,6 +578,7 @@ const EventCard = ({
   sourceActivityImageUrl?: string | null;
   generatingStyleNotes?: string | null;
   onGenerateStyleNotes?: (event: TripEvent) => void;
+  onRemoveLook?: (lookId: string) => void;
 }) => {
   const Icon = getCategoryIcon(event.category);
   const isCancelled = event.booking_status === "cancelled";
@@ -729,32 +731,40 @@ const EventCard = ({
           </div>
         )}
 
-        {/* Looks catalogue */}
-        {(allLooks ?? []).length > 0 ? (
+        {/* Look Board */}
+        {(allLooks ?? []).filter(l => l.image_url).length > 0 ? (
           <div className="pt-3 border-t border-ink-border">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] eyebrow text-parchment-faint">
+              <p className="text-[10px] eyebrow text-parchment-faint flex items-center gap-1">
+                <Sparkles size={9} className="text-gold" />
                 {(allLooks ?? []).length === 1 ? "1 look" : `${(allLooks ?? []).length} looks`}
               </p>
               <button
                 onClick={(e) => { e.stopPropagation(); onStyleEvent(`${event.event_name} ${trip?.destination || ""}`.trim(), event.id); }}
-                className="text-xs text-gold font-body hover:underline"
+                className="text-[10px] eyebrow text-gold hover:text-gold/70 transition-colors"
               >
-                + Add / change
+                + Add more
               </button>
             </div>
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+            <div className="columns-2 gap-1.5 space-y-1.5">
               {(allLooks ?? []).filter(l => l.image_url).map((look) => (
                 <div
-                  key={look.user_id}
-                  className="relative flex-shrink-0 w-12 rounded-sm overflow-hidden bg-ink-raised"
-                  style={{ height: 64 }}
+                  key={look.id}
+                  className="relative break-inside-avoid rounded-md overflow-hidden bg-ink-raised group"
                 >
                   <img
                     src={look.image_url!}
                     alt="Look"
-                    className="w-full h-full object-cover"
+                    className="w-full block object-cover"
                   />
+                  {onRemoveLook && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onRemoveLook(look.id); }}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={11} className="text-white" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -955,6 +965,11 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
     eventLooks.filter((l) => l.event_id === eventId);
 
   const activityById = Object.fromEntries(activities.map((a) => [a.id, a]));
+
+  const removeLook = async (lookId: string) => {
+    await supabase.from("event_looks").delete().eq("id", lookId);
+    queryClient.invalidateQueries({ queryKey: ["event-looks", tripId] });
+  };
 
   const generateStyleNotes = async (event: TripEvent) => {
     setGeneratingStyleNotes(event.id);
@@ -1209,6 +1224,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                   sourceActivityImageUrl={e.source_activity_id ? (activityById[e.source_activity_id]?.image_url ?? null) : null}
                   generatingStyleNotes={generatingStyleNotes}
                   onGenerateStyleNotes={generateStyleNotes}
+                  onRemoveLook={removeLook}
                 />
               ))}
             </AnimatePresence>
@@ -1249,6 +1265,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                         sourceActivityImageUrl={e.source_activity_id ? (activityById[e.source_activity_id]?.image_url ?? null) : null}
                         generatingStyleNotes={generatingStyleNotes}
                         onGenerateStyleNotes={generateStyleNotes}
+                        onRemoveLook={removeLook}
                       />
                     ))}
                   </AnimatePresence>

@@ -387,19 +387,16 @@ const PinToSheet = ({
     if (!outfit || !selectedEventId || !user) return;
     setAssigning(true);
     try {
-      const { error } = await supabase.from("event_looks").upsert(
-        {
-          trip_id: tripId,
-          event_id: selectedEventId,
-          user_id: user.id,
-          image_url: outfit.image_url,
-          outfit_suggestion_id: outfit.id,
-        },
-        { onConflict: "event_id,user_id" }
-      );
+      const { error } = await supabase.from("event_looks").insert({
+        trip_id: tripId,
+        event_id: selectedEventId,
+        user_id: user.id,
+        image_url: outfit.image_url,
+        outfit_suggestion_id: outfit.id,
+      } as any);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["event-looks", tripId] });
-      toast({ title: "Look assigned!", description: "Your look has been set for this event." });
+      toast({ title: "Look added!", description: "Added to this event's look board." });
       onClose();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
