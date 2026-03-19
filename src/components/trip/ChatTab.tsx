@@ -70,7 +70,7 @@ const MessageBubble = ({
                 alt=""
               />
             ) : (
-              <span className="text-[10px] font-heading text-muted-foreground">
+              <span className="text-xs font-heading text-muted-foreground">
                 {(profile?.name || "?")[0].toUpperCase()}
               </span>
             )}
@@ -81,7 +81,7 @@ const MessageBubble = ({
       <div className={`flex flex-col gap-1 max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}>
         {/* Sender name */}
         {showHeader && !isOwn && (
-          <span className="text-[11px] font-body text-muted-foreground ml-1">
+          <span className="text-xs font-body text-muted-foreground ml-1">
             {profile?.name || "Member"}
           </span>
         )}
@@ -100,7 +100,7 @@ const MessageBubble = ({
 
           {/* Outfit share message */}
           {message.pinned_outfit_id && outfitById[message.pinned_outfit_id] && (
-            <div className="glass-card rounded-2xl overflow-hidden max-w-[220px]">
+            <div className="glass rounded-2xl overflow-hidden max-w-[220px]">
               <div className="relative">
                 <img
                   src={outfitById[message.pinned_outfit_id].image_url ?? undefined}
@@ -122,7 +122,7 @@ const MessageBubble = ({
                     href={outfitById[message.pinned_outfit_id].product_url!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] text-primary font-body hover:underline mt-1"
+                    className="inline-flex items-center gap-1 text-xs text-primary font-body hover:underline mt-1"
                   >
                     <ShoppingBag size={10} /> Shop This
                   </a>
@@ -136,7 +136,7 @@ const MessageBubble = ({
             <div
               className={`rounded-2xl px-3.5 py-2.5 ${
                 isOwn
-                  ? "bg-gradient-champagne text-background rounded-br-sm"
+                  ? "bg-gold text-background rounded-br-sm"
                   : "bg-secondary text-foreground rounded-bl-sm"
               }`}
             >
@@ -209,7 +209,7 @@ const MessageBubble = ({
 
         {/* Timestamp */}
         <span
-          className={`text-[10px] font-body text-muted-foreground/50 ${
+          className={`text-xs font-body text-muted-foreground/50 ${
             isOwn ? "mr-1" : "ml-1"
           }`}
         >
@@ -471,7 +471,7 @@ const ChatTab = ({ tripId, trip }: ChatTabProps) => {
       {/* Header */}
       <div className="flex items-center gap-2 mb-4 flex-shrink-0">
         <MessageCircle size={14} className="text-primary" />
-        <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body">
+        <h2 className="eyebrow text-muted-foreground">
           Group Chat
         </h2>
         <span className="text-xs text-muted-foreground/60 font-body">· {trip.destination}</span>
@@ -517,7 +517,7 @@ const ChatTab = ({ tripId, trip }: ChatTabProps) => {
                 {showDateSep && (
                   <div className="flex items-center gap-3 py-3">
                     <div className="flex-1 h-px bg-border/40" />
-                    <span className="text-[10px] font-body text-muted-foreground/60 tracking-wide">
+                    <span className="text-xs font-body text-muted-foreground/60 tracking-wide">
                       {formatDateSeparator(message.created_at)}
                     </span>
                     <div className="flex-1 h-px bg-border/40" />
@@ -553,7 +553,7 @@ const ChatTab = ({ tripId, trip }: ChatTabProps) => {
               scrollToBottom();
               setShowNewMessagesPill(false);
             }}
-            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-primary text-background text-xs font-body px-3 py-1.5 rounded-full shadow-champagne"
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-primary text-background text-xs font-body px-3 py-1.5 rounded-full glow-gold"
           >
             New messages ↓
           </motion.button>
@@ -613,7 +613,7 @@ const ChatTab = ({ tripId, trip }: ChatTabProps) => {
           <button
             onClick={sendMessage}
             disabled={!textInput.trim() && !pendingImageFile}
-            className="p-2.5 rounded-xl bg-gradient-champagne disabled:opacity-40 transition-opacity flex-shrink-0"
+            className="p-2.5 rounded-xl bg-gold disabled:opacity-40 transition-opacity flex-shrink-0"
           >
             <Send size={16} className="text-background" />
           </button>
@@ -625,7 +625,7 @@ const ChatTab = ({ tripId, trip }: ChatTabProps) => {
         <SheetContent side="bottom" className="bg-card border-border rounded-t-2xl pb-10">
           <div className="pt-4">
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
-            <p className="text-xs tracking-[0.2em] uppercase text-primary font-body mb-4">
+            <p className="eyebrow text-primary mb-4">
               Share a Look
             </p>
             {pinnedOutfits.length === 0 ? (
@@ -647,7 +647,7 @@ const ChatTab = ({ tripId, trip }: ChatTabProps) => {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <p className="text-[10px] font-body text-muted-foreground mt-1 truncate max-w-[80px] text-center">
+                    <p className="text-xs font-body text-muted-foreground mt-1 truncate max-w-[80px] text-center">
                       {outfit.title}
                     </p>
                   </button>

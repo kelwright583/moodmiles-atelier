@@ -74,7 +74,7 @@ const PublicTrip = () => {
         <div className="h-72 bg-secondary animate-pulse" />
         <div className="px-4 -mt-8 relative z-10 space-y-4">
           {/* Host card skeleton */}
-          <div className="glass-card rounded-2xl p-4 flex items-center gap-3">
+          <div className="glass rounded-2xl p-4 flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-secondary animate-pulse flex-shrink-0" />
             <div className="space-y-2 flex-1">
               <div className="h-3 bg-secondary animate-pulse rounded w-32" />
@@ -103,7 +103,7 @@ const PublicTrip = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="glass-card rounded-2xl p-10 text-center max-w-sm w-full">
+        <div className="glass rounded-2xl p-10 text-center max-w-sm w-full">
           <Sparkles size={40} className="text-primary mx-auto mb-4 opacity-50" />
           <h2 className="text-2xl font-heading mb-2">This trip doesn't exist or has been made private</h2>
           <p className="text-sm text-muted-foreground font-body mb-6">
@@ -137,19 +137,19 @@ const PublicTrip = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
           <div className="absolute bottom-8 left-6 right-6">
             {data.trip_type && (
-              <span className="inline-block text-xs tracking-[0.2em] uppercase bg-white/10 backdrop-blur-sm border border-white/20 text-white px-3 py-1 rounded-full font-body mb-3">
+              <span className="inline-block eyebrow bg-white/10 backdrop-blur-sm border border-white/20 text-white px-3 py-1 rounded-full mb-3">
                 {data.trip_type}
               </span>
             )}
             <h1 className="text-4xl md:text-6xl font-heading text-white leading-tight">{data.destination}</h1>
-            <p className="text-sm font-body mt-2" style={{ color: "#cc8638" }}>
+            <p className="text-sm font-body mt-2 text-gold">
               {formatDate(data.start_date)} – {formatDate(data.end_date)}
             </p>
           </div>
         </div>
 
         {/* Host card */}
-        <div className="glass-card mx-4 -mt-8 relative z-10 rounded-2xl p-4 flex items-center gap-3">
+        <div className="glass mx-4 -mt-8 relative z-10 rounded-2xl p-4 flex items-center gap-3">
           {data.host.avatar_url ? (
             <img
               src={data.host.avatar_url}
@@ -191,11 +191,11 @@ const PublicTrip = () => {
           <div className="px-4 mt-8">
             <div className="flex items-center gap-2 mb-4">
               <Calendar size={14} className="text-primary" />
-              <h2 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">What's planned</h2>
+              <h2 className="eyebrow text-muted-foreground">What's planned</h2>
             </div>
             <div className="space-y-2">
               {visibleEvents.map((event, i) => (
-                <div key={i} className="glass-card rounded-xl px-4 py-3 flex items-center gap-3">
+                <div key={i} className="glass rounded-xl px-4 py-3 flex items-center gap-3">
                   {event.event_date && (
                     <span className="text-xs text-primary font-body font-medium w-16 flex-shrink-0">
                       {formatEventDate(event.event_date)}
@@ -210,7 +210,7 @@ const PublicTrip = () => {
                     </span>
                   )}
                   {event.dress_code && (
-                    <span className="text-[10px] font-body px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border flex-shrink-0">
+                    <span className="text-xs font-body px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border flex-shrink-0">
                       {event.dress_code}
                     </span>
                   )}
@@ -230,7 +230,7 @@ const PublicTrip = () => {
           <div className="px-4 mt-8">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles size={14} className="text-primary" />
-              <h2 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">The look</h2>
+              <h2 className="eyebrow text-muted-foreground">The look</h2>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {data.style_highlights.map((url, i) => (
@@ -251,9 +251,9 @@ const PublicTrip = () => {
           <div className="px-4 mt-8">
             <div className="flex items-center gap-2 mb-4">
               <Music size={14} className="text-primary" />
-              <h2 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">The soundtrack</h2>
+              <h2 className="eyebrow text-muted-foreground">The soundtrack</h2>
             </div>
-            <div className="glass-card rounded-xl p-4 flex items-center gap-3">
+            <div className="glass rounded-xl p-4 flex items-center gap-3">
               <SpotifyLogo />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-body text-foreground truncate">{data.playlist.playlist_name}</p>
@@ -264,7 +264,7 @@ const PublicTrip = () => {
                   href={data.playlist.spotify_playlist_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs font-body text-emerald-400 hover:text-emerald-300 transition-colors flex-shrink-0"
+                  className="flex items-center gap-1.5 text-xs font-body text-live-text hover:text-live transition-colors flex-shrink-0"
                 >
                   Listen <ExternalLink size={12} />
                 </a>
@@ -276,7 +276,7 @@ const PublicTrip = () => {
         {/* Footer CTA */}
         <div className="px-4 mt-12 pb-16 text-center border-t border-border pt-10">
           <h3 className="text-2xl font-heading text-primary mb-1">Concierge Styled</h3>
-          <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-1">
+          <p className="eyebrow text-muted-foreground mb-1">
             Arrive Impeccably Everywhere
           </p>
           <p className="text-sm text-muted-foreground font-body mb-6">Plan your own trip</p>

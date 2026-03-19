@@ -30,7 +30,7 @@ const Offline = () => {
 
         {cachedTrips.length > 0 && (
           <div className="text-left">
-            <p className="text-xs tracking-[0.2em] uppercase text-primary font-body mb-3">
+            <p className="eyebrow text-primary mb-3">
               Cached Trips
             </p>
             <ul className="space-y-2">
@@ -50,7 +50,7 @@ const Offline = () => {
           Try again
         </button>
 
-        <p className="mt-12 text-xs text-muted-foreground/40 font-body tracking-[0.2em] uppercase">
+        <p className="mt-12 eyebrow text-muted-foreground/40">
           Concierge Styled
         </p>
       </div>

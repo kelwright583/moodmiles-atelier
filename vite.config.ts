@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.ico", "icons/*.png"],
       manifest: {
         name: "Concierge Styled",
-        short_name: "Concierge",
+        short_name: "Concierge Styled",
         description: "Arrive Impeccably Everywhere — AI travel wardrobe planning",
         start_url: "/",
         display: "standalone",

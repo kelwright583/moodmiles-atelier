@@ -95,35 +95,35 @@ const TripHero = ({
       )}
 
       {isActive && (
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-live/60 to-transparent" />
       )}
 
       <div className="absolute bottom-6 left-4 right-4 md:bottom-8 md:left-8 md:right-8 max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-xs tracking-[0.2em] uppercase font-body ${isActive ? "text-emerald-400" : "text-primary"}`}>
+              <span className={`eyebrow ${isActive ? "text-live-text" : "text-gold"}`}>
                 {trip.trip_type || "Trip"}
               </span>
               {isActive && (
-                <span className="text-[10px] tracking-[0.15em] uppercase font-body bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs tracking-[0.15em] uppercase font-body bg-live/15 text-live-text border border-live-dim/50 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-live animate-pulse-dot" />
                   Travel Mode
                 </span>
               )}
               {isCompleted && (
-                <span className="text-[10px] tracking-[0.15em] uppercase font-body bg-secondary/60 text-muted-foreground border border-border px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                <span className="text-xs tracking-[0.15em] uppercase font-body bg-secondary/60 text-muted-foreground border border-border px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
                   <CheckCircle2 size={10} />
                   Completed
                 </span>
               )}
             </div>
-            <h1 className="text-3xl md:text-5xl font-heading mt-1">{trip.destination}</h1>
+            <h1 className="text-4xl md:text-6xl font-heading font-normal mt-1">{trip.destination}</h1>
 
             {isActive && dayInfo ? (
               <div className="mt-2 space-y-2">
                 <div className="flex items-center gap-3 text-sm font-body">
-                  <span className="flex items-center gap-1.5 text-emerald-300 font-medium">
+                  <span className="flex items-center gap-1.5 text-live-text font-medium">
                     <Sun size={13} />
                     Day {dayInfo.currentDay} of {dayInfo.totalDays}
                   </span>
@@ -137,14 +137,14 @@ const TripHero = ({
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.round((dayInfo.currentDay / dayInfo.totalDays) * 100)}%` }}
                     transition={{ duration: 1, ease: "easeOut" }}
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-300"
+                    className="h-full rounded-full bg-live"
                   />
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground font-body">
-                <span className="flex items-center gap-1"><Calendar size={12} className="text-primary" /> {formatDate(trip.start_date)} – {formatDate(trip.end_date)}</span>
-                {trip.country && <span className="flex items-center gap-1"><MapPin size={12} className="text-primary" /> {trip.country}</span>}
+              <div className="flex items-center gap-4 mt-2 text-xs font-body font-light text-parchment-dim">
+                <span className="flex items-center gap-1"><Calendar size={12} className="text-gold" /> {formatDate(trip.start_date)} – {formatDate(trip.end_date)}</span>
+                {trip.country && <span className="flex items-center gap-1"><MapPin size={12} className="text-gold" /> {trip.country}</span>}
               </div>
             )}
           </div>
@@ -456,7 +456,7 @@ const TripDetail = () => {
     <button
       key={tab}
       onClick={() => handleTabClick(tab)}
-      className={`px-4 md:px-5 py-3 text-sm font-body tracking-wide transition-all duration-300 relative whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+      className={`px-4 py-3 text-xs font-body font-medium tracking-[0.12em] uppercase transition-all duration-200 relative whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${activeTab === tab ? "text-parchment" : "text-parchment-faint hover:text-parchment-dim"}`}
     >
       {tab === "Today" && <Sun size={12} className={activeTab === "Today" ? "text-primary" : "text-muted-foreground"} />}
       {tab === "Memories" && <ImageIcon size={12} className={activeTab === "Memories" ? "text-primary" : "text-muted-foreground"} />}
@@ -473,7 +473,7 @@ const TripDetail = () => {
         <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
       )}
       {tab === "Chat" && chatUnread > 0 && activeTab !== "Chat" && (
-        <span className="min-w-[16px] h-4 rounded-full bg-blue-500 text-white text-[10px] font-body flex items-center justify-center px-1 flex-shrink-0">
+        <span className="min-w-[16px] h-4 rounded-full bg-blue-500 text-white text-xs font-body flex items-center justify-center px-1 flex-shrink-0">
           {chatUnread > 99 ? "99+" : chatUnread}
         </span>
       )}
@@ -486,7 +486,7 @@ const TripDetail = () => {
       {tab === "Playlist" && (unreadByType["track_added"] || 0) > 0 && activeTab !== "Playlist" && (
         <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
       )}
-      {activeTab === tab && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-px bg-gradient-champagne" />}
+      {activeTab === tab && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-px bg-gold" />}
     </button>
   );
 
@@ -678,7 +678,7 @@ const TripDetail = () => {
                 {TRAVEL_PRIMARY_TABS.filter((tab) => tab !== "Chat" || collabCount > 0).map(renderTabButton)}
                 <button
                   onClick={() => setPlanningExpanded((v) => !v)}
-                  className={`px-4 py-3 text-sm font-body tracking-wide transition-all duration-300 relative whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${planningExpanded ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`px-4 py-3 text-xs font-body font-medium tracking-[0.12em] uppercase transition-all duration-200 relative whitespace-nowrap flex items-center gap-1.5 flex-shrink-0 ${planningExpanded ? "text-parchment" : "text-parchment-faint hover:text-parchment-dim"}`}
                 >
                   Planning
                   <ChevronDown size={12} className={`transition-transform duration-200 ${planningExpanded ? "rotate-180" : ""}`} />
@@ -810,7 +810,7 @@ const TripDetail = () => {
               className="bg-card border border-border rounded-2xl p-4 max-w-sm mx-auto shadow-xl pointer-events-auto"
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] text-primary font-body tracking-widest uppercase">
+                <span className="text-xs text-primary font-body tracking-widest uppercase">
                   Step {tourStep + 1} of {tourSteps.length}
                 </span>
                 <div className="flex gap-1 ml-auto">

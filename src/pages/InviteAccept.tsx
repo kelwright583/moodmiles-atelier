@@ -91,9 +91,9 @@ const CollabOnboardingOverlay = ({ onDone }: { onDone: () => void }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="glass-card rounded-2xl p-8 max-w-sm w-full border border-primary/20"
+        className="glass rounded-2xl p-8 max-w-sm w-full border border-primary/20"
       >
-        <p className="text-xs tracking-[0.2em] uppercase text-primary font-body mb-1">
+        <p className="eyebrow text-primary mb-1">
           {step === 1 ? "Step 1 of 2" : "Step 2 of 2"}
         </p>
         <h2 className="text-2xl font-heading mb-2">
@@ -137,13 +137,13 @@ const CollabOnboardingOverlay = ({ onDone }: { onDone: () => void }) => {
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 {handleStatus === "checking" && <Loader2 size={13} className="animate-spin text-muted-foreground" />}
-                {handleStatus === "available" && <Check size={13} className="text-emerald-400" />}
+                {handleStatus === "available" && <Check size={13} className="text-live-text" />}
                 {(handleStatus === "taken" || handleStatus === "invalid") && <X size={13} className="text-red-400" />}
               </div>
             </div>
-            {handleStatus === "taken" && <p className="text-[11px] text-red-400 font-body mb-3">That handle is taken.</p>}
+            {handleStatus === "taken" && <p className="text-xs text-red-400 font-body mb-3">That handle is taken.</p>}
             {handleStatus === "invalid" && handle.length > 0 && (
-              <p className="text-[11px] text-muted-foreground font-body mb-3">3-20 chars, letters, numbers and _ only.</p>
+              <p className="text-xs text-muted-foreground font-body mb-3">3-20 chars, letters, numbers and _ only.</p>
             )}
             <Button
               variant="champagne"
@@ -254,7 +254,7 @@ const InviteAccept = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-card rounded-2xl p-10 max-w-sm w-full text-center border border-primary/10"
+            className="glass rounded-2xl p-10 max-w-sm w-full text-center border border-primary/10"
           >
             {acceptState === "accepting" && (
               <>
@@ -266,8 +266,8 @@ const InviteAccept = () => {
             )}
             {acceptState === "success" && (
               <>
-                <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                  <Check size={28} className="text-emerald-400" />
+                <div className="w-14 h-14 rounded-full bg-live/15 flex items-center justify-center mx-auto mb-4">
+                  <Check size={28} className="text-live-text" />
                 </div>
                 <p className="text-2xl font-heading mb-2">You're in!</p>
                 <p className="text-sm font-body text-muted-foreground">
@@ -319,7 +319,7 @@ const InviteAccept = () => {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card rounded-2xl p-8 max-w-md w-full border border-primary/20 text-center"
+          className="glass rounded-2xl p-8 max-w-md w-full border border-primary/20 text-center"
         >
           {/* Inviter */}
           <div className="flex flex-col items-center mb-6">
@@ -380,7 +380,7 @@ const InviteAccept = () => {
             </Link>
           </div>
 
-          <p className="text-[11px] text-muted-foreground font-body mt-6">
+          <p className="text-xs text-muted-foreground font-body mt-6">
             Powered by Concierge Styled
           </p>
         </motion.div>

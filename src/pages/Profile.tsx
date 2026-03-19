@@ -83,7 +83,7 @@ const Profile = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-32 flex justify-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-champagne animate-pulse" />
+          <div className="w-8 h-8 rounded-full bg-gold animate-pulse" />
         </div>
       </div>
     );
@@ -146,7 +146,7 @@ const Profile = () => {
             </div>
 
             {/* Stats */}
-            <div className="glass-card rounded-xl p-4 flex gap-6 mb-8">
+            <div className="glass rounded-xl p-4 flex gap-6 mb-8">
               <div>
                 <p className="text-2xl font-heading text-foreground">{tripCount ?? 0}</p>
                 <p className="text-xs text-muted-foreground font-body">trips planned</p>
@@ -160,7 +160,7 @@ const Profile = () => {
 
             {/* Style vibe */}
             {vibeInfo && (
-              <div className="glass-card rounded-xl p-4 mb-8">
+              <div className="glass rounded-xl p-4 mb-8">
                 <p className="text-xs tracking-[0.15em] uppercase text-primary font-body mb-1">Style</p>
                 <p className="font-heading text-lg">{vibeInfo.label}</p>
                 <p className="text-sm text-muted-foreground font-body">{vibeInfo.desc}</p>
@@ -169,17 +169,17 @@ const Profile = () => {
 
             {/* Public trips */}
             <section>
-              <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2 mb-6">
+              <h2 className="eyebrow text-muted-foreground flex items-center gap-2 mb-6">
                 <Calendar size={14} className="text-primary" /> Recent Trips
               </h2>
               {publicTrips.length === 0 ? (
-                <div className="glass-card rounded-xl p-8 text-center">
+                <div className="glass rounded-xl p-8 text-center">
                   <p className="text-muted-foreground font-body text-sm">No public trips yet.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {publicTrips.map((trip: any) => (
-                    <div key={trip.id} className="glass-card rounded-xl overflow-hidden">
+                    <div key={trip.id} className="glass rounded-xl overflow-hidden">
                       <div className="relative h-32 bg-secondary">
                         {trip.image_url && (
                           <img
@@ -205,8 +205,8 @@ const Profile = () => {
 
             {/* CTA for logged-in users */}
             {user && user.id !== profile.user_id && (
-              <div className="mt-12 glass-card rounded-2xl p-6 text-center border border-primary/10">
-                <p className="text-xs tracking-[0.2em] uppercase text-primary font-body mb-2">Travelling Together?</p>
+              <div className="mt-12 glass rounded-2xl p-6 text-center border border-primary/10">
+                <p className="eyebrow text-primary mb-2">Travelling Together?</p>
                 <p className="text-sm text-muted-foreground font-body mb-4">
                   Invite {profile.name?.split(" ")[0] || "them"} to collaborate on your next trip.
                 </p>

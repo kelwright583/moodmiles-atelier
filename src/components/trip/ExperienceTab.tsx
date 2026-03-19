@@ -15,7 +15,7 @@ const categoryColors: Record<string, string> = {
   Culture: "text-purple-400",
   Dining: "text-orange-400",
   Nightlife: "text-pink-400",
-  Shopping: "text-emerald-400",
+  Shopping: "text-live-text",
   Outdoor: "text-sky-400",
   Experience: "text-amber-400",
 };
@@ -120,7 +120,7 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <MapPin size={14} className="text-primary" /> Curated Experiences
           </h2>
           <p className="text-xs text-muted-foreground/60 font-body mt-1">
@@ -147,7 +147,7 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
 
       {/* Cards or empty state */}
       {activities.length === 0 ? (
-        <div className="glass-card rounded-2xl p-12 text-center">
+        <div className="glass rounded-2xl p-12 text-center">
           <Globe size={40} className="text-primary mx-auto mb-4 opacity-40" />
           <p className="text-muted-foreground font-body text-sm mb-2">
             Curated restaurants, sights and experiences in {trip.destination}.
@@ -170,7 +170,7 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
               <div
                 key={a.id}
                 onClick={() => { setStartIndex(i); setFeedOpen(true); }}
-                className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-champagne transition-all duration-500"
+                className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:glow-gold transition-all duration-500"
                 style={{ scrollSnapAlign: "start" }}
               >
                 <div className="group-hover:[&_img]:scale-105 transition-transform duration-700">
@@ -183,12 +183,12 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[a.category || ""] || "text-primary"}`}>
+                  <span className={`eyebrow ${categoryColors[a.category || ""] || "text-primary"}`}>
                     {a.category}
                   </span>
                   <h3 className="font-heading text-2xl leading-tight text-foreground">{a.name}</h3>
                   {isInEvents(a.name) && (
-                    <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-primary font-body">
+                    <span className="inline-flex items-center gap-1 mt-1 text-xs text-primary font-body">
                       <BookmarkCheck size={10} /> In your events
                     </span>
                   )}
@@ -212,7 +212,7 @@ const ExperienceTab = ({ tripId, trip, onNavigateToEvents }: ExperienceTabProps)
             className="fixed inset-0 z-50 bg-background overflow-y-auto"
           >
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-              <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+              <h3 className="eyebrow text-muted-foreground flex items-center gap-2">
                 <MapPin size={12} className="text-primary" /> Experiences in {trip.destination}
               </h3>
               <button onClick={() => setFeedOpen(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">
@@ -288,7 +288,7 @@ const ActivityCard = ({
           href={activity.booking_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-champagne text-primary-foreground text-xs font-body"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold text-primary-foreground text-xs font-body"
         >
           <Ticket size={12} /> Book
         </a>
@@ -298,7 +298,7 @@ const ActivityCard = ({
     {/* Info */}
     <div className="px-4 py-3">
       <div className="flex items-center gap-2 mb-1">
-        <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
+        <span className={`eyebrow ${categoryColors[activity.category || ""] || "text-primary"}`}>
           {activity.category}
         </span>
         {activity.rating && (

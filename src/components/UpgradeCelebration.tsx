@@ -34,7 +34,7 @@ export const UpgradeCelebration = ({ open, tier, onClose }: UpgradeCelebrationPr
                 scale: [0, 1, 0.5],
               }}
               transition={{ duration: 1.8, delay: i * 0.08, ease: "easeOut" }}
-              className="absolute w-2 h-2 rounded-full bg-gradient-champagne pointer-events-none"
+              className="absolute w-2 h-2 rounded-full bg-gold pointer-events-none"
               style={{
                 left: `${40 + Math.random() * 20}%`,
                 top: "50%",
@@ -47,7 +47,7 @@ export const UpgradeCelebration = ({ open, tier, onClose }: UpgradeCelebrationPr
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="glass-card rounded-3xl p-10 max-w-sm w-full text-center relative shadow-champagne border border-primary/30"
+            className="glass rounded-3xl p-10 max-w-sm w-full text-center relative glow-gold border border-primary/30"
           >
             <button
               onClick={onClose}
@@ -60,12 +60,12 @@ export const UpgradeCelebration = ({ open, tier, onClose }: UpgradeCelebrationPr
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", delay: 0.2 }}
-              className="w-16 h-16 rounded-full bg-gradient-champagne flex items-center justify-center mx-auto mb-6"
+              className="w-16 h-16 rounded-full bg-gold flex items-center justify-center mx-auto mb-6"
             >
               <Crown size={28} className="text-background" />
             </motion.div>
 
-            <p className="text-[10px] tracking-[0.3em] uppercase text-primary mb-3 font-body">
+            <p className="eyebrow text-primary mb-3">
               Welcome to {tierLabel}
             </p>
             <h2 className="text-3xl font-heading mb-3">

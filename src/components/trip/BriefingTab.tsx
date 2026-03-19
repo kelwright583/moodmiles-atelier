@@ -52,7 +52,7 @@ const SeverityDot = ({ severity }: { severity: Severity }) => (
         ? "bg-red-500"
         : severity === "amber"
         ? "bg-amber-400"
-        : "bg-emerald-500"
+        : "bg-live"
     }`}
   />
 );
@@ -115,7 +115,7 @@ const BriefingSection = ({
   }, "green");
 
   return (
-    <div className="glass-card rounded-2xl overflow-hidden">
+    <div className="glass rounded-2xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -167,7 +167,7 @@ const DisclaimerBanner = () => (
           href="https://www.gov.uk/foreign-travel-advice"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[11px] font-body text-primary hover:text-primary/80 underline underline-offset-2 transition-colors flex items-center gap-1"
+          className="text-xs font-body text-primary hover:text-primary/80 underline underline-offset-2 transition-colors flex items-center gap-1"
         >
           UK: gov.uk/foreign-travel-advice <ExternalLink size={9} />
         </a>
@@ -175,7 +175,7 @@ const DisclaimerBanner = () => (
           href="https://travel.state.gov"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[11px] font-body text-primary hover:text-primary/80 underline underline-offset-2 transition-colors flex items-center gap-1"
+          className="text-xs font-body text-primary hover:text-primary/80 underline underline-offset-2 transition-colors flex items-center gap-1"
         >
           US: travel.state.gov <ExternalLink size={9} />
         </a>
@@ -189,7 +189,7 @@ const DisclaimerBanner = () => (
 const SectionDisclaimer = ({ text }: { text: string }) => (
   <div className="rounded-lg border border-amber-500/20 bg-amber-500/6 px-3.5 py-2.5 flex gap-2">
     <ShieldAlert size={12} className="text-amber-400/70 flex-shrink-0 mt-0.5" />
-    <p className="text-[11px] font-body text-amber-200/70 leading-relaxed">{text}</p>
+    <p className="text-xs font-body text-amber-200/70 leading-relaxed">{text}</p>
   </div>
 );
 
@@ -198,7 +198,7 @@ const SectionDisclaimer = ({ text }: { text: string }) => (
 const BriefingShimmer = () => (
   <div className="space-y-4">
     {[...Array(6)].map((_, i) => (
-      <div key={i} className="glass-card rounded-2xl p-5 space-y-3">
+      <div key={i} className="glass rounded-2xl p-5 space-y-3">
         <div className="flex items-center gap-3">
           <ShimmerSkeleton className="w-8 h-8 rounded-lg" />
           <ShimmerSkeleton variant="text" className="flex-1 h-4" />
@@ -272,7 +272,7 @@ const BriefingTab = ({ tripId, trip }: BriefingTabProps) => {
         <DisclaimerBanner />
         <div className="flex items-center gap-3">
           <Shield size={16} className="text-primary" />
-          <span className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body">
+          <span className="eyebrow text-muted-foreground">
             Generating your briefing…
           </span>
           <span className="text-xs text-muted-foreground/60 font-body animate-pulse ml-auto">
@@ -288,7 +288,7 @@ const BriefingTab = ({ tripId, trip }: BriefingTabProps) => {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
         <DisclaimerBanner />
-        <div className="glass-card rounded-2xl p-10 text-center">
+        <div className="glass rounded-2xl p-10 text-center">
           <Shield size={40} className="text-primary mx-auto mb-4 opacity-40" />
           <h3 className="font-heading text-xl mb-2">The Briefing</h3>
           <p className="text-muted-foreground font-body text-sm mb-6 max-w-md mx-auto">
@@ -332,7 +332,7 @@ const BriefingTab = ({ tripId, trip }: BriefingTabProps) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <Shield size={14} className="text-primary" /> The Briefing
           </h2>
           <p className="text-xs text-muted-foreground/60 font-body mt-0.5">
@@ -371,10 +371,10 @@ const BriefingTab = ({ tripId, trip }: BriefingTabProps) => {
       />
 
       {/* Travel insurance CTA — shown within Health context */}
-      <div className="glass-card rounded-xl px-5 py-4 flex items-center justify-between border border-primary/10">
+      <div className="glass rounded-xl px-5 py-4 flex items-center justify-between border border-primary/10">
         <div>
           <p className="text-xs font-body font-medium text-foreground">Travel insurance with medical evacuation cover</p>
-          <p className="text-[11px] text-muted-foreground font-body mt-0.5">Strongly recommended for {trip.destination}</p>
+          <p className="text-xs text-muted-foreground font-body mt-0.5">Strongly recommended for {trip.destination}</p>
         </div>
         <a
           href="#"
@@ -445,17 +445,17 @@ const BriefingTab = ({ tripId, trip }: BriefingTabProps) => {
       {/* Last updated + cache indicator */}
       <div className="pt-2 pb-1 space-y-1 text-center">
         {updatedAt && (
-          <p className="text-[10px] text-muted-foreground/50 font-body flex items-center justify-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isFresh ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
+          <p className="text-xs text-muted-foreground/50 font-body flex items-center justify-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isFresh ? "bg-live" : "bg-muted-foreground/30"}`} />
             {isFresh ? "Just generated" : `Last updated ${updatedAt.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`}
           </p>
         )}
         {nextRefresh && !isFresh && (
-          <p className="text-[10px] text-muted-foreground/30 font-body">
+          <p className="text-xs text-muted-foreground/30 font-body">
             Refreshes automatically {nextRefresh.toLocaleDateString("en-GB", { day: "numeric", month: "long" })}
           </p>
         )}
-        <p className="text-[10px] text-muted-foreground/25 font-body">
+        <p className="text-xs text-muted-foreground/25 font-body">
           AI-generated · Not a substitute for professional advice
         </p>
       </div>

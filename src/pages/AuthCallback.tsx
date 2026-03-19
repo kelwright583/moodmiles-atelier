@@ -28,7 +28,7 @@ const AuthCallback = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="w-8 h-8 rounded-full bg-gradient-champagne animate-pulse" />
+      <div className="w-8 h-8 rounded-full bg-gold animate-pulse" />
     </div>
   );
 };

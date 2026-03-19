@@ -29,7 +29,7 @@ const categoryColors: Record<string, string> = {
   Culture: "text-purple-400",
   Dining: "text-orange-400",
   Nightlife: "text-pink-400",
-  Shopping: "text-emerald-400",
+  Shopping: "text-live-text",
   Outdoor: "text-sky-400",
   Experience: "text-amber-400",
 };
@@ -151,7 +151,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
       {/* AI-Suggested Activities - Horizontal Scroll */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <MapPin size={14} className="text-primary" /> Curated Experiences
           </h2>
           <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
         </div>
 
         {activities.length === 0 ? (
-          <div className="glass-card rounded-xl p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center">
             <Globe size={32} className="text-primary mx-auto mb-3 opacity-50" />
             <p className="text-muted-foreground font-body text-sm mb-1">
               Curated restaurants, sights, and experiences in {trip.destination}.
@@ -195,7 +195,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
               {activities.map((activity, i) => (
                 <div
                   key={activity.id}
-                  className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden group hover:shadow-champagne transition-all duration-500"
+                  className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden group hover:glow-gold transition-all duration-500"
                   style={{ scrollSnapAlign: "start" }}
                 >
                   <div
@@ -221,7 +221,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2">
-                        <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
+                        <span className={`eyebrow ${categoryColors[activity.category || ""] || "text-primary"}`}>
                           {activity.category}
                         </span>
                         {activity.rating && (
@@ -256,7 +256,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
             className="fixed inset-0 z-50 bg-background overflow-y-auto"
           >
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-              <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+              <h3 className="eyebrow text-muted-foreground flex items-center gap-2">
                 <MapPin size={12} className="text-primary" /> Experiences in {trip.destination}
               </h3>
               <button onClick={() => setFeedOpen(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">
@@ -281,7 +281,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
       {/* Pinned Events */}
       {pinnedEvents.length > 0 && (
         <section>
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground mb-6 font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground mb-6 flex items-center gap-2">
             <Pin size={14} className="text-primary" /> Pinned Events
           </h2>
           <div className="space-y-3">
@@ -295,7 +295,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
       {/* User's Events */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <Calendar size={14} className="text-primary" /> Your Events
           </h2>
           <Dialog open={open} onOpenChange={setOpen}>
@@ -315,7 +315,7 @@ const ThingsToDoTab = ({ tripId, trip }: ThingsToDoTabProps) => {
           </Dialog>
         </div>
         {otherEvents.length === 0 && pinnedEvents.length === 0 ? (
-          <div className="glass-card rounded-xl p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center">
             <p className="text-muted-foreground font-body text-sm">No events yet. Discover experiences above or add your own.</p>
           </div>
         ) : (
@@ -385,7 +385,7 @@ const ActivityFeedCard = ({
               href={activity.booking_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-champagne text-primary-foreground text-xs font-body tracking-wide hover:opacity-90 transition-opacity"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold text-primary-foreground text-xs font-body tracking-wide hover:opacity-90 transition-opacity"
             >
               <Ticket size={12} /> Book
             </a>
@@ -396,7 +396,7 @@ const ActivityFeedCard = ({
       <div className="px-4 py-3">
         <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
           <div className="flex items-center gap-2">
-            <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>
+            <span className={`eyebrow ${categoryColors[activity.category || ""] || "text-primary"}`}>
               {activity.category}
             </span>
             {activity.rating && (
@@ -442,7 +442,7 @@ const ActivityFeedCard = ({
 /* ── Event Row ── */
 
 const EventRow = ({ event, onTogglePin, onDelete }: { event: TripEvent; onTogglePin: (e: TripEvent) => void; onDelete: (id: string) => void }) => (
-  <div className="glass-card rounded-xl p-4 md:p-5 flex items-center justify-between hover:shadow-champagne transition-all duration-300">
+  <div className="glass rounded-xl p-4 md:p-5 flex items-center justify-between hover:glow-gold transition-all duration-300">
     <div className="min-w-0 flex-1">
       <h3 className="font-heading text-base truncate">{event.event_name}</h3>
       <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-body">
@@ -456,7 +456,7 @@ const EventRow = ({ event, onTogglePin, onDelete }: { event: TripEvent; onToggle
       )}
     </div>
     <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
-      {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.2em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
+      {event.event_type && <span className="hidden sm:inline eyebrow text-primary bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
       <button onClick={() => onTogglePin(event)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
         {event.is_pinned ? <PinOff size={14} className="text-primary" /> : <Pin size={14} className="text-muted-foreground" />}
       </button>

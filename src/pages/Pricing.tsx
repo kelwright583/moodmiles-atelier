@@ -117,7 +117,7 @@ const Pricing = () => {
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-[11px] tracking-[0.3em] uppercase text-primary mb-3 font-body"
+            className="eyebrow mb-3"
           >
             Membership
           </motion.p>
@@ -125,16 +125,16 @@ const Pricing = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-6xl font-heading mb-5"
+            className="text-4xl md:text-6xl font-heading font-normal mb-5"
           >
             Travel,{" "}
-            <span className="text-gradient-champagne italic">Styled.</span>
+            <em className="font-heading italic">Styled.</em>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-muted-foreground font-body mb-10 text-sm leading-relaxed max-w-md mx-auto"
+            className="text-sm font-body font-light text-parchment-dim leading-relaxed max-w-md mx-auto mb-10"
           >
             Choose the membership that fits your journey. Upgrade or downgrade anytime.
           </motion.p>
@@ -144,24 +144,24 @@ const Pricing = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="inline-flex items-center gap-3 bg-secondary rounded-full p-1"
+            className="inline-flex items-center gap-6"
           >
             <button
               onClick={() => setIsAnnual(false)}
-              className={`px-5 py-2 rounded-full text-xs font-body font-medium transition-all ${
-                !isAnnual ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+              className={`pb-1 text-sm font-body font-medium transition-all ${
+                !isAnnual ? "border-b border-gold text-parchment" : "text-parchment-faint hover:text-parchment-dim"
               }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setIsAnnual(true)}
-              className={`px-5 py-2 rounded-full text-xs font-body font-medium transition-all flex items-center gap-2 ${
-                isAnnual ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+              className={`pb-1 text-sm font-body font-medium transition-all flex items-center gap-2 ${
+                isAnnual ? "border-b border-gold text-parchment" : "text-parchment-faint hover:text-parchment-dim"
               }`}
             >
               Annual
-              <span className="bg-primary/20 text-primary text-[10px] px-1.5 py-0.5 rounded-full">
+              <span className="text-gold text-[10px] font-body">
                 Save 33%
               </span>
             </button>
@@ -173,21 +173,26 @@ const Pricing = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="mt-6 flex items-center justify-center gap-2"
+          className="mt-6 flex items-center justify-center"
         >
-          <div className="relative">
-            <Tag size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <Input
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-              placeholder="Promo code"
-              className="pl-8 h-9 w-40 bg-secondary border-border text-sm font-body placeholder:text-muted-foreground/50 text-center tracking-wider"
-              maxLength={20}
-            />
-          </div>
-          {promoCode && (
-            <span className="text-xs text-primary font-body">Applied at checkout</span>
-          )}
+          <details className="mt-4">
+            <summary className="text-xs text-parchment-faint cursor-pointer hover:text-parchment-dim font-body">Have a promo code?</summary>
+            <div className="mt-3 flex items-center gap-2">
+              <div className="relative">
+                <Tag size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-parchment-faint pointer-events-none" />
+                <Input
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  placeholder="Promo code"
+                  className="pl-8 h-9 w-40 bg-ink-raised border-ink-border text-sm font-body placeholder:text-parchment-faint/50 text-center tracking-wider"
+                  maxLength={20}
+                />
+              </div>
+              {promoCode && (
+                <span className="text-xs text-gold font-body">Applied at checkout</span>
+              )}
+            </div>
+          </details>
         </motion.div>
 
         {/* Tier cards */}
@@ -197,24 +202,23 @@ const Pricing = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="glass-card rounded-2xl p-8 flex flex-col"
+            className="surface rounded-sm p-8 flex flex-col"
           >
             <div className="mb-6">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center mb-4">
-                <Zap size={18} className="text-muted-foreground" />
+              <div className="w-10 h-10 rounded-sm bg-ink-raised border border-ink-border flex items-center justify-center mb-4">
+                <Zap size={18} className="text-parchment-dim" />
               </div>
-              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-1">Free</p>
+              <p className="eyebrow mb-1">Complimentary</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-heading">$0</span>
-                <span className="text-muted-foreground text-sm font-body">/ month</span>
+                <span className="text-5xl font-heading font-normal"><em className="font-heading italic">Free</em></span>
               </div>
-              <p className="text-xs text-muted-foreground font-body mt-2">No credit card required</p>
+              <p className="text-xs font-body font-light text-parchment-dim mt-2">No credit card required</p>
             </div>
 
             <ul className="space-y-3 mb-8 flex-1">
               {features.free.map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm font-body text-muted-foreground">
-                  <Check size={14} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                <li key={f} className="flex items-start gap-2.5 text-sm font-body font-light text-parchment-dim">
+                  <Check size={12} className="text-gold flex-shrink-0 mt-0.5" />
                   {f}
                 </li>
               ))}
@@ -222,7 +226,7 @@ const Pricing = () => {
 
             <Link
               to="/auth"
-              className="w-full inline-flex items-center justify-center h-11 px-6 rounded-xl border border-border text-sm font-body font-medium hover:bg-secondary transition-colors"
+              className="w-full inline-flex items-center justify-center h-11 px-6 rounded-sm border border-ink-border text-sm font-body font-medium text-parchment hover:bg-ink-raised transition-colors"
             >
               Get started free
             </Link>
@@ -233,39 +237,39 @@ const Pricing = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="relative glass-card rounded-2xl p-8 flex flex-col border border-primary/40 shadow-champagne"
+            className="relative bg-ink-raised border border-gold/30 rounded-sm p-8 flex flex-col glow-gold"
           >
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <span className="bg-gradient-champagne text-background text-[10px] tracking-[0.15em] uppercase font-body font-medium px-4 py-1 rounded-full">
+              <span className="eyebrow bg-ink-raised border border-gold/30 px-4 py-1">
                 Most Popular
               </span>
             </div>
 
             <div className="mb-6">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <Sparkles size={18} className="text-primary" />
+              <div className="w-10 h-10 rounded-sm bg-gold/10 border border-gold/20 flex items-center justify-center mb-4">
+                <Sparkles size={18} className="text-gold" />
               </div>
-              <p className="text-xs tracking-[0.2em] uppercase text-primary font-body mb-1">Luxe</p>
+              <p className="eyebrow mb-1">Luxe</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-heading">${luxeMonthlyDisplay}</span>
-                <span className="text-muted-foreground text-sm font-body">/ month</span>
+                <span className="text-6xl font-heading italic">${luxeMonthlyDisplay}</span>
+                <span className="text-parchment-dim text-sm font-body">/ month</span>
               </div>
               {isAnnual && (
-                <p className="text-xs text-primary font-body mt-1">Billed annually ($119/yr)</p>
+                <p className="text-xs text-gold font-body mt-1">Billed annually ($119/yr)</p>
               )}
             </div>
 
             <ul className="space-y-3 mb-8 flex-1">
               {features.luxe.map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm font-body">
-                  <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                <li key={f} className="flex items-start gap-2.5 text-sm font-body font-light text-parchment-dim">
+                  <Check size={12} className="text-gold flex-shrink-0 mt-0.5" />
                   {f}
                 </li>
               ))}
             </ul>
 
             <Button
-              variant="champagne"
+              variant="default"
               className="w-full"
               onClick={() => handleCheckout("luxe")}
               disabled={loadingPlan !== null}
@@ -280,26 +284,26 @@ const Pricing = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="glass-card rounded-2xl p-8 flex flex-col"
+            className="surface rounded-sm p-8 flex flex-col"
           >
             <div className="mb-6">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center mb-4">
-                <Crown size={18} className="text-primary" />
+              <div className="w-10 h-10 rounded-sm bg-ink-raised border border-ink-border flex items-center justify-center mb-4">
+                <Crown size={18} className="text-gold" />
               </div>
-              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-1">Atelier</p>
+              <p className="eyebrow mb-1">Atelier</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-heading">${atelierMonthlyDisplay}</span>
-                <span className="text-muted-foreground text-sm font-body">/ month</span>
+                <span className="text-5xl font-heading italic">${atelierMonthlyDisplay}</span>
+                <span className="text-parchment-dim text-sm font-body">/ month</span>
               </div>
               {isAnnual && (
-                <p className="text-xs text-primary font-body mt-1">Billed annually ($249/yr)</p>
+                <p className="text-xs text-gold font-body mt-1">Billed annually ($249/yr)</p>
               )}
             </div>
 
             <ul className="space-y-3 mb-8 flex-1">
               {features.atelier.map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm font-body">
-                  <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                <li key={f} className="flex items-start gap-2.5 text-sm font-body font-light text-parchment-dim">
+                  <Check size={12} className="text-gold flex-shrink-0 mt-0.5" />
                   {f}
                 </li>
               ))}
@@ -307,7 +311,7 @@ const Pricing = () => {
 
             <Button
               variant="outline"
-              className="w-full border-border hover:bg-secondary"
+              className="w-full"
               onClick={() => handleCheckout("atelier")}
               disabled={loadingPlan !== null}
             >
@@ -320,7 +324,7 @@ const Pricing = () => {
         {/* Feature comparison table */}
         <div className="max-w-4xl mx-auto mb-24">
           <h2 className="text-2xl font-heading text-center mb-10">Compare plans</h2>
-          <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="glass rounded-sm overflow-hidden">
             <table className="w-full text-sm font-body">
               <thead>
                 <tr className="border-b border-border">
@@ -360,7 +364,7 @@ const Pricing = () => {
           <h2 className="text-2xl font-heading text-center mb-10">Questions</h2>
           <div className="space-y-5">
             {faqs.map((faq) => (
-              <div key={faq.q} className="glass-card rounded-xl p-6">
+              <div key={faq.q} className="glass rounded-sm p-6">
                 <h3 className="font-heading text-base mb-2">{faq.q}</h3>
                 <p className="text-sm text-muted-foreground font-body leading-relaxed">{faq.a}</p>
               </div>

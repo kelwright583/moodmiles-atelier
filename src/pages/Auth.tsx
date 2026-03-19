@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/layout/Navbar";
+import Logo from "@/components/layout/Logo";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -109,51 +110,55 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="pt-32 pb-20 px-6 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-ink pt-32 pb-24 px-4">
+      <main className="w-full max-w-sm">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
         >
+          <div className="flex justify-center mb-10">
+            <Logo size="lg" />
+          </div>
           {needsVerification && (
-            <div className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20">
-              <p className="text-sm font-body text-foreground">
+            <div className="mb-6 p-4 rounded-sm bg-gold/10 border border-gold/20">
+              <p className="text-sm font-body text-parchment">
                 Please verify your email address. We've sent you a confirmation link — check your inbox.
               </p>
-              <p className="text-xs text-muted-foreground mt-2 font-body">
+              <p className="text-xs text-parchment-dim mt-2 font-body">
                 Already verified? Try signing in again.
               </p>
             </div>
           )}
           <div className="text-center mb-10">
-            <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">
+            <p className="eyebrow mb-1">
               {isForgotPassword ? "Reset Password" : isLogin ? "Welcome Back" : "Join Concierge Styled"}
             </p>
-            <h1 className="text-3xl md:text-4xl font-heading">
+            <h1 className="text-4xl font-heading font-normal text-center mb-1">
               {isForgotPassword ? "Forgot your password?" : isLogin ? "Sign In" : "Create Account"}
             </h1>
+            <p className="text-sm font-body font-light text-parchment-dim text-center mb-10">
+              {isForgotPassword ? "Enter your email to receive a reset link." : isLogin ? "Welcome back to Concierge Styled." : "Start your styled journey today."}
+            </p>
           </div>
 
           {isForgotPassword ? (
             <form onSubmit={handleForgotPassword} className="space-y-5">
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Email</label>
+                <label className="eyebrow mb-2 block">Email</label>
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body"
+                  className="bg-ink-raised border-ink-border h-12 font-body text-sm text-parchment placeholder:text-parchment-faint focus:border-gold/50 focus:ring-0 rounded-sm w-full px-4"
                 />
               </div>
               <Button variant="champagne" size="xl" type="submit" className="w-full" disabled={loading}>
                 {loading ? "Sending..." : "Send reset link"}
               </Button>
-              <p className="text-center text-sm text-muted-foreground font-body">
-                <button type="button" onClick={() => setIsForgotPassword(false)} className="text-primary hover:underline">
+              <p className="text-center text-xs font-body font-light text-parchment-faint">
+                <button type="button" onClick={() => setIsForgotPassword(false)} className="text-gold hover:underline">
                   Back to sign in
                 </button>
               </p>
@@ -162,28 +167,28 @@ const Auth = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Name</label>
+                <label className="eyebrow mb-2 block">Name</label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your name"
-                  className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body"
+                  className="bg-ink-raised border-ink-border h-12 font-body text-sm text-parchment placeholder:text-parchment-faint focus:border-gold/50 focus:ring-0 rounded-sm w-full px-4"
                 />
               </div>
             )}
             <div>
-              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Email</label>
+              <label className="eyebrow mb-2 block">Email</label>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body"
+                className="bg-ink-raised border-ink-border h-12 font-body text-sm text-parchment placeholder:text-parchment-faint focus:border-gold/50 focus:ring-0 rounded-sm w-full px-4"
               />
             </div>
             <div>
-              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Password</label>
+              <label className="eyebrow mb-2 block">Password</label>
               <Input
                 type="password"
                 value={password}
@@ -191,7 +196,7 @@ const Auth = () => {
                 placeholder="••••••••"
                 required
                 minLength={6}
-                className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body"
+                className="bg-ink-raised border-ink-border h-12 font-body text-sm text-parchment placeholder:text-parchment-faint focus:border-gold/50 focus:ring-0 rounded-sm w-full px-4"
               />
             </div>
             <Button
@@ -205,21 +210,18 @@ const Auth = () => {
             </Button>
 
             {isLogin && (
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground font-body">or</span>
-                </div>
+              <div className="flex items-center gap-4 my-6">
+                <div className="rule-gold flex-1" />
+                <span className="text-xs text-parchment-faint font-body">or</span>
+                <div className="rule-gold flex-1" />
               </div>
             )}
             {isLogin && (
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 size="xl"
-                className="w-full border-border hover:bg-secondary"
+                className="w-full"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
               >
@@ -236,12 +238,12 @@ const Auth = () => {
           )}
 
           {!isForgotPassword && (
-          <p className="text-center text-sm text-muted-foreground mt-6 font-body">
+          <p className="text-center text-xs font-body font-light text-parchment-faint mt-6">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
+              className="text-gold hover:underline"
             >
               {isLogin ? "Sign up" : "Sign in"}
             </button>
@@ -251,7 +253,7 @@ const Auth = () => {
                 <button
                   type="button"
                   onClick={() => setIsForgotPassword(true)}
-                  className="text-primary hover:underline"
+                  className="text-gold hover:underline"
                 >
                   Forgot password?
                 </button>
@@ -261,11 +263,11 @@ const Auth = () => {
           )}
 
           {!isLogin && !isForgotPassword && (
-            <p className="text-center text-xs text-muted-foreground mt-4 font-body leading-relaxed">
+            <p className="text-center text-xs font-body font-light text-parchment-faint mt-4 leading-relaxed">
               By creating an account you agree to our{" "}
-              <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
+              <Link to="/terms" className="text-gold hover:underline">Terms of Service</Link>
               {" "}and{" "}
-              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+              <Link to="/privacy" className="text-gold hover:underline">Privacy Policy</Link>.
             </p>
           )}
         </motion.div>

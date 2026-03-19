@@ -37,7 +37,7 @@ function NotifIcon({ type }: { type: string }) {
   if (type === "event_added")
     return <Calendar size={14} className={`${cls} text-blue-400`} />;
   if (type === "new_message")
-    return <MessageCircle size={14} className={`${cls} text-emerald-400`} />;
+    return <MessageCircle size={14} className={`${cls} text-live-text`} />;
   if (type === "outfit_pinned")
     return <Heart size={14} className={`${cls} text-pink-400`} />;
   if (type === "track_added")
@@ -200,12 +200,12 @@ const NotificationBell = () => {
                         {notif.title}
                       </p>
                       {notif.body && (
-                        <p className="text-[10px] text-muted-foreground/60 font-body mt-0.5 truncate">
+                        <p className="text-xs text-muted-foreground/60 font-body mt-0.5 truncate">
                           {notif.body}
                         </p>
                       )}
                     </div>
-                    <span className="text-[10px] text-muted-foreground/50 font-body whitespace-nowrap flex-shrink-0 mt-0.5">
+                    <span className="text-xs text-muted-foreground/50 font-body whitespace-nowrap flex-shrink-0 mt-0.5">
                       {timeAgo(notif.created_at)}
                     </span>
                   </button>

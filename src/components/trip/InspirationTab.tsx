@@ -165,7 +165,7 @@ const CoordinateView = ({
 
   if (events.length === 0) {
     return (
-      <div className="glass-card rounded-2xl p-10 text-center">
+      <div className="glass rounded-2xl p-10 text-center">
         <Users size={40} className="text-primary mx-auto mb-4 opacity-40" />
         <h3 className="font-heading text-xl mb-2">No events with dress codes yet</h3>
         <p className="text-muted-foreground font-body text-sm max-w-md mx-auto">
@@ -221,12 +221,12 @@ const CoordinateView = ({
                 >
                   <p className="font-heading text-sm leading-tight mb-1.5">{event.event_name}</p>
                   {event.dress_code && (
-                    <span className="text-[10px] text-primary/70 border border-primary/20 rounded-full px-2 py-0.5 font-body w-fit mb-1.5">
+                    <span className="text-xs text-primary/70 border border-primary/20 rounded-full px-2 py-0.5 font-body w-fit mb-1.5">
                       {event.dress_code}
                     </span>
                   )}
                   {event.event_date && (
-                    <span className="text-[10px] text-muted-foreground font-body">
+                    <span className="text-xs text-muted-foreground font-body">
                       {formatEventDate(event.event_date)}
                     </span>
                   )}
@@ -297,7 +297,7 @@ const CoordinateView = ({
                           disabled={!isCurrentUser}
                         >
                           <MemberAvatar profile={profile} size="md" ring={isCurrentUser} faded={!isCurrentUser} />
-                          <span className={`text-[10px] font-body text-center leading-tight px-2 ${
+                          <span className={`text-xs font-body text-center leading-tight px-2 ${
                             isCurrentUser ? "text-primary" : "text-muted-foreground/40"
                           }`}>
                             {isCurrentUser ? "Add your look" : "No look yet"}
@@ -487,10 +487,10 @@ const PinToSheet = ({
                           <p className="text-sm font-body text-foreground leading-tight">{event.event_name}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             {event.dress_code && (
-                              <span className="text-[10px] text-primary/60 font-body">{event.dress_code}</span>
+                              <span className="text-xs text-primary/60 font-body">{event.dress_code}</span>
                             )}
                             {event.event_date && (
-                              <span className="text-[10px] text-muted-foreground font-body">
+                              <span className="text-xs text-muted-foreground font-body">
                                 {formatEventDate(event.event_date)}
                               </span>
                             )}
@@ -740,7 +740,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <Sparkles size={14} className="text-primary" /> Get the Look
           </h2>
           <p className="text-xs text-muted-foreground/70 font-body mt-1">
@@ -820,7 +820,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
                 onClick={() => setShopFilter(f)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-body transition-all ${
                   shopFilter === f
-                    ? "bg-gradient-champagne text-primary-foreground shadow-champagne"
+                    ? "bg-gold text-primary-foreground glow-gold"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -845,7 +845,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
               className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
             />
             {searchingWeb && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-primary/70 font-body animate-pulse">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-primary/70 font-body animate-pulse">
                 searching…
               </span>
             )}
@@ -866,7 +866,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
           )}
 
           {editorialError ? (
-            <div className="glass-card rounded-2xl p-10 text-center">
+            <div className="glass rounded-2xl p-10 text-center">
               <AlertTriangle size={32} className="text-amber-400 mx-auto mb-3 opacity-70" />
               <p className="text-muted-foreground font-body text-sm mb-4">Having trouble loading looks right now — try refreshing.</p>
               <Button variant="champagne-outline" size="sm" onClick={() => searchWebFashion()} disabled={searchingWeb}>
@@ -874,7 +874,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
               </Button>
             </div>
           ) : uniqueEditorial.length === 0 ? (
-            <div className="glass-card rounded-2xl p-10 text-center">
+            <div className="glass rounded-2xl p-10 text-center">
               <Sparkles size={40} className="text-primary mx-auto mb-4 opacity-40" />
               <h3 className="font-heading text-xl mb-2">Styled for {trip.destination}</h3>
               <p className="text-muted-foreground font-body text-sm mb-6 max-w-md mx-auto">
@@ -923,14 +923,14 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
       {mode === "shop" && (
         <>
           {loadingShop ? (
-            <div className="glass-card rounded-2xl p-10 text-center">
+            <div className="glass rounded-2xl p-10 text-center">
               <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4" />
               <p className="text-sm text-muted-foreground font-body animate-pulse">
                 Curating real products for your trip…
               </p>
             </div>
           ) : shopError ? (
-            <div className="glass-card rounded-2xl p-10 text-center">
+            <div className="glass rounded-2xl p-10 text-center">
               <AlertTriangle size={32} className="text-amber-400 mx-auto mb-3 opacity-70" />
               <p className="text-muted-foreground font-body text-sm mb-4">Having trouble loading looks right now — try refreshing.</p>
               <Button variant="champagne-outline" size="sm" onClick={() => loadShoppableOutfits()} disabled={loadingShop}>
@@ -938,7 +938,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
               </Button>
             </div>
           ) : shopOutfits.length === 0 ? (
-            <div className="glass-card rounded-2xl p-10 text-center">
+            <div className="glass rounded-2xl p-10 text-center">
               <ShoppingBag size={40} className="text-primary mx-auto mb-4 opacity-40" />
               <h3 className="font-heading text-xl mb-2">Shop the Look</h3>
               <p className="text-muted-foreground font-body text-sm mb-6 max-w-md mx-auto">
@@ -983,7 +983,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card rounded-2xl p-4 border border-amber-500/30 bg-amber-500/5"
+          className="glass rounded-2xl p-4 border border-amber-500/30 bg-amber-500/5"
         >
           <div className="flex items-start gap-3">
             <AlertTriangle
@@ -1024,8 +1024,8 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId }: Inspira
           exit={{ opacity: 0, y: 24 }}
           className="fixed bottom-6 left-4 right-4 z-50 max-w-sm mx-auto"
         >
-          <div className="glass-card rounded-2xl p-4 border border-primary/20 shadow-champagne">
-            <p className="text-xs tracking-[0.2em] uppercase text-primary font-body mb-1">Add to Home Screen</p>
+          <div className="glass rounded-2xl p-4 border border-primary/20 glow-gold">
+            <p className="eyebrow text-primary mb-1">Add to Home Screen</p>
             <p className="text-sm text-foreground font-body mb-3 leading-snug">
               Get the full Concierge Styled experience — instant access from your home screen.
             </p>
@@ -1119,7 +1119,7 @@ const MasonryCard = ({
           const fallback = document.createElement("div");
           fallback.className = "w-full bg-secondary/80 flex flex-col items-center justify-center p-3 text-center";
           fallback.style.minHeight = "200px";
-          fallback.innerHTML = `<p class="text-foreground text-xs font-semibold leading-snug">${outfit.title}</p>${outfit.store ? `<p class="text-muted-foreground text-[10px] mt-0.5">${outfit.store}</p>` : ""}`;
+          fallback.innerHTML = `<p class="text-foreground text-xs font-semibold leading-snug">${outfit.title}</p>${outfit.store ? `<p class="text-muted-foreground text-xs mt-0.5">${outfit.store}</p>` : ""}`;
           el.parentElement?.insertBefore(fallback, el.nextSibling);
         }}
       />
@@ -1160,7 +1160,7 @@ const MasonryCard = ({
           <div className="flex items-center gap-2">
             <button
               onClick={(e) => { e.stopPropagation(); onPinToBoard(outfit); }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-body transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-body transition-colors"
             >
               <Pin size={11} /> Pin to Board
             </button>
@@ -1170,7 +1170,7 @@ const MasonryCard = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/80 hover:bg-primary text-white text-[11px] font-body transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/80 hover:bg-primary text-white text-xs font-body transition-colors"
               >
                 <ShoppingBag size={11} /> Shop This
               </a>
@@ -1235,10 +1235,10 @@ const ShopTheLookCard = ({
 
   if (buyableItems.length === 0 && filter !== "all") {
     return (
-      <div className="glass-card rounded-2xl p-5">
+      <div className="glass rounded-2xl p-5">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <p className="text-xs tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</p>
+            <p className="eyebrow text-primary">{outfit.occasion}</p>
             <h3 className="font-heading text-lg leading-snug">{outfit.title}</h3>
           </div>
         </div>
@@ -1250,11 +1250,11 @@ const ShopTheLookCard = ({
   }
 
   return (
-    <div className="glass-card rounded-2xl p-5 space-y-4">
+    <div className="glass rounded-2xl p-5 space-y-4">
       {/* Outfit header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs tracking-[0.2em] uppercase text-primary font-body">{outfit.occasion}</p>
+          <p className="eyebrow text-primary">{outfit.occasion}</p>
           <h3 className="font-heading text-lg leading-snug">{outfit.title}</h3>
           {outfit.description && (
             <p className="text-xs text-muted-foreground font-body mt-1 leading-relaxed line-clamp-2">
@@ -1301,7 +1301,7 @@ const ShopTheLookCard = ({
                       {item.category}
                     </span>
                     {isRental && (
-                      <span className="text-[9px] tracking-wide uppercase font-body px-1.5 py-0.5 rounded bg-emerald-600/80 text-white">
+                      <span className="text-[9px] tracking-wide uppercase font-body px-1.5 py-0.5 rounded bg-live/80 text-white">
                         Rent
                       </span>
                     )}
@@ -1315,18 +1315,18 @@ const ShopTheLookCard = ({
                 <div className="p-2.5">
                   <p className="text-xs font-body text-foreground leading-snug line-clamp-2">{item.name}</p>
                   {item.brand_suggestion && (
-                    <p className="text-[10px] text-muted-foreground font-body mt-0.5">{item.brand_suggestion}</p>
+                    <p className="text-xs text-muted-foreground font-body mt-0.5">{item.brand_suggestion}</p>
                   )}
                   <div className="flex items-center justify-between mt-1.5 gap-1">
                     <div className="min-w-0">
                       {isRental && item.price ? (
-                        <span className="text-xs font-body text-emerald-500 font-medium">
+                        <span className="text-xs font-body text-live-text font-medium">
                           {formatCurrency(item.price, currency)} / 4 days
                         </span>
                       ) : isResale && item.price ? (
                         <div>
                           {item.original_price && (
-                            <span className="text-[10px] font-body text-muted-foreground line-through block leading-none">
+                            <span className="text-xs font-body text-muted-foreground line-through block leading-none">
                               Was {formatCurrency(item.original_price, originalCurrency)}
                             </span>
                           )}
@@ -1339,12 +1339,12 @@ const ShopTheLookCard = ({
                           {formatCurrency(item.price, currency)}
                         </span>
                       ) : (
-                        <span className="text-[10px] text-muted-foreground font-body">See price</span>
+                        <span className="text-xs text-muted-foreground font-body">See price</span>
                       )}
                     </div>
                     <span className={`text-[9px] tracking-wide uppercase font-body px-1.5 py-0.5 rounded-full flex-shrink-0 ${
                       isRental
-                        ? "bg-emerald-600/10 text-emerald-500"
+                        ? "bg-live/15 text-live-text"
                         : isResale
                         ? "bg-violet-600/10 text-violet-400"
                         : "bg-primary/10 text-primary"
@@ -1365,10 +1365,10 @@ const ShopTheLookCard = ({
               <div>
                 <span className="text-xs font-body text-foreground">{item.name}</span>
                 {item.brand_suggestion && (
-                  <span className="text-[10px] text-muted-foreground font-body ml-1.5">by {item.brand_suggestion}</span>
+                  <span className="text-xs text-muted-foreground font-body ml-1.5">by {item.brand_suggestion}</span>
                 )}
               </div>
-              <span className="text-[10px] text-muted-foreground font-body">{item.category}</span>
+              <span className="text-xs text-muted-foreground font-body">{item.category}</span>
             </div>
           ))}
         </div>
@@ -1382,7 +1382,7 @@ const ShopTheLookCard = ({
             <span className="text-foreground font-medium">${totalPrice.toLocaleString()}</span>
           </span>
           {buyableItems.length > 0 && (
-            <span className="text-[10px] text-muted-foreground font-body">
+            <span className="text-xs text-muted-foreground font-body">
               {buyableItems.length} piece{buyableItems.length !== 1 ? "s" : ""}
             </span>
           )}

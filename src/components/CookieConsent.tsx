@@ -27,7 +27,7 @@ export const CookieConsent = () => {
           transition={{ duration: 0.3 }}
           className="fixed bottom-4 left-4 right-4 z-50 md:bottom-6 md:left-6 md:right-auto md:max-w-md"
         >
-          <div className="glass-card rounded-2xl p-5 border border-border shadow-champagne">
+          <div className="glass rounded-2xl p-5 border border-border glow-gold">
             <p className="text-sm font-body text-muted-foreground mb-1 leading-relaxed">
               We use cookies for essential functionality and analytics to improve your experience.{" "}
               <Link to="/privacy" className="text-primary hover:underline">

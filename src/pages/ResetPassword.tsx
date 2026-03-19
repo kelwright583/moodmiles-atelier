@@ -46,7 +46,7 @@ const ResetPassword = () => {
   if (hasRecoverySession === null) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full bg-gradient-champagne animate-pulse" />
+        <div className="w-8 h-8 rounded-full bg-gold animate-pulse" />
       </div>
     );
   }
@@ -71,7 +71,7 @@ const ResetPassword = () => {
       <main className="pt-32 pb-20 px-6 flex items-center justify-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
           <div className="text-center mb-10">
-            <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">Reset Password</p>
+            <p className="eyebrow text-primary mb-2">Reset Password</p>
             <h1 className="text-3xl md:text-4xl font-heading">Set your new password</h1>
           </div>
 

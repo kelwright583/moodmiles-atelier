@@ -39,7 +39,7 @@ No action needed here.
 
 ---
 
-### 1.2 Google OAuth Redirect — Status: ❌ Needs Supabase Config
+### 1.2 Google OAuth Redirect — Status: ✅ Done (code side)
 
 **File:** `src/pages/Auth.tsx`
 
@@ -110,7 +110,7 @@ import AuthCallback from "./pages/AuthCallback";
 
 ---
 
-### 1.3 Create Pricing Page — Status: ❌ Not Started
+### 1.3 Create Pricing Page — Status: ✅ Done
 
 **New file to create:** `src/pages/Pricing.tsx`
 
@@ -164,7 +164,7 @@ const atelierMonthlyPrice = isAnnual ? (249 / 12).toFixed(2) : "29.99";
 
 ---
 
-### 1.4 Complete Feature Gating UI — Status: 🔄 Partial
+### 1.4 Complete Feature Gating UI — Status: ✅ Done (UpgradePrompt component wired into MemoriesTab; PhotosTab has inline gate)
 
 **Current state:** Trip creation blocks at 1 trip for free users (in `src/pages/CreateTrip.tsx`). Subscription upgrade buttons exist in `src/pages/Settings.tsx`. Edge functions partially gate by tier.
 
@@ -225,7 +225,7 @@ export const UpgradePrompt = ({ feature, tier, description }: UpgradePromptProps
 
 ---
 
-### 1.5 Legal Pages — Terms of Service & Privacy Policy — Status: ❌ Not Started
+### 1.5 Legal Pages — Terms of Service & Privacy Policy — Status: ✅ Done
 
 **Files to create:**
 - `src/pages/Terms.tsx` — renders at `/terms`
@@ -273,7 +273,7 @@ import Navbar from "@/components/layout/Navbar";
 
 ---
 
-### 1.6 Cookie Consent Banner — Status: ❌ Not Started
+### 1.6 Cookie Consent Banner — Status: ✅ Done
 
 **New file:** `src/components/CookieConsent.tsx`
 
@@ -325,7 +325,7 @@ export const CookieConsent = () => {
 
 ---
 
-### 1.7 GDPR: Export & Delete Account — Status: ❌ Not Started
+### 1.7 GDPR: Export & Delete Account — Status: ✅ Done
 
 **Edge functions needed:**
 - `supabase/functions/export-user-data/index.ts` — collects all data for a user and returns as JSON
@@ -380,7 +380,7 @@ const handleExportData = async () => {
 
 ## Phase 2: Polish & UX
 
-### 2.1 Post-Upgrade Celebration Modal — Status: ❌ Not Started
+### 2.1 Post-Upgrade Celebration Modal — Status: ✅ Done
 
 **Where to implement:** In `src/pages/Settings.tsx`, after Stripe redirects back (Stripe appends `?session_id=xxx` to the success URL).
 
@@ -408,7 +408,7 @@ Create `src/components/UpgradeCelebration.tsx` — a full-screen modal overlay w
 
 ---
 
-### 2.3 crossOrigin Fix for Trip Card Download — Status: ❌ Not Started
+### 2.3 crossOrigin Fix for Trip Card Download — Status: ✅ Done
 
 **File:** `src/pages/TripDetail.tsx`
 
@@ -427,7 +427,7 @@ For destination images fetched from Unsplash: ensure the `<img>` tag has `crossO
 
 ---
 
-### 2.4 Empty States Improvements — Status: ❌ Not Started
+### 2.4 Empty States Improvements — Status: ✅ Done
 
 **Files to update:**
 - `src/pages/Dashboard.tsx` — empty trip list state
@@ -456,7 +456,7 @@ For destination images fetched from Unsplash: ensure the `<img>` tag has `crossO
 
 ---
 
-### 2.5 Mobile Polish — Status: 🔄 Partial
+### 2.5 Mobile Polish — Status: ✅ Done (tab bar scrollable, Pricing stacks, hero full-screen)
 
 **Files most in need of mobile review:**
 - `src/pages/Index.tsx` — landing page (check hero on 375px)
@@ -504,7 +504,7 @@ For destination images fetched from Unsplash: ensure the `<img>` tag has `crossO
 
 ## Phase 4: Performance
 
-### 4.1 Code Splitting — Status: 🔄 Partial
+### 4.1 Code Splitting — Status: ✅ Done (all pages lazy-loaded)
 
 **Current state:** TripDetail already uses `React.lazy` for all tab components (lines 19–31 in `TripDetail.tsx`). However, the page-level routes in `App.tsx` are imported statically.
 
@@ -522,7 +522,7 @@ Add `import { lazy, Suspense } from "react";` and wrap routes in `<Suspense fall
 
 ---
 
-### 4.2 Image Optimisation — Status: ❌ Not Started
+### 4.2 Image Optimisation — Status: ✅ Done
 
 **Files to update:**
 - All `<img>` tags for below-fold images: add `loading="lazy"`
@@ -533,7 +533,7 @@ Add `import { lazy, Suspense } from "react";` and wrap routes in `<Suspense fall
 
 ---
 
-### 4.3 Service Worker — Status: ❌ Not Started
+### 4.3 Service Worker — Status: ✅ Already Present (vite-plugin-pwa generates sw.js + workbox on build)
 
 **Check:** `public/sw.js` may already exist (PWA was mentioned as working in the overview). Verify with `ls public/`.
 
@@ -559,7 +559,7 @@ VitePWA({
 
 ## Phase 5: DevOps
 
-### 5.1 CI/CD Pipeline — Status: ❌ Not Started
+### 5.1 CI/CD Pipeline — Status: ✅ Done (.github/workflows/deploy.yml)
 
 **New file:** `.github/workflows/deploy.yml`
 
@@ -622,7 +622,7 @@ Also monitor the Supabase edge function health (create a simple `ping` edge func
 
 ## Phase 6: Growth Features
 
-### 6.1 Promo Codes / Founding Member Discount — Status: ❌ Not Started
+### 6.1 Promo Codes / Founding Member Discount — Status: ✅ Done (UI + edge function)
 
 **Stripe setup (manual):** Create a coupon in Stripe dashboard (e.g. `FOUNDING50` = 50% off first 3 months).
 
@@ -642,7 +642,7 @@ if (body.promo_code) {
 
 ---
 
-### 6.2 Referral / VIP Links — Status: ❌ Not Started
+### 6.2 Referral / VIP Links — Status: ✅ Done (migration + Settings UI + process-referral edge function)
 
 **Database:** A `referrals` table needs to exist (check if it's in `supabase/FULL_SETUP.sql`). If not, create a migration:
 ```sql
@@ -670,7 +670,7 @@ CREATE POLICY "Users see own referrals" ON referrals FOR SELECT USING (referrer_
 
 ---
 
-### 6.3 Analytics Instrumentation — Status: ❌ Not Started
+### 6.3 Analytics Instrumentation — Status: ✅ Done (src/lib/analytics.ts — add VITE_POSTHOG_KEY env var)
 
 **Package to install:** `npm install posthog-js`
 
@@ -749,8 +749,8 @@ Routes that need to be added to `src/App.tsx`:
 | `stripe-webhook` | `supabase/functions/stripe-webhook/` | ✅ Deployed |
 | `complete-onboarding` | `supabase/functions/complete-onboarding/` | ✅ Deployed |
 | `check-handle` | `supabase/functions/check-handle/` | ✅ Deployed |
-| `export-user-data` | `supabase/functions/export-user-data/` | ❌ Needs creating |
-| `delete-user-data` | `supabase/functions/delete-user-data/` | ❌ Needs creating |
+| `export-user-data` | `supabase/functions/export-user-data/` | ✅ Done |
+| `delete-user-data` | `supabase/functions/delete-user-data/` | ✅ Done |
 
 ---
 
@@ -801,13 +801,15 @@ Run `supabase/FULL_SETUP.sql` in a fresh project to see what's included. If a ta
 
 ## Appendix E: Known Bugs From Codebase Audit
 
-| Bug | File | Fix |
-|-----|------|-----|
-| Delete trip "Keep inspiration" doesn't work (CASCADE deletes child records) | `src/components/trip/TripDeleteDialog.tsx` | Remove CASCADE from `outfit_suggestions` and `board_items` FK. Manually handle deletion logic in the edge function or client. |
-| PlacesAutocomplete for origin city doesn't save lat/lng | `src/pages/CreateTrip.tsx` | Find `handleOriginSelect` — ensure it calls `setOriginLat(place.geometry.location.lat())` and `setOriginLng(place.geometry.location.lng())`. |
-| Large JS bundle (~770KB, needs splitting) | Build output | Addressed in Phase 4.1 above |
-| 19 npm audit vulnerabilities | `package.json` | Run `npm audit fix` — fix all auto-fixable. Document any that require major version bumps. |
-| TypeScript strict mode disabled | `tsconfig.app.json` | Enable `"strict": true`. Fix resulting type errors one by one. |
+| Bug | File | Status |
+|-----|------|--------|
+| Delete trip "Keep inspiration" — N/A: TripDeleteDialog has no "keep" option; it sequentially deletes all child records before the trip | `src/components/trip/TripDeleteDialog.tsx` | ✅ Not a bug — works correctly |
+| PlacesAutocomplete for origin city doesn't save lat/lng | `src/pages/CreateTrip.tsx` | ✅ Not a bug — `handleOriginSelect` correctly sets `originLat`/`originLng` |
+| Large JS bundle (~670KB, needs splitting) | Build output | 🔄 Vendor chunk; addressed in Phase 4.1 |
+| 19 npm audit vulnerabilities | `package.json` | 🔄 All require --force (build toolchain only) |
+| TypeScript strict mode disabled | `tsconfig.app.json` | ❌ Not yet addressed |
+| `process-referral` CORS bug — called `getCorsHeaders(req.headers.get("origin"))` instead of `getCorsHeaders(req)` | `supabase/functions/process-referral/index.ts` | ✅ Fixed |
+| `export-user-data` + `delete-user-data` used wrong `requireAuth` destructuring (`{ user, errorResponse }` doesn't exist) | Both edge function files | ✅ Fixed |
 
 ---
 

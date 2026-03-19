@@ -473,7 +473,7 @@ const Settings = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full bg-gradient-champagne animate-pulse" />
+        <div className="w-8 h-8 rounded-full bg-gold animate-pulse" />
       </div>
     );
   }
@@ -487,7 +487,7 @@ const Settings = () => {
       <main className="pt-24 md:pt-28 pb-16 px-4 md:px-6">
         <div className="max-w-xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">Settings</p>
+            <p className="eyebrow text-primary mb-2">Settings</p>
             <h1 className="text-3xl md:text-4xl font-heading mb-10">Your Profile</h1>
           </motion.div>
 
@@ -519,7 +519,7 @@ const Settings = () => {
 
           {/* ── Identity section ── */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4 mb-6">
-            <div className="glass-card rounded-xl p-5 space-y-4">
+            <div className="glass rounded-xl p-5 space-y-4">
               <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body">Identity</p>
 
               {/* Display name */}
@@ -537,7 +537,7 @@ const Settings = () => {
               <div id="handle">
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs text-muted-foreground font-body">@Handle</label>
-                  <span className="text-[10px] font-body text-muted-foreground/60">
+                  <span className="text-xs font-body text-muted-foreground/60">
                     {canChangeHandle
                       ? `You can change this ${2 - handleChanges} more time${2 - handleChanges === 1 ? "" : "s"}`
                       : "Handle locked — changed 2 times"}
@@ -555,7 +555,7 @@ const Settings = () => {
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     {handleStatus === "checking" && <Loader2 size={14} className="text-muted-foreground animate-spin" />}
-                    {(handleStatus === "available" || handleStatus === "yours") && <Check size={14} className="text-emerald-400" />}
+                    {(handleStatus === "available" || handleStatus === "yours") && <Check size={14} className="text-live-text" />}
                     {(handleStatus === "taken" || handleStatus === "invalid") && <X size={14} className="text-red-400" />}
                   </div>
                 </div>
@@ -578,7 +578,7 @@ const Settings = () => {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs text-muted-foreground font-body">Bio</label>
-                  <span className="text-[10px] text-muted-foreground/60 font-body">{bio.length}/160</span>
+                  <span className="text-xs text-muted-foreground/60 font-body">{bio.length}/160</span>
                 </div>
                 <textarea
                   value={bio}
@@ -615,7 +615,7 @@ const Settings = () => {
                       }`}
                     >
                       <p className="font-body font-medium text-foreground text-xs">{vibe.label}</p>
-                      <p className="text-[10px] text-muted-foreground font-body">{vibe.desc}</p>
+                      <p className="text-xs text-muted-foreground font-body">{vibe.desc}</p>
                     </button>
                   ))}
                 </div>
@@ -634,7 +634,7 @@ const Settings = () => {
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>
-                <p className="text-[10px] text-muted-foreground/60 font-body mt-1">Used to personalise travel advisory links in the Briefing tab.</p>
+                <p className="text-xs text-muted-foreground/60 font-body mt-1">Used to personalise travel advisory links in the Briefing tab.</p>
               </div>
 
               <Button
@@ -650,7 +650,7 @@ const Settings = () => {
 
           {/* ── Legacy fields ── */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-6">
-            <div className="glass-card rounded-xl p-5">
+            <div className="glass rounded-xl p-5">
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-2 block">Email</label>
               <div className="flex items-center gap-2.5 bg-secondary rounded-lg px-4 h-11">
                 <Mail size={14} className="text-muted-foreground" />
@@ -658,12 +658,12 @@ const Settings = () => {
               </div>
             </div>
 
-            <div className="glass-card rounded-xl p-5">
+            <div className="glass rounded-xl p-5">
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-2 block">Style Tags</label>
               <div className="flex flex-wrap gap-2 mb-3">
                 {styleProfileOptions.map((tag) => (
                   <button key={tag} type="button" onClick={() => toggleStyleTag(tag)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-body transition-all ${styleProfile.includes(tag) ? "bg-gradient-champagne text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                    className={`px-3 py-1.5 rounded-full text-xs font-body transition-all ${styleProfile.includes(tag) ? "bg-gold text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                     {tag}
                   </button>
                 ))}
@@ -674,13 +674,13 @@ const Settings = () => {
               </Button>
             </div>
 
-            <div className="glass-card rounded-xl p-5">
+            <div className="glass rounded-xl p-5">
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-2 block">Luggage Size</label>
               <div className="flex items-center gap-3">
                 <div className="flex flex-wrap gap-2 flex-1">
                   {luggageSizes.map((size) => (
                     <button key={size} type="button" onClick={() => setLuggageSize(size)}
-                      className={`px-4 py-2 rounded-full text-sm font-body transition-all capitalize ${luggageSize === size ? "bg-gradient-champagne text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                      className={`px-4 py-2 rounded-full text-sm font-body transition-all capitalize ${luggageSize === size ? "bg-gold text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
                       {size.replace("-", " ")}
                     </button>
                   ))}
@@ -693,7 +693,7 @@ const Settings = () => {
             </div>
 
             {/* Membership */}
-            <div className="glass-card rounded-xl p-5">
+            <div className="glass rounded-xl p-5">
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-2 block">Membership</label>
 
               {/* Current tier display */}
@@ -752,7 +752,7 @@ const Settings = () => {
             </div>
 
             {/* Music */}
-            <div className="glass-card rounded-xl p-5">
+            <div className="glass rounded-xl p-5">
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-3 block">Music</label>
               {spotifyConn ? (
                 <div className="flex items-center justify-between gap-4">
@@ -766,7 +766,7 @@ const Settings = () => {
                     )}
                     <div>
                       <p className="text-sm font-body text-foreground">{spotifyConn.spotify_display_name}</p>
-                      <span className="text-[10px] font-body text-[#1DB954]">● Connected</span>
+                      <span className="text-xs font-body text-[#1DB954]">● Connected</span>
                     </div>
                   </div>
                   <Button variant="champagne-outline" size="sm" onClick={disconnectSpotify}>Disconnect</Button>
@@ -778,7 +778,7 @@ const Settings = () => {
                     <Music size={14} /> Connect Spotify
                   </Button>
                   {!import.meta.env.VITE_SPOTIFY_CLIENT_ID && (
-                    <p className="text-[10px] text-muted-foreground/60 font-body mt-1">VITE_SPOTIFY_CLIENT_ID not configured</p>
+                    <p className="text-xs text-muted-foreground/60 font-body mt-1">VITE_SPOTIFY_CLIENT_ID not configured</p>
                   )}
                 </div>
               )}
@@ -787,7 +787,7 @@ const Settings = () => {
 
           {/* ── Booking Email Import ── */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="space-y-4">
-            <div className="glass-card rounded-xl p-5">
+            <div className="glass rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Inbox size={14} className="text-primary" />
                 <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body">Booking Import</label>
@@ -822,10 +822,10 @@ const Settings = () => {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-body text-foreground truncate">{parsed.event_name || "Booking"}</p>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] text-muted-foreground font-body capitalize">{booking.parsed_type || "other"}</span>
-                              {parsed.event_date && <span className="text-[10px] text-muted-foreground font-body">{parsed.event_date}</span>}
-                              <span className={`text-[10px] font-body px-1.5 py-0.5 rounded-full ${
-                                booking.status === "assigned" ? "bg-emerald-500/20 text-emerald-400"
+                              <span className="text-xs text-muted-foreground font-body capitalize">{booking.parsed_type || "other"}</span>
+                              {parsed.event_date && <span className="text-xs text-muted-foreground font-body">{parsed.event_date}</span>}
+                              <span className={`text-xs font-body px-1.5 py-0.5 rounded-full ${
+                                booking.status === "assigned" ? "bg-live/15 text-live-text"
                                 : booking.status === "ignored" ? "bg-muted-foreground/20 text-muted-foreground"
                                 : "bg-primary/20 text-primary"
                               }`}>{booking.status}</span>
@@ -861,7 +861,7 @@ const Settings = () => {
           {/* ── Invite a Friend ── */}
           {profile?.handle && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }} className="space-y-3">
-              <div className="glass-card rounded-xl p-5">
+              <div className="glass rounded-xl p-5">
                 <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-4 block">Invite a Friend</label>
                 <p className="text-sm font-body text-muted-foreground mb-4">
                   Share your link — when a friend signs up, you both get rewarded.
@@ -898,7 +898,7 @@ const Settings = () => {
 
           {/* ── Data & Account ── */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="space-y-3">
-            <div className="glass-card rounded-xl p-5">
+            <div className="glass rounded-xl p-5">
               <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body mb-4 block">Data & Account</label>
               <div className="space-y-3">
                 {/* Export data */}
@@ -911,7 +911,7 @@ const Settings = () => {
                     <Download size={14} className="text-muted-foreground" />
                     <div className="text-left">
                       <p className="text-sm font-body text-foreground">Export my data</p>
-                      <p className="text-[10px] text-muted-foreground font-body">Download all your trip data as JSON</p>
+                      <p className="text-xs text-muted-foreground font-body">Download all your trip data as JSON</p>
                     </div>
                   </div>
                   {exportingData ? (
@@ -929,7 +929,7 @@ const Settings = () => {
                         <AlertTriangle size={14} className="text-red-400/70" />
                         <div className="text-left">
                           <p className="text-sm font-body text-red-400/80">Delete account</p>
-                          <p className="text-[10px] text-muted-foreground font-body">Permanently remove all data and cancel subscription</p>
+                          <p className="text-xs text-muted-foreground font-body">Permanently remove all data and cancel subscription</p>
                         </div>
                       </div>
                       <ChevronRight size={14} className="text-muted-foreground/50 group-hover:text-red-400/50 transition-colors" />

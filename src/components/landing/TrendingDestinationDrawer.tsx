@@ -74,7 +74,7 @@ const TrendingDestinationDrawer = ({ destination, onClose }: Props) => {
               <div className="absolute bottom-6 left-6 right-6">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <MapPin size={14} className="text-primary" />
-                  <span className="text-xs tracking-[0.2em] uppercase font-body">{destination.country}</span>
+                  <span className="eyebrow">{destination.country}</span>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-heading leading-tight">{destination.city}</h2>
                 <p className="text-sm md:text-base font-body italic text-primary mt-1">{destination.tagline}</p>
@@ -85,7 +85,7 @@ const TrendingDestinationDrawer = ({ destination, onClose }: Props) => {
             <div className="px-6 md:px-8 py-6 md:py-8 space-y-8">
               {/* Why it's trending */}
               <div>
-                <p className="text-xs tracking-[0.2em] uppercase text-primary mb-3 font-body">Why It's Trending</p>
+                <p className="eyebrow text-primary mb-3">Why It's Trending</p>
                 <p className="text-sm md:text-base text-muted-foreground font-body leading-relaxed">
                   {destination.why_trending}
                 </p>
@@ -93,7 +93,7 @@ const TrendingDestinationDrawer = ({ destination, onClose }: Props) => {
 
               {/* Highlights */}
               <div>
-                <p className="text-xs tracking-[0.2em] uppercase text-primary mb-4 font-body">What Makes It Extraordinary</p>
+                <p className="eyebrow text-primary mb-4">What Makes It Extraordinary</p>
                 <div className="space-y-3">
                   {destination.highlights.map((h, i) => (
                     <div key={i} className="flex items-start gap-3">
@@ -106,7 +106,7 @@ const TrendingDestinationDrawer = ({ destination, onClose }: Props) => {
 
               {/* Best for tags */}
               <div>
-                <p className="text-xs tracking-[0.2em] uppercase text-primary mb-3 font-body">Best For</p>
+                <p className="eyebrow text-primary mb-3">Best For</p>
                 <div className="flex flex-wrap gap-2">
                   {destination.best_for.map((tag) => (
                     <span
@@ -123,7 +123,7 @@ const TrendingDestinationDrawer = ({ destination, onClose }: Props) => {
               <div className="pt-2 pb-2">
                 <Link
                   to={`/create-trip?destination=${encodeURIComponent(destination.city)}`}
-                  className="btn-hero-cta inline-flex items-center justify-center gap-3 font-body w-full md:w-auto"
+                  className="inline-flex items-center justify-center gap-3 font-body w-full md:w-auto"
                 >
                   Plan Your Trip to {destination.city}
                   <ArrowRight size={16} strokeWidth={2} />

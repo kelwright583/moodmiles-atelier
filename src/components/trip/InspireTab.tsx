@@ -21,7 +21,7 @@ const categoryColors: Record<string, string> = {
   Culture: "text-purple-400",
   Dining: "text-orange-400",
   Nightlife: "text-pink-400",
-  Shopping: "text-emerald-400",
+  Shopping: "text-live-text",
   Outdoor: "text-sky-400",
   Experience: "text-amber-400",
 };
@@ -125,7 +125,7 @@ const ExperiencesSection = ({ tripId, trip }: { tripId: string; trip: InspireTab
   return (
     <section>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+        <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
           <MapPin size={14} className="text-primary" /> Curated Experiences
         </h2>
         <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ const ExperiencesSection = ({ tripId, trip }: { tripId: string; trip: InspireTab
         </div>
       </div>
       {activities.length === 0 ? (
-        <div className="glass-card rounded-xl p-8 text-center">
+        <div className="glass rounded-xl p-8 text-center">
           <Globe size={32} className="text-primary mx-auto mb-3 opacity-50" />
           <p className="text-muted-foreground font-body text-sm mb-4">Curated restaurants, sights, and experiences in {trip.destination}.</p>
           <Button variant="champagne" size="sm" onClick={generateActivities} disabled={generating}>
@@ -160,7 +160,7 @@ const ExperiencesSection = ({ tripId, trip }: { tripId: string; trip: InspireTab
               <div
                 key={a.id}
                 onClick={() => { setStartIndex(i); setFeedOpen(true); }}
-                className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-champagne transition-all duration-500"
+                className="relative min-w-[260px] max-w-[280px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:glow-gold transition-all duration-500"
                 style={{ scrollSnapAlign: "start" }}
               >
                 <div className="group-hover:[&_img]:scale-105 transition-transform duration-700">
@@ -168,7 +168,7 @@ const ExperiencesSection = ({ tripId, trip }: { tripId: string; trip: InspireTab
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[a.category || ""] || "text-primary"}`}>{a.category}</span>
+                  <span className={`eyebrow ${categoryColors[a.category || ""] || "text-primary"}`}>{a.category}</span>
                   <h3 className="font-heading text-2xl leading-tight text-foreground">{a.name}</h3>
                 </div>
               </div>
@@ -182,7 +182,7 @@ const ExperiencesSection = ({ tripId, trip }: { tripId: string; trip: InspireTab
         {feedOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-background overflow-y-auto">
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-              <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+              <h3 className="eyebrow text-muted-foreground flex items-center gap-2">
                 <MapPin size={12} className="text-primary" /> Experiences in {trip.destination}
               </h3>
               <button onClick={() => setFeedOpen(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">
@@ -209,14 +209,14 @@ const ActivityCard = ({ activity, isInPlan, onAddToPlan }: { activity: ActivityS
         {isInPlan ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
       </button>
       {activity.booking_url && (
-        <a href={activity.booking_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-champagne text-primary-foreground text-xs font-body">
+        <a href={activity.booking_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold text-primary-foreground text-xs font-body">
           <Ticket size={12} /> Book
         </a>
       )}
     </div>
     <div className="px-4 py-3">
       <div className="flex items-center gap-2 mb-1">
-        <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${categoryColors[activity.category || ""] || "text-primary"}`}>{activity.category}</span>
+        <span className={`eyebrow ${categoryColors[activity.category || ""] || "text-primary"}`}>{activity.category}</span>
         {activity.rating && <span className="text-xs text-primary flex items-center gap-0.5"><Star size={10} className="fill-primary" /> {activity.rating.toFixed(1)}</span>}
       </div>
       <h3 className="font-heading text-2xl leading-tight mb-1">{activity.name}</h3>
@@ -306,7 +306,7 @@ const MoodBoardSection = ({ tripId }: { tripId: string }) => {
   return (
     <section>
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+        <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
           <Grid3X3 size={14} className="text-primary" /> Mood Board
         </h2>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -336,14 +336,14 @@ const MoodBoardSection = ({ tripId }: { tripId: string }) => {
       </div>
 
       {items.length === 0 ? (
-        <div className="glass-card rounded-xl p-12 text-center">
+        <div className="glass rounded-xl p-12 text-center">
           <Grid3X3 size={32} className="mx-auto text-muted-foreground/30 mb-4" />
           <p className="text-muted-foreground font-body text-sm">Pin looks from above, upload your own images, or add notes. Your private scrapbook for this trip.</p>
         </div>
       ) : (
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
           {items.map((item) => (
-            <div key={item.id} className="break-inside-avoid glass-card rounded-xl overflow-hidden group relative hover:shadow-champagne transition-all duration-300">
+            <div key={item.id} className="break-inside-avoid glass rounded-xl overflow-hidden group relative hover:glow-gold transition-all duration-300">
               <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button onClick={() => openSaveToOther(item)} className="p-1.5 rounded-lg bg-card/80 backdrop-blur-sm" title="Save to another trip">
                   <Copy size={14} className="text-muted-foreground hover:text-primary" />

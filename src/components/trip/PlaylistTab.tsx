@@ -276,7 +276,7 @@ const PlaylistTab = ({ tripId, trip }: PlaylistTabProps) => {
 
       {/* Search results */}
       {searchResults.length > 0 && (
-        <div className="glass-card rounded-xl overflow-hidden divide-y divide-border">
+        <div className="glass rounded-xl overflow-hidden divide-y divide-border">
           {searchResults.map((track) => (
             <div key={track.track_uri} className="flex items-center gap-3 p-3 hover:bg-secondary/50 transition-colors">
               {track.album_art_url ? (
@@ -321,8 +321,8 @@ const PlaylistTab = ({ tripId, trip }: PlaylistTabProps) => {
       {/* Track list */}
       {tracks.length > 0 && (
         <div className="space-y-1">
-          <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-3">Playlist</p>
-          <div className="glass-card rounded-xl overflow-hidden divide-y divide-border">
+          <p className="eyebrow text-muted-foreground mb-3">Playlist</p>
+          <div className="glass rounded-xl overflow-hidden divide-y divide-border">
             {tracks.map((track, idx) => (
               <div key={`${track.track_uri}-${idx}`} className="flex items-center gap-3 p-3 hover:bg-secondary/50 transition-colors">
                 {track.album_art_url ? (

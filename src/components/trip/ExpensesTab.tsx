@@ -23,7 +23,7 @@ const CATEGORY_META: Record<Category, { icon: typeof Utensils; label: string; co
   food: { icon: Utensils, label: "Food & Drink", color: "text-orange-400" },
   transport: { icon: Car, label: "Transport", color: "text-blue-400" },
   accommodation: { icon: Building, label: "Accommodation", color: "text-violet-400" },
-  activity: { icon: Ticket, label: "Activity", color: "text-emerald-400" },
+  activity: { icon: Ticket, label: "Activity", color: "text-live-text" },
   shopping: { icon: ShoppingBag, label: "Shopping", color: "text-pink-400" },
   other: { icon: MoreHorizontal, label: "Other", color: "text-muted-foreground" },
 };
@@ -317,24 +317,24 @@ const ExpensesTab = ({ tripId, trip }: ExpensesTabProps) => {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
       {/* ── Summary Card ─────────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-5">
-        <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-4">Trip Expenses</h3>
+      <div className="glass rounded-2xl p-5">
+        <h3 className="eyebrow text-muted-foreground mb-4">Trip Expenses</h3>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-secondary rounded-xl p-3 text-center">
             <p className="text-xl font-heading">{formCurrency} {summary.totalSpend.toFixed(2)}</p>
-            <p className="text-[10px] text-muted-foreground font-body uppercase tracking-[0.12em]">Total Spend</p>
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-[0.12em]">Total Spend</p>
           </div>
           <div className="bg-secondary rounded-xl p-3 text-center">
             <p className="text-xl font-heading">{formCurrency} {summary.myShare.toFixed(2)}</p>
-            <p className="text-[10px] text-muted-foreground font-body uppercase tracking-[0.12em]">Your Share</p>
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-[0.12em]">Your Share</p>
           </div>
           <div className="bg-secondary rounded-xl p-3 text-center">
-            <p className="text-xl font-heading text-emerald-400">{formCurrency} {summary.owedToMe.toFixed(2)}</p>
-            <p className="text-[10px] text-muted-foreground font-body uppercase tracking-[0.12em]">Owed to You</p>
+            <p className="text-xl font-heading text-live-text">{formCurrency} {summary.owedToMe.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-[0.12em]">Owed to You</p>
           </div>
           <div className="bg-secondary rounded-xl p-3 text-center">
             <p className="text-xl font-heading text-red-400">{formCurrency} {summary.iOwe.toFixed(2)}</p>
-            <p className="text-[10px] text-muted-foreground font-body uppercase tracking-[0.12em]">You Owe</p>
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-[0.12em]">You Owe</p>
           </div>
         </div>
       </div>
@@ -386,15 +386,15 @@ const ExpensesTab = ({ tripId, trip }: ExpensesTabProps) => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="glass-card rounded-2xl overflow-hidden"
+            className="glass rounded-2xl overflow-hidden"
           >
             <div className="p-5 space-y-3">
-              <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">Settle Up</h3>
+              <h3 className="eyebrow text-muted-foreground">Settle Up</h3>
               {settlements.map((s, i) => (
                 <div key={i} className="flex items-center gap-3 py-2">
                   <span className="text-sm font-body">{getName(s.from)}</span>
                   <div className="flex-1 border-t border-dashed border-primary/30 relative">
-                    <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 text-[10px] text-primary font-body bg-card px-1">
+                    <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 text-xs text-primary font-body bg-card px-1">
                       {formCurrency} {s.amount.toFixed(2)}
                     </span>
                   </div>
@@ -413,7 +413,7 @@ const ExpensesTab = ({ tripId, trip }: ExpensesTabProps) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="glass-card rounded-2xl p-5 space-y-4"
+            className="glass rounded-2xl p-5 space-y-4"
           >
             <div className="flex items-center justify-between">
               <h3 className="font-heading text-base">New Expense</h3>
@@ -552,7 +552,7 @@ const ExpensesTab = ({ tripId, trip }: ExpensesTabProps) => {
 
       {/* ── Empty state ───────────────────────────────────────────────────── */}
       {!isLoading && expenses.length === 0 && !addOpen && (
-        <div className="glass-card rounded-2xl p-12 text-center">
+        <div className="glass rounded-2xl p-12 text-center">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
             <Receipt size={28} className="text-primary" />
           </div>
@@ -566,7 +566,7 @@ const ExpensesTab = ({ tripId, trip }: ExpensesTabProps) => {
       {/* ── Expense list grouped by date ──────────────────────────────────── */}
       {!isLoading && groupedByDate.map(([date, dateExpenses]) => (
         <div key={date}>
-          <h4 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-2 px-1">
+          <h4 className="eyebrow text-muted-foreground mb-2 px-1">
             {formatDate(date)}
           </h4>
           <div className="space-y-2">
@@ -582,7 +582,7 @@ const ExpensesTab = ({ tripId, trip }: ExpensesTabProps) => {
                 <motion.div
                   key={exp.id}
                   layout
-                  className="glass-card rounded-xl overflow-hidden"
+                  className="glass rounded-xl overflow-hidden"
                 >
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : exp.id)}
@@ -601,7 +601,7 @@ const ExpensesTab = ({ tripId, trip }: ExpensesTabProps) => {
                     <div className="text-right flex-shrink-0">
                       <p className="text-sm font-heading">{exp.currency} {Number(exp.amount).toFixed(2)}</p>
                       {splitCount > 1 && (
-                        <p className="text-[10px] text-muted-foreground font-body">
+                        <p className="text-xs text-muted-foreground font-body">
                           {exp.currency} {(Number(exp.amount) / splitCount).toFixed(2)} ea
                         </p>
                       )}
@@ -629,7 +629,7 @@ const ExpensesTab = ({ tripId, trip }: ExpensesTabProps) => {
                           <div className="flex flex-wrap gap-1">
                             <Users size={10} className="text-muted-foreground mt-0.5" />
                             {(exp.split_between.length > 0 ? exp.split_between : memberIds).map((uid) => (
-                              <span key={uid} className="text-[10px] font-body text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                              <span key={uid} className="text-xs font-body text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
                                 {getName(uid)}
                               </span>
                             ))}

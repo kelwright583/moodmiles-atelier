@@ -252,7 +252,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
       {/* Travelling With */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <Users size={14} className="text-primary" /> Travelling With
           </h2>
           {isHost && (
@@ -274,7 +274,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
                   </div>
                 )}
               </div>
-              <p className="text-[10px] font-body text-foreground max-w-[56px] truncate text-center">{hostProfile.name?.split(" ")[0] || hostProfile.handle || "Host"}</p>
+              <p className="text-xs font-body text-foreground max-w-[56px] truncate text-center">{hostProfile.name?.split(" ")[0] || hostProfile.handle || "Host"}</p>
               <div className="flex items-center gap-0.5">
                 <Crown size={9} className="text-primary" />
                 <span className="text-[9px] text-primary font-body">Host</span>
@@ -297,7 +297,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
                     </div>
                   )}
                 </div>
-                <p className="text-[10px] font-body text-foreground max-w-[56px] truncate text-center">
+                <p className="text-xs font-body text-foreground max-w-[56px] truncate text-center">
                   {profile?.name?.split(" ")[0] || "Traveller"}
                 </p>
                 <div className="flex items-center gap-0.5">
@@ -313,7 +313,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
               <div className="w-12 h-12 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center">
                 <Clock size={16} className="text-muted-foreground" />
               </div>
-              <p className="text-[10px] font-body text-muted-foreground max-w-[56px] truncate text-center">
+              <p className="text-xs font-body text-muted-foreground max-w-[56px] truncate text-center">
                 {c.invited_email?.split("@")[0]}
               </p>
               <span className="text-[9px] text-muted-foreground font-body">Pending</span>
@@ -321,7 +321,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
           ))}
 
           {!hostProfile && acceptedCollabs.length === 0 && pendingInvites.length === 0 && (
-            <div className="glass-card rounded-xl p-4 w-full text-center">
+            <div className="glass rounded-xl p-4 w-full text-center">
               <p className="text-xs font-body text-muted-foreground">
                 {isHost ? "Invite friends to plan this trip together." : "Just you on this trip so far."}
               </p>
@@ -332,16 +332,16 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
 
       {/* Trip Readiness */}
       <section>
-        <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground mb-4 font-body flex items-center gap-2">
+        <h2 className="eyebrow text-muted-foreground mb-4 flex items-center gap-2">
           <CheckCircle2 size={14} className="text-primary" /> Trip Readiness
         </h2>
-        <div className="glass-card rounded-xl p-4 space-y-3">
+        <div className="glass rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between cursor-pointer group" onClick={() => onNavigateTo?.("Events")}>
             <div className="flex items-center gap-3">
               {dressCodeAlerts.length > 0 ? (
                 <AlertTriangle size={14} className={dressCodeAlerts.some((a: any) => a.severity === "critical") ? "text-red-400" : "text-amber-400"} />
               ) : (
-                <CheckCircle2 size={14} className="text-emerald-400" />
+                <CheckCircle2 size={14} className="text-live-text" />
               )}
               <span className="text-sm font-body text-foreground">Dress code alerts</span>
             </div>
@@ -350,7 +350,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
                 {dressCodeAlerts.length} alert{dressCodeAlerts.length !== 1 ? "s" : ""} — tap to review
               </span>
             ) : (
-              <span className="text-xs font-body text-emerald-400">All outfits cleared</span>
+              <span className="text-xs font-body text-live-text">All outfits cleared</span>
             )}
           </div>
         </div>
@@ -359,7 +359,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
       {/* Flights */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <Plane size={14} className="text-primary" /> Flights
           </h2>
           {canEditFlights && (
@@ -369,7 +369,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
           )}
         </div>
         {flights.length === 0 ? (
-          <div className="glass-card rounded-xl p-5 flex items-center justify-between">
+          <div className="glass rounded-xl p-5 flex items-center justify-between">
             <p className="text-xs text-muted-foreground font-body">No flights added yet.</p>
             <div className="flex items-center gap-3">
               {["Google Flights", "Skyscanner"].map((name) => (
@@ -383,7 +383,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
         ) : (
           <div className="space-y-2">
             {flights.map((f) => (
-              <div key={f.id} className="glass-card rounded-xl p-4 flex items-center justify-between gap-4">
+              <div key={f.id} className="glass rounded-xl p-4 flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="font-heading text-base">{fmtFlightRoute(f)}</p>
                   <p className="text-xs text-muted-foreground font-body mt-0.5">
@@ -456,7 +456,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
       {/* Weather */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <CloudSun size={14} className="text-primary" /> Weather Forecast
           </h2>
           <Button variant="champagne-outline" size="sm" onClick={refreshWeather} disabled={refreshingWeather}>
@@ -465,7 +465,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
           </Button>
         </div>
         {weather.length === 0 ? (
-          <div className="glass-card rounded-xl p-6 text-center">
+          <div className="glass rounded-xl p-6 text-center">
             <p className="text-muted-foreground font-body text-sm">
               {trip?.latitude ? "No weather data yet. Click Refresh to fetch forecast." : "Add coordinates to your destination to see weather data."}
             </p>
@@ -475,7 +475,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
             {weather.slice(0, 14).map((w) => {
               const Icon = getWeatherIcon(w.weather_code || 0);
               return (
-                <div key={w.id} className="glass-card rounded-xl p-3 md:p-4 text-center hover:shadow-champagne transition-all duration-300">
+                <div key={w.id} className="glass rounded-xl p-3 md:p-4 text-center hover:glow-gold transition-all duration-300">
                   <p className="text-xs text-muted-foreground font-body mb-2">
                     {new Date(w.date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric" })}
                   </p>
@@ -513,13 +513,13 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
             />
           ) : inviteResult ? (
             <div className="space-y-4 pt-2">
-              <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4">
-                <p className="text-xs text-emerald-400 font-body mb-1">Invite link created</p>
+              <div className="rounded-xl bg-live/15 border border-live-dim p-4">
+                <p className="text-xs text-live-text font-body mb-1">Invite link created</p>
                 <p className="text-xs font-body text-muted-foreground break-all">{inviteResult.invite_url}</p>
               </div>
               <div className="flex gap-2">
                 <Button variant="champagne-outline" size="sm" className="flex-1" onClick={() => copyLink(inviteResult.invite_url)}>
-                  {copiedLink ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                  {copiedLink ? <Check size={13} className="text-live-text" /> : <Copy size={13} />}
                   {copiedLink ? "Copied!" : "Copy link"}
                 </Button>
                 <Button
@@ -581,7 +581,7 @@ const OverviewTab = ({ tripId, trip, onNavigateTo }: OverviewTabProps) => {
                       className={`rounded-xl border p-3 text-left transition-all ${inviteRole === r ? "border-primary bg-primary/5" : "border-border bg-secondary hover:border-primary/40"}`}
                     >
                       <p className="text-sm font-body capitalize font-medium text-foreground mb-1">{r}</p>
-                      <p className="text-[11px] font-body text-muted-foreground leading-relaxed">
+                      <p className="text-xs font-body text-muted-foreground leading-relaxed">
                         {r === "collaborator" ? "Can add events, pin outfits, and vote on polls" : "Can view the trip but not make changes"}
                       </p>
                     </button>

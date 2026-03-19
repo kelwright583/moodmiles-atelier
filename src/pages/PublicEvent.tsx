@@ -71,7 +71,7 @@ const PublicEvent = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full bg-gradient-champagne animate-pulse" />
+        <div className="w-8 h-8 rounded-full bg-gold animate-pulse" />
       </div>
     );
   }
@@ -142,7 +142,7 @@ const PublicEvent = () => {
 
           {/* Dress code */}
           {event.dress_code && (
-            <div className="glass-card rounded-xl p-4 mb-6 border border-primary/20">
+            <div className="glass rounded-xl p-4 mb-6 border border-primary/20">
               <p className="text-xs tracking-[0.15em] uppercase text-primary font-body mb-1">Dress Code</p>
               <p className="text-lg font-heading">{event.dress_code}</p>
             </div>
@@ -164,9 +164,9 @@ const PublicEvent = () => {
           </Button>
 
           {/* Plan your outfit CTA */}
-          <div className="glass-card rounded-2xl p-6 text-center border border-primary/10">
+          <div className="glass rounded-2xl p-6 text-center border border-primary/10">
             <Sparkles size={20} className="text-primary mx-auto mb-3" />
-            <p className="text-xs tracking-[0.2em] uppercase text-primary font-body mb-2">Style Planning</p>
+            <p className="eyebrow text-primary mb-2">Style Planning</p>
             <p className="text-base font-heading mb-1">Attending {event.event_name}?</p>
             <p className="text-sm font-body text-muted-foreground mb-5">
               Plan your look with Concierge Styled.

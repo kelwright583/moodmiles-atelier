@@ -1,4 +1,12 @@
-/* Fonts loaded via @fontsource in main.tsx (self-hosted, font-display: swap) */
+/* ── Concierge Design System ─────────────────────────────── */
+
+@import "@fontsource/cormorant-garamond/400.css";
+@import "@fontsource/cormorant-garamond/400-italic.css";
+@import "@fontsource/cormorant-garamond/500.css";
+@import "@fontsource/cormorant-garamond/600.css";
+@import "@fontsource/dm-sans/300.css";
+@import "@fontsource/dm-sans/400.css";
+@import "@fontsource/dm-sans/500.css";
 
 @tailwind base;
 @tailwind components;
@@ -6,227 +14,161 @@
 
 @layer base {
   :root {
-    /* Concierge Styled brand palette — single source of truth: #cc8638 */
-    --brand-gold: #cc8638;
+    --ink:          12 8% 8%;
+    --ink-deep:     12 10% 5%;
+    --ink-raised:   25 10% 13%;
+    --ink-border:   25 12% 20%;
 
-    --background: 30 11% 7%;
-    --foreground: 30 33% 96%;
+    --parchment:    36 28% 94%;
+    --parchment-dim:34 18% 72%;
+    --parchment-faint:30 14% 50%;
 
-    --card: 30 12% 11%;
-    --card-foreground: 30 33% 96%;
+    --gold:         34 68% 50%;
+    --gold-dim:     34 50% 38%;
+    --gold-glow:    34 68% 60%;
 
-    --popover: 30 12% 11%;
-    --popover-foreground: 30 33% 96%;
+    --live:         152 45% 42%;
+    --live-dim:     152 35% 30%;
+    --live-text:    152 40% 68%;
 
-    --primary-foreground: 30 11% 7%;
+    --background:         var(--ink);
+    --foreground:         var(--parchment);
+    --card:               var(--ink-raised);
+    --card-foreground:    var(--parchment);
+    --popover:            var(--ink-raised);
+    --popover-foreground: var(--parchment);
+    --primary:            34 68% 50%;
+    --primary-foreground: 12 8% 8%;
+    --secondary:          25 10% 17%;
+    --secondary-foreground: var(--parchment);
+    --muted:              25 10% 17%;
+    --muted-foreground:   34 18% 66%;
+    --accent:             34 68% 50%;
+    --accent-foreground:  12 8% 8%;
+    --destructive:        0 60% 48%;
+    --destructive-foreground: var(--parchment);
+    --border:             var(--ink-border);
+    --input:              var(--ink-raised);
+    --ring:               34 68% 50%;
+    --radius: 0.5rem;
 
-    --secondary: 30 15% 33%;
-    --secondary-foreground: 30 33% 96%;
+    --font-heading: 'Cormorant Garamond', Georgia, serif;
+    --font-body:    'DM Sans', system-ui, sans-serif;
 
-    --muted: 30 12% 20%;
-    --muted-foreground: 40 7% 84%;
-
-    --accent-foreground: 30 33% 96%;
-
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 30 33% 96%;
-
-    --border: 30 15% 22%;
-    --input: 30 15% 22%;
-
-    --radius: 0.75rem;
-
-    --charcoal-deep: 30 11% 5%;
-    --charcoal-light: 30 15% 25%;
-
-    --sidebar-background: 30 11% 5%;
-    --sidebar-foreground: 30 33% 96%;
-    --sidebar-primary-foreground: 30 11% 7%;
-    --sidebar-accent: 30 15% 33%;
-    --sidebar-accent-foreground: 30 33% 96%;
-    --sidebar-border: 30 15% 22%;
-
-    --font-heading: 'Playfair Display', Georgia, serif;
-    --font-body: 'Inter', -apple-system, sans-serif;
-    --font-global: 'Anek Bangla', Inter, sans-serif;
+    --space-section: 7rem;
+    --space-section-sm: 4rem;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  * { @apply border-border; }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--ink));
+    color: hsl(var(--parchment));
     font-family: var(--font-body);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-weight: 300;
+    line-height: 1.65;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
   }
 }
 
 @layer utilities {
-  .text-gradient-champagne {
-    color: #cc8638 !important;
-    background: none !important;
-    -webkit-background-clip: unset !important;
-    -webkit-text-fill-color: #cc8638 !important;
-    background-clip: unset !important;
+  .text-gold        { color: hsl(var(--gold)); }
+  .bg-gold          { background-color: hsl(var(--gold)); }
+  .border-gold      { border-color: hsl(var(--gold)); }
+  .text-gold-dim    { color: hsl(var(--gold-dim)); }
+
+  .text-parchment       { color: hsl(var(--parchment)); }
+  .text-parchment-dim   { color: hsl(var(--parchment-dim)); }
+  .text-parchment-faint { color: hsl(var(--parchment-faint)); }
+
+  .text-live  { color: hsl(var(--live-text)); }
+  .bg-live    { background-color: hsl(var(--live)); }
+
+  .italic-display {
+    font-family: var(--font-heading);
+    font-style: italic;
+    font-weight: 400;
   }
 
-  .bg-gradient-champagne {
-    background: #cc8638 !important;
-  }
-
-  .bg-gold-brand {
-    background-color: #cc8638 !important;
-  }
-
-  .btn-hero-cta {
-    background-color: #cc8638 !important;
-    color: #151311 !important;
-    padding: 0.75rem 2rem;
-    border-radius: 9999px;
-    font-size: 0.8125rem;
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
     font-weight: 500;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid transparent;
-  }
-  .btn-hero-cta:hover {
-    background-color: #cc8638 !important;
-    opacity: 0.9;
-    transform: translateY(-1px);
+    color: hsl(var(--gold));
   }
 
-  .bg-gradient-dark {
-    background: linear-gradient(180deg, hsl(30 11% 7%), hsl(30 11% 5%));
+  .surface {
+    background-color: hsl(var(--ink-raised));
+    border: 1px solid hsl(var(--ink-border));
+    border-radius: 0.75rem;
   }
 
-  .shadow-champagne {
-    box-shadow: 0 0 40px -10px rgba(204, 134, 56, 0.3);
+  .glass {
+    background: hsl(var(--ink-raised) / 0.7);
+    backdrop-filter: blur(24px) saturate(1.2);
+    border: 1px solid hsl(var(--ink-border) / 0.6);
+    border-radius: 0.75rem;
   }
 
-  .border-champagne {
-    border-color: rgba(204, 134, 56, 0.3);
+  .rule-gold {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--gold) / 0.4), transparent);
   }
 
-  .glass-card {
-    background: hsl(30 12% 11% / 0.8);
-    backdrop-filter: blur(20px);
-    border: 1px solid hsl(30 15% 22% / 0.5);
+  .glow-gold {
+    box-shadow: 0 0 32px -8px hsl(var(--gold) / 0.35);
   }
 
-  .logo-global {
-    font-family: 'Anek Bangla', Inter, sans-serif;
-    letter-spacing: 0.35em;
-    transform: scaleX(1.12);
-    transform-origin: center center;
-  }
-  .logo-global-tiny {
-    font-size: 0.38em;
-    margin-top: 0.15em;
+  .glow-live {
+    box-shadow: 0 0 24px -6px hsl(var(--live) / 0.3);
   }
 
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  .safe-bottom {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
-/* Force #cc8638 on every Tailwind gold/primary class — no HSL, no variables */
-.text-primary {
-  color: #cc8638 !important;
-}
-.bg-primary {
-  background-color: #cc8638 !important;
-}
-.border-primary {
-  border-color: #cc8638 !important;
-}
-.ring-primary {
-  --tw-ring-color: #cc8638 !important;
-}
-.text-accent {
-  color: #cc8638 !important;
-}
-.bg-accent {
-  background-color: #cc8638 !important;
-}
-.fill-primary {
-  fill: #cc8638 !important;
-}
-.text-champagne {
-  color: #cc8638 !important;
-}
-.bg-champagne {
-  background-color: #cc8638 !important;
-}
-.border-champagne {
-  border-color: rgba(204, 134, 56, 0.3) !important;
-}
-
-/* Primary foreground stays dark */
-.text-primary-foreground {
-  color: #151311 !important;
-}
-.bg-primary-foreground {
-  background-color: #151311 !important;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
-}
-::-webkit-scrollbar-track {
-  background: hsl(30 11% 7%);
-}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: hsl(var(--ink-deep)); }
 ::-webkit-scrollbar-thumb {
-  background: rgba(204, 134, 56, 0.5);
+  background: hsl(var(--gold-dim) / 0.5);
   border-radius: 9999px;
-  min-height: 38px;
-  max-height: 38px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(204, 134, 56, 0.7);
-}
-::-webkit-scrollbar-button {
-  height: 0;
-  width: 0;
-  display: none;
-}
-::-webkit-scrollbar-corner {
-  display: none;
-}
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--gold-dim) / 0.75); }
 
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(204, 134, 56, 0.5) hsl(30 11% 7%);
+    scrollbar-color: hsl(var(--gold-dim) / 0.5) hsl(var(--ink-deep));
   }
 }
 
-/* ── PWA & Mobile Polish ─────────────────────────────────────── */
-
-/* Safe area insets for bottom-fixed elements */
-.safe-bottom {
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-}
-
-/* Prevent double-tap zoom on interactive elements */
 button, a, input, select, textarea, [role="button"], [tabindex] {
   touch-action: manipulation;
 }
 
-/* Minimum tap target for all interactive elements */
 @media (pointer: coarse) {
   button, a, [role="button"], [tabindex] {
     min-height: 44px;
@@ -234,32 +176,13 @@ button, a, input, select, textarea, [role="button"], [tabindex] {
   }
 }
 
-/* Suppress sticky hover on touch devices */
-@media (hover: none) {
-  .hover\:bg-secondary:hover,
-  .hover\:bg-secondary\/80:hover,
-  .hover\:border-primary\/50:hover,
-  .hover\:text-foreground:hover,
-  .hover\:underline:hover,
-  .group:hover .group-hover\:opacity-100,
-  .group:hover .group-hover\:scale-105,
-  .group:hover .group-hover\:translate-y-0 {
-    /* Reset to non-hover state on touch */
-  }
-}
-
-/* Scroll momentum on scrollable containers */
 .overflow-y-auto, .overflow-x-auto, .overflow-auto {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Modals and sheets: never overflow screen */
-[role="dialog"], .sheet-content, [data-radix-popper-content-wrapper] {
+[role="dialog"], [data-radix-popper-content-wrapper] {
   max-height: 90vh;
   overflow-y: auto;
 }
 
-/* Images below the fold */
-img[loading="lazy"] {
-  content-visibility: auto;
-}
+img[loading="lazy"] { content-visibility: auto; }

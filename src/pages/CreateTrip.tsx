@@ -164,15 +164,15 @@ const CreateTrip = () => {
         <Navbar />
         <main className="pt-24 md:pt-28 pb-16 md:pb-20 px-4 md:px-6">
           <div className="max-w-xl mx-auto text-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-12">
-              <div className="w-16 h-16 rounded-full bg-gradient-champagne flex items-center justify-center mx-auto mb-6">
-                <Crown size={28} className="text-primary-foreground" />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-sm p-12">
+              <div className="w-16 h-16 rounded-sm bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto mb-6">
+                <Crown size={28} className="text-gold" />
               </div>
-              <p className="text-xs tracking-[0.3em] uppercase text-primary font-body mb-3">Concierge Luxe</p>
-              <h1 className="text-2xl md:text-3xl font-heading mb-4 leading-tight">
+              <p className="eyebrow mb-3">Concierge Luxe</p>
+              <h1 className="text-4xl font-heading font-normal mb-4 leading-tight">
                 Your next adventure<br />awaits
               </h1>
-              <p className="text-muted-foreground font-body mb-8 leading-relaxed">
+              <p className="text-sm font-body font-light text-parchment-dim mb-8 leading-relaxed">
                 You've planned your first trip with Concierge Styled. Ready to unlock unlimited trips, group collaboration, and your personal style feed? Join Luxe from $14.99/month.
               </p>
               <div className="flex flex-col gap-3">
@@ -202,9 +202,9 @@ const CreateTrip = () => {
       <main className="pt-24 md:pt-28 pb-16 md:pb-20 px-4 md:px-6">
         <div className="max-w-2xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 md:mb-12">
-            <p className="text-sm tracking-[0.3em] uppercase text-primary mb-2 font-body">New Journey</p>
-            <h1 className="text-3xl md:text-5xl font-heading">
-              Where are you <span className="text-gradient-champagne italic">going?</span>
+            <p className="eyebrow mb-2">New Journey</p>
+            <h1 className="text-4xl font-heading font-normal">
+              Where are you <em className="font-heading italic">going?</em>
             </h1>
           </motion.div>
 
@@ -214,17 +214,17 @@ const CreateTrip = () => {
               {showOrigin ? (
                 <>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs tracking-[0.15em] uppercase text-primary font-body">Travelling From</p>
-                    <button type="button" onClick={() => { setShowOrigin(false); setOriginCity(""); setOriginCountry(""); setOriginLat(null); setOriginLng(null); }} className="text-xs text-muted-foreground font-body hover:text-foreground">Skip</button>
+                    <p className="eyebrow">Travelling From</p>
+                    <button type="button" onClick={() => { setShowOrigin(false); setOriginCity(""); setOriginCountry(""); setOriginLat(null); setOriginLng(null); }} className="text-xs text-parchment-faint font-body hover:text-parchment-dim">Skip</button>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">City</label>
+                      <label className="eyebrow mb-2 block">City</label>
                       <PlacesAutocomplete value={originCity} onChange={setOriginCity} onSelect={handleOriginSelect} />
                     </div>
                     <div>
-                      <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Country</label>
-                      <Input value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} placeholder="South Africa" className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+                      <label className="eyebrow mb-2 block">Country</label>
+                      <Input value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} placeholder="South Africa" className="bg-ink-raised border-ink-border rounded-sm font-body text-sm text-parchment focus:border-gold/50 h-12 placeholder:text-parchment-faint" />
                     </div>
                   </div>
                 </>
@@ -237,41 +237,45 @@ const CreateTrip = () => {
 
             {/* Destination */}
             <div>
-              <p className="text-xs tracking-[0.15em] uppercase text-primary mb-3 font-body">Destination</p>
+              <p className="eyebrow mb-3">Destination</p>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">City</label>
+                  <label className="eyebrow mb-2 block">City</label>
                   <PlacesAutocomplete value={destination} onChange={setDestination} onSelect={handlePlaceSelect} />
                 </div>
                 <div>
-                  <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Country</label>
-                  <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="France" className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+                  <label className="eyebrow mb-2 block">Country</label>
+                  <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="France" className="bg-ink-raised border-ink-border rounded-sm font-body text-sm text-parchment focus:border-gold/50 h-12 placeholder:text-parchment-faint" />
                 </div>
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Departure</label>
-                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-secondary border-border h-12 text-foreground font-body" required />
+                <label className="eyebrow mb-2 block">Departure</label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-ink-raised border-ink-border rounded-sm font-body text-sm text-parchment focus:border-gold/50 h-12" required />
               </div>
               <div>
-                <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-2 block font-body">Return</label>
-                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-secondary border-border h-12 text-foreground font-body" required />
+                <label className="eyebrow mb-2 block">Return</label>
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-ink-raised border-ink-border rounded-sm font-body text-sm text-parchment focus:border-gold/50 h-12" required />
               </div>
             </div>
 
             <div>
-              <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground mb-3 block font-body">Type of Trip</label>
+              <label className="eyebrow mb-3 block">Type of Trip</label>
               <div className="flex flex-wrap gap-2">
                 {[...tripTypes, "Other"].map((type) => (
-                  <button key={type} type="button" onClick={() => setSelectedType(type)} className={`px-4 py-2 rounded-full text-sm font-body transition-all duration-300 ${selectedType === type ? "bg-gradient-champagne text-primary-foreground shadow-champagne" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                  <button key={type} type="button" onClick={() => setSelectedType(type)} className={`px-4 py-2 text-xs font-body font-medium tracking-[0.1em] uppercase border rounded-sm transition-all duration-200 ${
+                    selectedType === type
+                      ? "border-gold text-gold bg-gold/10"
+                      : "border-ink-border text-parchment-faint hover:border-gold/40 hover:text-parchment-dim"
+                  }`}>
                     {type}
                   </button>
                 ))}
               </div>
               {selectedType === "Other" && (
-                <Input value={customType} onChange={(e) => setCustomType(e.target.value)} placeholder="Describe your trip type..." className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body mt-3" />
+                <Input value={customType} onChange={(e) => setCustomType(e.target.value)} placeholder="Describe your trip type..." className="bg-ink-raised border-ink-border rounded-sm font-body text-sm text-parchment focus:border-gold/50 h-12 placeholder:text-parchment-faint mt-3" />
               )}
             </div>
 
@@ -279,13 +283,13 @@ const CreateTrip = () => {
               {showAccommodation ? (
                 <>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs tracking-[0.15em] uppercase text-muted-foreground font-body">Accommodation</label>
-                    <button type="button" onClick={() => { setShowAccommodation(false); setAccommodation(""); }} className="text-xs text-muted-foreground font-body hover:text-foreground">Skip</button>
+                    <label className="eyebrow">Accommodation</label>
+                    <button type="button" onClick={() => { setShowAccommodation(false); setAccommodation(""); }} className="text-xs text-parchment-faint font-body hover:text-parchment-dim">Skip</button>
                   </div>
-                  <Input value={accommodation} onChange={(e) => setAccommodation(e.target.value)} placeholder="Hotel, villa, resort..." className="bg-secondary border-border h-12 text-foreground placeholder:text-muted-foreground font-body" />
+                  <Input value={accommodation} onChange={(e) => setAccommodation(e.target.value)} placeholder="Hotel, villa, resort..." className="bg-ink-raised border-ink-border rounded-sm font-body text-sm text-parchment focus:border-gold/50 h-12 placeholder:text-parchment-faint" />
                 </>
               ) : (
-                <button type="button" onClick={() => setShowAccommodation(true)} className="text-xs text-muted-foreground font-body hover:text-primary transition-colors">
+                <button type="button" onClick={() => setShowAccommodation(true)} className="text-xs text-parchment-faint font-body hover:text-gold transition-colors">
                   + Add accommodation (optional)
                 </button>
               )}

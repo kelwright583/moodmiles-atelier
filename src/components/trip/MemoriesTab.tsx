@@ -183,7 +183,7 @@ const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
   // ─── Tier gate ────────────────────────────────────────────────────────────
   if (!hasAccess) {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl">
         <UpgradePrompt
           feature="Memories"
           tier="luxe"
@@ -196,7 +196,7 @@ const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
   // ─── Empty (no photos) ───────────────────────────────────────────────────
   if (photos.length === 0) {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-10 text-center">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-10 text-center">
         <Camera size={32} className="text-primary mx-auto mb-4 opacity-40" />
         <h3 className="font-heading text-xl mb-2">No photos to work with</h3>
         <p className="text-sm text-muted-foreground font-body max-w-sm mx-auto">
@@ -209,36 +209,36 @@ const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       {/* ── Trip Stats Recap ──────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-5">
-        <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-4">Trip Recap</h3>
+      <div className="glass rounded-2xl p-5">
+        <h3 className="eyebrow text-muted-foreground mb-4">Trip Recap</h3>
         <div className="grid grid-cols-4 gap-3">
           <div className="text-center">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-1">
               <Moon size={16} className="text-primary" />
             </div>
             <p className="text-lg font-heading">{nights}</p>
-            <p className="text-[10px] text-muted-foreground font-body">Nights</p>
+            <p className="text-xs text-muted-foreground font-body">Nights</p>
           </div>
           <div className="text-center">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-1">
               <CalendarDays size={16} className="text-primary" />
             </div>
             <p className="text-lg font-heading">{eventCount}</p>
-            <p className="text-[10px] text-muted-foreground font-body">Events</p>
+            <p className="text-xs text-muted-foreground font-body">Events</p>
           </div>
           <div className="text-center">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-1">
               <Camera size={16} className="text-primary" />
             </div>
             <p className="text-lg font-heading">{photos.length}</p>
-            <p className="text-[10px] text-muted-foreground font-body">Photos</p>
+            <p className="text-xs text-muted-foreground font-body">Photos</p>
           </div>
           <div className="text-center">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-1">
               <Music size={16} className="text-primary" />
             </div>
             <p className="text-lg font-heading">{trackCount ? "1" : "0"}</p>
-            <p className="text-[10px] text-muted-foreground font-body">Playlist</p>
+            <p className="text-xs text-muted-foreground font-body">Playlist</p>
           </div>
         </div>
       </div>
@@ -246,7 +246,7 @@ const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
       {/* ── Photo Selector ────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">
+          <h3 className="eyebrow text-muted-foreground">
             Select Photos ({selectedPhotos.length}/10)
           </h3>
           {selectedPhotos.length > 0 && (
@@ -279,7 +279,7 @@ const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
 
       {/* ── Frame Style ───────────────────────────────────────────────────── */}
       <div>
-        <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-3">Frame Style</h3>
+        <h3 className="eyebrow text-muted-foreground mb-3">Frame Style</h3>
         <div className="flex gap-2">
           {(Object.entries(FRAME_STYLES) as [FrameStyle, typeof FRAME_STYLES[FrameStyle]][]).map(([key, s]) => (
             <button
@@ -295,9 +295,9 @@ const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
       </div>
 
       {/* ── AI Caption ────────────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-5 space-y-3">
+      <div className="glass rounded-2xl p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">Instagram Caption</h3>
+          <h3 className="eyebrow text-muted-foreground">Instagram Caption</h3>
           <Button
             variant="champagne-outline"
             size="sm"
@@ -326,7 +326,7 @@ const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
       {/* ── Preview (first 3 slides) ──────────────────────────────────────── */}
       {selectedPhotoUrls.length > 0 && (
         <div>
-          <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-3">
+          <h3 className="eyebrow text-muted-foreground mb-3">
             Preview ({selectedPhotoUrls.length + 2} slides)
           </h3>
           <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
@@ -381,7 +381,7 @@ const MemoriesTab = ({ tripId, trip }: MemoriesTabProps) => {
           {exporting && (
             <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-champagne rounded-full"
+                className="h-full bg-gold rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${exportProgress}%` }}
                 transition={{ duration: 0.3 }}

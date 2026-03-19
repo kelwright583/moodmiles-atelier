@@ -291,11 +291,11 @@ const PhotosTab = ({ tripId, trip }: PhotosTabProps) => {
   return (
     <div className="space-y-5">
       {/* ── Upload area ──────────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-5">
+      <div className="glass rounded-2xl p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">Add Photos</h3>
+          <h3 className="eyebrow text-muted-foreground">Add Photos</h3>
           {tier !== "atelier" && (
-            <span className="text-[10px] font-body text-muted-foreground">
+            <span className="text-xs font-body text-muted-foreground">
               {myPhotoCount} / {photoLimit}
             </span>
           )}
@@ -360,7 +360,7 @@ const PhotosTab = ({ tripId, trip }: PhotosTabProps) => {
                 </div>
                 <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-champagne rounded-full"
+                    className="h-full bg-gold rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${uploadProgress}%` }}
                     transition={{ duration: 0.3 }}
@@ -377,7 +377,7 @@ const PhotosTab = ({ tripId, trip }: PhotosTabProps) => {
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           <button
             onClick={() => setFilterUserId("all")}
-            className={`flex-shrink-0 text-xs font-body px-3 py-1.5 rounded-full transition-all ${filterUserId === "all" ? "bg-gradient-champagne text-background" : "bg-secondary text-muted-foreground"}`}
+            className={`flex-shrink-0 text-xs font-body px-3 py-1.5 rounded-full transition-all ${filterUserId === "all" ? "bg-gold text-background" : "bg-secondary text-muted-foreground"}`}
           >
             All ({photos.length})
           </button>
@@ -387,7 +387,7 @@ const PhotosTab = ({ tripId, trip }: PhotosTabProps) => {
               <button
                 key={u.id}
                 onClick={() => setFilterUserId(u.id)}
-                className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-body px-3 py-1.5 rounded-full transition-all ${filterUserId === u.id ? "bg-gradient-champagne text-background" : "bg-secondary text-muted-foreground"}`}
+                className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-body px-3 py-1.5 rounded-full transition-all ${filterUserId === u.id ? "bg-gold text-background" : "bg-secondary text-muted-foreground"}`}
               >
                 {u.avatar ? (
                   <img src={u.avatar} className="w-4 h-4 rounded-full" alt="" />
@@ -414,7 +414,7 @@ const PhotosTab = ({ tripId, trip }: PhotosTabProps) => {
 
       {/* ── Empty state ───────────────────────────────────────────────────── */}
       {!isLoading && filteredPhotos.length === 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-12 text-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-12 text-center">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
             <Camera size={28} className="text-primary" />
           </div>
@@ -489,7 +489,7 @@ const PhotosTab = ({ tripId, trip }: PhotosTabProps) => {
                   <img src={lightboxPhoto.uploaderAvatar} className="w-7 h-7 rounded-full" alt="" />
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
-                    <span className="text-[10px] font-heading text-primary">
+                    <span className="text-xs font-heading text-primary">
                       {(lightboxPhoto.uploaderName || "?")[0].toUpperCase()}
                     </span>
                   </div>

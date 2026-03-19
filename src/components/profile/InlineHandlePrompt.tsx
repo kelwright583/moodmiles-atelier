@@ -82,7 +82,7 @@ const InlineHandlePrompt = ({
           />
           <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
             {status === "checking" && <Loader2 size={13} className="text-muted-foreground animate-spin" />}
-            {status === "available" && <Check size={13} className="text-emerald-400" />}
+            {status === "available" && <Check size={13} className="text-live-text" />}
             {(status === "taken" || status === "invalid") && <X size={13} className="text-red-400" />}
           </div>
         </div>
@@ -96,10 +96,10 @@ const InlineHandlePrompt = ({
         </Button>
       </div>
       {status === "taken" && (
-        <p className="text-[11px] text-red-400 font-body">That handle is taken — try another.</p>
+        <p className="text-xs text-red-400 font-body">That handle is taken — try another.</p>
       )}
       {status === "invalid" && handle.length > 0 && (
-        <p className="text-[11px] text-muted-foreground font-body">3-20 chars, lowercase letters, numbers and underscores only.</p>
+        <p className="text-xs text-muted-foreground font-body">3-20 chars, lowercase letters, numbers and underscores only.</p>
       )}
     </div>
   );

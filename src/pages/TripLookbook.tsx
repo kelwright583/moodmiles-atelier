@@ -193,7 +193,7 @@ const TripLookbook = () => {
   if (!trip) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="glass-card rounded-2xl p-10 text-center max-w-sm w-full">
+        <div className="glass rounded-2xl p-10 text-center max-w-sm w-full">
           <h2 className="text-2xl font-heading mb-3">Trip not found</h2>
           <p className="text-sm text-muted-foreground font-body mb-6">This trip could not be loaded.</p>
           <Button variant="champagne" onClick={() => navigate(-1)}>Back to trip</Button>
@@ -207,7 +207,7 @@ const TripLookbook = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <Navbar />
-        <div className="glass-card rounded-2xl p-10 text-center max-w-sm w-full mt-20">
+        <div className="glass rounded-2xl p-10 text-center max-w-sm w-full mt-20">
           <BookOpen size={40} className="text-primary mx-auto mb-4 opacity-60" />
           <h2 className="text-2xl font-heading mb-3">Trip Lookbook</h2>
           <p className="text-sm text-muted-foreground font-body mb-6">

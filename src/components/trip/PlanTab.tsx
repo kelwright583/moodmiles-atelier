@@ -244,7 +244,7 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
       {/* Flights */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <Plane size={14} className="text-primary" /> Flights
           </h2>
           <Dialog open={flightOpen} onOpenChange={setFlightOpen}>
@@ -292,7 +292,7 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
           </Dialog>
         </div>
         {flights.length === 0 ? (
-          <div className="glass-card rounded-xl p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center">
             <Plane size={32} className="mx-auto text-muted-foreground/40 mb-3" />
             <p className="text-muted-foreground font-body text-sm mb-4">Add your flights for this trip. Include booking links or upload confirmations.</p>
             <div className="flex flex-wrap gap-2 justify-center">
@@ -306,7 +306,7 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
         ) : (
           <div className="space-y-3">
             {flights.map((f) => (
-              <div key={f.id} className="glass-card rounded-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-champagne transition-all duration-300">
+              <div key={f.id} className="glass rounded-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:glow-gold transition-all duration-300">
                 <div className="min-w-0">
                   <p className="font-heading text-base">{formatFlightRoute(f)}</p>
                   <p className="text-xs text-muted-foreground font-body mt-1">
@@ -340,7 +340,7 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
       {/* Weather */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <CloudSun size={14} className="text-primary" /> Weather
           </h2>
           <Button variant="champagne-outline" size="sm" onClick={refreshWeather} disabled={refreshingWeather}>
@@ -349,7 +349,7 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
           </Button>
         </div>
         {weather.length === 0 ? (
-          <div className="glass-card rounded-xl p-6 text-center">
+          <div className="glass rounded-xl p-6 text-center">
             <p className="text-muted-foreground font-body text-sm">
               {trip?.latitude ? "No weather data yet. Click Refresh to fetch forecast." : "Add coordinates to your destination to see weather."}
             </p>
@@ -359,7 +359,7 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
             {weather.slice(0, 14).map((w) => {
               const Icon = getWeatherIcon(w.weather_code || 0);
               return (
-                <div key={w.id} className="glass-card rounded-xl p-3 md:p-4 text-center hover:shadow-champagne transition-all duration-300">
+                <div key={w.id} className="glass rounded-xl p-3 md:p-4 text-center hover:glow-gold transition-all duration-300">
                   <p className="text-xs text-muted-foreground font-body mb-2">{new Date(w.date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric" })}</p>
                   <Icon size={24} className="mx-auto text-primary mb-2" />
                   <div className="flex justify-center gap-1 text-sm font-body">
@@ -380,7 +380,7 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
       {/* Pinned Events */}
       {pinnedEvents.length > 0 && (
         <section>
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground mb-6 font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground mb-6 flex items-center gap-2">
             <Pin size={14} className="text-primary" /> Pinned
           </h2>
           <div className="space-y-2">
@@ -394,12 +394,12 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
       {/* Events & Plan */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <Calendar size={14} className="text-primary" /> Plans & Events
           </h2>
         </div>
         {otherEvents.length === 0 && pinnedEvents.length === 0 ? (
-          <div className="glass-card rounded-xl p-8 text-center">
+          <div className="glass rounded-xl p-8 text-center">
             <p className="text-muted-foreground font-body text-sm">Add dinners, shows, or experiences. Discover curated options below.</p>
           </div>
         ) : (
@@ -414,12 +414,12 @@ const PlanTab = ({ tripId, trip, onNavigateTo }: PlanTabProps) => {
       {/* Discover experiences */}
       {activities.length > 0 && (
         <section>
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground mb-6 font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground mb-6 flex items-center gap-2">
             <MapPin size={14} className="text-primary" /> Add to Plan
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {activities.slice(0, 6).map((a) => (
-              <div key={a.id} className="glass-card rounded-xl overflow-hidden flex gap-4 p-4 hover:shadow-champagne transition-all">
+              <div key={a.id} className="glass rounded-xl overflow-hidden flex gap-4 p-4 hover:glow-gold transition-all">
                 <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-secondary">
                   <ImageWithFallback src={a.image_url} alt={a.name} fallbackIcon={MapPin} aspectClass="w-full h-full" />
                 </div>
@@ -477,7 +477,7 @@ const EventRow = ({
 
   return (
     <div>
-      <div className="glass-card rounded-xl p-4 md:p-5 flex items-center justify-between hover:shadow-champagne transition-all duration-300">
+      <div className="glass rounded-xl p-4 md:p-5 flex items-center justify-between hover:glow-gold transition-all duration-300">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="font-heading text-base truncate">{event.event_name}</h3>
@@ -495,7 +495,7 @@ const EventRow = ({
             )}
           </div>
           {event.dress_code && (
-            <span className="text-[10px] text-primary/60 font-body tracking-wide">
+            <span className="text-xs text-primary/60 font-body tracking-wide">
               Dress code: {event.dress_code}
             </span>
           )}
@@ -505,7 +505,7 @@ const EventRow = ({
           </div>
         </div>
         <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
-          {event.event_type && <span className="hidden sm:inline text-xs tracking-[0.2em] uppercase text-primary font-body bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
+          {event.event_type && <span className="hidden sm:inline eyebrow text-primary bg-secondary px-3 py-1 rounded-full">{event.event_type}</span>}
           <button onClick={() => onTogglePin(event)} className="p-2 rounded-lg hover:bg-secondary transition-colors">
             {event.is_pinned ? <PinOff size={14} className="text-primary" /> : <Pin size={14} className="text-muted-foreground" />}
           </button>

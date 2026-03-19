@@ -78,7 +78,7 @@ export const SaveToOtherBoardDialog = ({
               <button
                 key={trip.id}
                 onClick={() => saveToTrip(trip.id)}
-                className="w-full text-left glass-card rounded-xl p-4 hover:shadow-champagne transition-all flex items-center justify-between"
+                className="w-full text-left glass rounded-xl p-4 hover:glow-gold transition-all flex items-center justify-between"
               >
                 <div>
                   <p className="font-heading text-base">{trip.destination}</p>

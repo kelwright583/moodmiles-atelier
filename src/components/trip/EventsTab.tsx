@@ -26,7 +26,7 @@ const ACTIVITY_CATEGORY_COLORS: Record<string, string> = {
   Culture: "text-purple-400",
   Dining: "text-orange-400",
   Nightlife: "text-pink-400",
-  Shopping: "text-emerald-400",
+  Shopping: "text-live-text",
   Outdoor: "text-sky-400",
   Experience: "text-amber-400",
 };
@@ -48,7 +48,7 @@ type BookingStatus = typeof BOOKING_STATUSES[number];
 const BOOKING_STATUS_STYLES: Record<BookingStatus, string> = {
   researching: "bg-muted/60 text-muted-foreground",
   booked: "bg-blue-500/15 text-blue-400",
-  confirmed: "bg-emerald-500/15 text-emerald-400",
+  confirmed: "bg-live/15 text-live-text",
   cancelled: "bg-red-500/15 text-red-400",
 };
 
@@ -212,14 +212,14 @@ const ShareEventSheet = ({
       <SheetContent side="bottom" className="bg-card border-border rounded-t-2xl px-6 pb-10">
         <div className="pt-4 pb-6">
           <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-          <p className="text-xs tracking-[0.2em] uppercase text-primary font-body mb-1">Share Event</p>
+          <p className="eyebrow text-primary mb-1">Share Event</p>
           <h3 className="text-xl font-heading mb-6">{event.event_name}</h3>
           <div className="space-y-3">
             <button
               onClick={copy}
               className="w-full flex items-center gap-4 p-4 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left"
             >
-              {copied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} className="text-primary" />}
+              {copied ? <Check size={18} className="text-live-text" /> : <Copy size={18} className="text-primary" />}
               <div>
                 <p className="text-sm font-body text-foreground">{copied ? "Copied!" : "Copy link"}</p>
                 {shareUrl && <p className="text-xs font-body text-muted-foreground truncate max-w-[260px]">{shareUrl}</p>}
@@ -387,7 +387,7 @@ const AddEditEventModal = ({
                   className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${form.category === value ? "border-primary bg-primary/10" : "border-border bg-secondary hover:border-primary/40"}`}
                 >
                   <Icon size={18} className={form.category === value ? "text-primary" : "text-muted-foreground"} />
-                  <span className={`text-[10px] font-body ${form.category === value ? "text-primary" : "text-muted-foreground"}`}>{label}</span>
+                  <span className={`text-xs font-body ${form.category === value ? "text-primary" : "text-muted-foreground"}`}>{label}</span>
                 </button>
               ))}
             </div>
@@ -468,7 +468,7 @@ const AddEditEventModal = ({
                 <button
                   key={chip}
                   onClick={() => set("dress_code", chip)}
-                  className={`text-[11px] font-body px-2.5 py-1 rounded-full border transition-all ${form.dress_code === chip ? "border-primary text-primary bg-primary/5" : "border-border text-muted-foreground hover:border-primary/40"}`}
+                  className={`text-xs font-body px-2.5 py-1 rounded-full border transition-all ${form.dress_code === chip ? "border-primary text-primary bg-primary/5" : "border-border text-muted-foreground hover:border-primary/40"}`}
                 >
                   {chip}
                 </button>
@@ -577,7 +577,7 @@ const EventCard = ({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      className={`glass-card rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-champagne ${isCancelled ? "opacity-60" : ""}`}
+      className={`glass rounded-2xl overflow-hidden transition-all duration-300 hover:glow-gold ${isCancelled ? "opacity-60" : ""}`}
     >
       {/* Card body */}
       <div className="p-5 space-y-4">
@@ -589,7 +589,7 @@ const EventCard = ({
               <Icon size={17} className="text-primary" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-primary font-body">
+              <p className="eyebrow text-primary">
                 {getCategoryLabel(event.category)}
               </p>
               {event.event_date && (
@@ -602,7 +602,7 @@ const EventCard = ({
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {/* Booking status badge */}
             {event.booking_status && (
-              <span className={`text-[10px] tracking-[0.08em] uppercase font-body px-2.5 py-1 rounded-full ${BOOKING_STATUS_STYLES[event.booking_status as BookingStatus] ?? ""}`}>
+              <span className={`text-xs tracking-[0.08em] uppercase font-body px-2.5 py-1 rounded-full ${BOOKING_STATUS_STYLES[event.booking_status as BookingStatus] ?? ""}`}>
                 {event.booking_status}
               </span>
             )}
@@ -648,7 +648,7 @@ const EventCard = ({
                   href={mapLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-body text-primary hover:underline mt-1"
+                  className="inline-flex items-center gap-1 text-xs font-body text-primary hover:underline mt-1"
                 >
                   <ExternalLink size={10} /> View on Google Maps
                 </a>
@@ -713,7 +713,7 @@ const EventCard = ({
         {event.dress_code && (
           <button
             onClick={() => onStyleEvent(`${event.dress_code} ${destination} outfit`)}
-            className="inline-flex items-center gap-1.5 text-[11px] font-body text-primary border border-primary/30 px-2.5 py-1 rounded-full hover:bg-primary/5 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-body text-primary border border-primary/30 px-2.5 py-1 rounded-full hover:bg-primary/5 transition-colors"
           >
             <Sparkles size={10} />
             {event.dress_code}
@@ -728,7 +728,7 @@ const EventCard = ({
           </button>
           <button
             onClick={() => onStyleEvent(`${event.event_name} ${event.dress_code || ""} ${destination}`.trim())}
-            className="flex items-center gap-1.5 text-xs font-body text-background bg-gradient-champagne px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity font-medium"
+            className="flex items-center gap-1.5 text-xs font-body text-background bg-gold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity font-medium"
           >
             <Sparkles size={12} /> Style This Event
           </button>
@@ -908,7 +908,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+            <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
               <Globe size={14} className="text-primary" /> Discover Experiences
             </h2>
             <p className="text-xs text-muted-foreground/60 font-body mt-0.5">Find things to do and add them directly to your plan</p>
@@ -932,7 +932,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
         </div>
 
         {activities.length === 0 ? (
-          <div className="glass-card rounded-2xl p-8 text-center">
+          <div className="glass rounded-2xl p-8 text-center">
             <Globe size={32} className="text-primary mx-auto mb-3 opacity-40" />
             <p className="text-sm text-muted-foreground font-body mb-1">Discover restaurants, sights and experiences in {trip.destination}.</p>
             <p className="text-xs text-muted-foreground/50 font-body mb-5">Tap any card to view details and add it to your plan.</p>
@@ -947,7 +947,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                 <div
                   key={a.id}
                   onClick={() => { setExpFeedStart(i); setExpFeedOpen(true); }}
-                  className="relative min-w-[220px] max-w-[240px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:shadow-champagne transition-all duration-500"
+                  className="relative min-w-[220px] max-w-[240px] shrink-0 rounded-2xl overflow-hidden cursor-pointer group hover:glow-gold transition-all duration-500"
                   style={{ scrollSnapAlign: "start" }}
                 >
                   <div className="group-hover:[&_img]:scale-105 transition-transform duration-700">
@@ -955,10 +955,10 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-card/95 via-card/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${ACTIVITY_CATEGORY_COLORS[a.category || ""] || "text-primary"}`}>{a.category}</span>
+                    <span className={`eyebrow ${ACTIVITY_CATEGORY_COLORS[a.category || ""] || "text-primary"}`}>{a.category}</span>
                     <p className="font-heading text-lg leading-tight text-foreground">{a.name}</p>
                     {isActivityInEvents(a.name) && (
-                      <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] text-primary font-body">
+                      <span className="inline-flex items-center gap-1 mt-0.5 text-xs text-primary font-body">
                         <BookmarkCheck size={9} /> In your plan
                       </span>
                     )}
@@ -976,7 +976,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
         {expFeedOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-background overflow-y-auto">
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-              <h3 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+              <h3 className="eyebrow text-muted-foreground flex items-center gap-2">
                 <Globe size={12} className="text-primary" /> Experiences in {trip.destination}
               </h3>
               <button onClick={() => setExpFeedOpen(false)} className="p-2 rounded-full hover:bg-secondary transition-colors">
@@ -998,14 +998,14 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                       </button>
                     )}
                     {a.booking_url && (
-                      <a href={a.booking_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-champagne text-primary-foreground text-xs font-body">
+                      <a href={a.booking_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold text-primary-foreground text-xs font-body">
                         <Ticket size={12} /> Book
                       </a>
                     )}
                   </div>
                   <div className="px-4 py-3">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-[10px] tracking-[0.2em] uppercase font-body ${ACTIVITY_CATEGORY_COLORS[a.category || ""] || "text-primary"}`}>{a.category}</span>
+                      <span className={`eyebrow ${ACTIVITY_CATEGORY_COLORS[a.category || ""] || "text-primary"}`}>{a.category}</span>
                       {a.rating && <span className="text-xs text-primary flex items-center gap-0.5"><Star size={10} className="fill-primary" /> {a.rating.toFixed(1)}</span>}
                       {(a as any).price_from && <span className="text-xs text-muted-foreground font-body ml-auto">{(a as any).price_from}</span>}
                     </div>
@@ -1023,7 +1023,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
       {/* Upcoming events */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <CalendarPlus size={14} className="text-primary" /> Upcoming
           </h2>
           {upcoming.length > 0 && (
@@ -1031,7 +1031,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
           )}
         </div>
         {upcoming.length === 0 ? (
-          <div className="glass-card rounded-2xl p-10 text-center space-y-4">
+          <div className="glass rounded-2xl p-10 text-center space-y-4">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
               <Sparkles size={28} className="text-primary" />
             </div>
@@ -1044,7 +1044,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
             {canEdit && (
               <button
                 onClick={() => setAddOpen(true)}
-                className="inline-flex items-center gap-2 text-sm font-body text-background bg-gradient-champagne px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-2 text-sm font-body text-background bg-gold px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
               >
                 <Plus size={15} /> Add your first event
               </button>
@@ -1077,7 +1077,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
         <section>
           <button
             onClick={() => setShowPast((v) => !v)}
-            className="flex items-center gap-2 text-sm tracking-[0.2em] uppercase text-muted-foreground font-body mb-4 hover:text-foreground transition-colors"
+            className="flex items-center gap-2 eyebrow text-muted-foreground mb-4 hover:text-foreground transition-colors"
           >
             {showPast ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             Past Events ({past.length})
@@ -1113,7 +1113,7 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
       {canEdit && events.length > 0 && (
         <button
           onClick={() => setAddOpen(true)}
-          className="fixed bottom-8 right-6 z-30 w-14 h-14 rounded-full bg-gradient-champagne shadow-champagne flex items-center justify-center hover:scale-105 transition-transform"
+          className="fixed bottom-8 right-6 z-30 w-14 h-14 rounded-full bg-gold glow-gold flex items-center justify-center hover:scale-105 transition-transform"
           aria-label="Add event"
         >
           <Plus size={22} className="text-background" />

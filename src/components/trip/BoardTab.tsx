@@ -179,11 +179,11 @@ const TripThemeBanner = ({
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card rounded-2xl p-4 border border-primary/20"
+        className="glass rounded-2xl p-4 border border-primary/20"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] tracking-[0.2em] uppercase text-primary/60 font-body mb-1">Trip Theme</p>
+            <p className="eyebrow text-primary/60 mb-1">Trip Theme</p>
             <h3 className="font-heading text-2xl leading-tight">{trip.trip_theme}</h3>
             {trip.theme_colors && trip.theme_colors.length > 0 && (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -202,7 +202,7 @@ const TripThemeBanner = ({
             {onSearchTheme && (
               <button
                 onClick={() => onSearchTheme(trip.trip_theme!)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-champagne text-primary-foreground text-xs font-body shadow-champagne hover:opacity-90 transition-opacity"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold text-primary-foreground text-xs font-body glow-gold hover:opacity-90 transition-opacity"
               >
                 <Sparkles size={11} />
                 Search this theme
@@ -285,7 +285,7 @@ const ThemeEditForm = ({
               type="button"
               onClick={() => toggleColor(hex)}
               className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center flex-shrink-0 ${
-                isSelected ? "border-primary shadow-champagne scale-110" : "border-transparent hover:scale-105"
+                isSelected ? "border-primary glow-gold scale-110" : "border-transparent hover:scale-105"
               }`}
               style={{ backgroundColor: hex }}
               title={hex}
@@ -403,12 +403,12 @@ const MyLookSection = ({
 
   return (
     <section className="mb-8">
-      <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2 mb-4">
+      <h2 className="eyebrow text-muted-foreground flex items-center gap-2 mb-4">
         <Users size={14} className="text-primary" /> Group Looks by Event
       </h2>
       <div className="space-y-5">
         {events.map((event) => (
-          <div key={event.id} className="glass-card rounded-2xl p-4">
+          <div key={event.id} className="glass rounded-2xl p-4">
             {/* Event header */}
             <div className="flex items-center gap-3 mb-3 flex-wrap">
               <span className="font-heading text-base">{event.event_name}</span>
@@ -478,7 +478,7 @@ const MyLookSection = ({
                         disabled={!isCurrentUser}
                       >
                         <MemberAvatar profile={profile} size="md" ring={isCurrentUser} />
-                        <span className={`text-[10px] font-body text-center leading-tight ${
+                        <span className={`text-xs font-body text-center leading-tight ${
                           isCurrentUser ? "text-primary" : "text-muted-foreground/50"
                         }`}>
                           {isCurrentUser ? "Add your look" : "No look yet"}
@@ -946,7 +946,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
       {/* Polls section */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+          <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
             <BarChart2 size={14} className="text-primary" /> Polls
           </h2>
           {canEdit && (
@@ -956,7 +956,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
           )}
         </div>
         {polls.length === 0 ? (
-          <div className="glass-card rounded-xl p-6 text-center">
+          <div className="glass rounded-xl p-6 text-center">
             <p className="text-xs text-muted-foreground font-body">
               No polls yet. Ask the group what to wear!
             </p>
@@ -982,7 +982,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
 
       {/* Board Grid header with filter pills + add button */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+        <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
           <Grid3X3 size={14} className="text-primary" /> Mood Board
         </h2>
         <div className="flex items-center gap-2 flex-wrap">
@@ -993,7 +993,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
               onClick={() => setFilterUserId("all")}
               className={`px-3 py-1 rounded-full text-xs font-body transition-all ${
                 filterUserId === "all"
-                  ? "bg-gradient-champagne text-primary-foreground shadow-champagne"
+                  ? "bg-gold text-primary-foreground glow-gold"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -1004,7 +1004,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
               onClick={() => setFilterUserId("mine")}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-body transition-all ${
                 filterUserId === "mine"
-                  ? "bg-gradient-champagne text-primary-foreground shadow-champagne"
+                  ? "bg-gold text-primary-foreground glow-gold"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -1017,7 +1017,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
                 onClick={() => setFilterUserId(userId)}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-body transition-all ${
                   filterUserId === userId
-                    ? "bg-gradient-champagne text-primary-foreground shadow-champagne"
+                    ? "bg-gold text-primary-foreground glow-gold"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -1084,7 +1084,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
 
       {/* Board grid */}
       {filteredItems.length === 0 ? (
-        <div className="glass-card rounded-xl p-12 text-center">
+        <div className="glass rounded-xl p-12 text-center">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
             <Palette size={24} className="text-primary" />
           </div>
@@ -1104,7 +1104,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
             return (
               <div
                 key={item.id}
-                className="break-inside-avoid glass-card rounded-xl overflow-hidden group relative hover:shadow-champagne transition-all duration-300"
+                className="break-inside-avoid glass rounded-xl overflow-hidden group relative hover:glow-gold transition-all duration-300"
               >
                 {/* Delete button */}
                 {canDelete(item) && (
@@ -1168,7 +1168,7 @@ const BoardTab = ({ tripId, trip, onSearchTheme, onAddLookForEvent }: BoardTabPr
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
                 onClick={() => setOpen(true)}
-                className="w-12 h-12 rounded-full bg-gradient-champagne shadow-champagne flex items-center justify-center hover:opacity-90 transition-opacity"
+                className="w-12 h-12 rounded-full bg-gold glow-gold flex items-center justify-center hover:opacity-90 transition-opacity"
                 title="Add to board"
               >
                 <Plus size={20} className="text-primary-foreground" />

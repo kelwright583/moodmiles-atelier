@@ -201,7 +201,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-sm tracking-[0.2em] uppercase text-muted-foreground font-body flex items-center gap-2">
+        <h2 className="eyebrow text-muted-foreground flex items-center gap-2">
           <Briefcase size={14} className="text-primary" /> Packing List
         </h2>
         <div className="flex items-center gap-2">
@@ -218,15 +218,15 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
               <div className="space-y-4 pt-2">
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Item name" className="bg-secondary border-border h-11 text-foreground placeholder:text-muted-foreground font-body" />
                 <div>
-                  <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block font-body">Category</label>
+                  <label className="eyebrow text-muted-foreground mb-2 block">Category</label>
                   <div className="flex flex-wrap gap-2">
                     {packingCategories.map((c) => (
-                      <button key={c} type="button" onClick={() => setCategory(c)} className={`px-3 py-1.5 rounded-full text-xs font-body transition-all ${category === c ? "bg-gradient-champagne text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{c}</button>
+                      <button key={c} type="button" onClick={() => setCategory(c)} className={`px-3 py-1.5 rounded-full text-xs font-body transition-all ${category === c ? "bg-gold text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{c}</button>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2 block font-body">Quantity</label>
+                  <label className="eyebrow text-muted-foreground mb-2 block">Quantity</label>
                   <div className="flex items-center gap-3">
                     <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center"><Minus size={14} /></button>
                     <span className="text-lg font-heading w-8 text-center">{quantity}</span>
@@ -242,7 +242,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
 
       {/* Trip context banner */}
       {trip && (
-        <div className="glass-card rounded-xl p-4 mb-6 flex flex-wrap gap-x-6 gap-y-2 text-xs font-body text-muted-foreground">
+        <div className="glass rounded-xl p-4 mb-6 flex flex-wrap gap-x-6 gap-y-2 text-xs font-body text-muted-foreground">
           {trip.origin_city && (
             <span>From: <span className="text-foreground">{trip.origin_city}{trip.origin_country ? `, ${trip.origin_country}` : ""}</span></span>
           )}
@@ -259,7 +259,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
             <span className="text-xs font-body text-muted-foreground">{packedCount} of {totalCount} packed</span>
             <span className={`text-xs font-body ${progress >= 100 ? "text-primary font-medium" : "text-primary"}`}>{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className={`h-2 transition-all duration-300 ${progress >= 100 ? "shadow-champagne ring-1 ring-primary/20" : ""}`} />
+          <Progress value={progress} className={`h-2 transition-all duration-300 ${progress >= 100 ? "glow-gold ring-1 ring-primary/20" : ""}`} />
         </div>
       )}
 
@@ -271,7 +271,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
             className="flex items-center gap-2 w-full text-left mb-3"
           >
             {leaveItemsCollapsed ? <ChevronRight size={14} className="text-red-400" /> : <ChevronDown size={14} className="text-red-400" />}
-            <h3 className="text-xs tracking-[0.2em] uppercase text-red-400 font-body flex items-center gap-1.5">
+            <h3 className="eyebrow text-red-400 flex items-center gap-1.5">
               <XCircle size={12} /> Leave These At Home
             </h3>
           </button>
@@ -304,7 +304,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
       )}
 
       {totalCount === 0 ? (
-        <div className="glass-card rounded-xl p-12 text-center">
+        <div className="glass rounded-xl p-12 text-center">
           <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mx-auto mb-5">
             <Briefcase size={22} className="text-muted-foreground/50" />
           </div>
@@ -328,16 +328,16 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
               <div key={cat}>
                 <button onClick={() => toggleCategory(cat)} className="flex items-center gap-2 w-full text-left mb-3 group">
                   {isCollapsed ? <ChevronRight size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-                  <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">{cat}</h3>
+                  <h3 className="eyebrow text-muted-foreground">{cat}</h3>
                   <span className="text-xs text-primary font-body ml-auto">{catPacked}/{catItems.length}</span>
                 </button>
                 <AnimatePresence>
                   {!isCollapsed && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden">
                       {catItems.map((item) => (
-                        <div key={item.id} className={`glass-card rounded-xl px-5 py-4 flex items-center justify-between transition-all duration-300 ${item.is_packed ? "opacity-50" : "hover:shadow-champagne"}`}>
+                        <div key={item.id} className={`glass rounded-xl px-5 py-4 flex items-center justify-between transition-all duration-300 ${item.is_packed ? "opacity-50" : "hover:glow-gold"}`}>
                           <div className="flex items-center gap-4 min-w-0">
-                            <button onClick={() => togglePacked(item)} className={`w-6 h-6 rounded-md border flex items-center justify-center transition-all shrink-0 ${item.is_packed ? "bg-gradient-champagne border-transparent" : "border-border hover:border-primary"}`}>
+                            <button onClick={() => togglePacked(item)} className={`w-6 h-6 rounded-md border flex items-center justify-center transition-all shrink-0 ${item.is_packed ? "bg-gold border-transparent" : "border-border hover:border-primary"}`}>
                               {item.is_packed && <Check size={14} className="text-primary-foreground" />}
                             </button>
                             <span className={`text-sm font-body truncate ${item.is_packed ? "line-through text-muted-foreground" : "text-foreground"}`}>{item.name}</span>
@@ -345,7 +345,7 @@ const PackingTab = ({ tripId, trip }: PackingTabProps) => {
                           <div className="flex items-center gap-3 shrink-0">
                             <div className="flex items-center gap-1">
                               <button onClick={() => updateQuantity(item, -1)} className="w-6 h-6 rounded flex items-center justify-center hover:bg-secondary"><Minus size={12} className="text-muted-foreground" /></button>
-                              <span className="text-sm font-heading w-6 text-center text-gradient-champagne">{item.quantity}</span>
+                              <span className="text-sm font-heading w-6 text-center text-gold">{item.quantity}</span>
                               <button onClick={() => updateQuantity(item, 1)} className="w-6 h-6 rounded flex items-center justify-center hover:bg-secondary"><Plus size={12} className="text-muted-foreground" /></button>
                             </div>
                             <button onClick={() => deleteItem(item.id)} className="p-1.5 rounded-lg hover:bg-secondary">
@@ -401,14 +401,14 @@ const RentalOpportunitiesCard = ({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-card rounded-2xl p-5 border border-emerald-600/20"
+      className="glass rounded-2xl p-5 border border-live-dim"
     >
       <div className="flex items-start gap-3 mb-4">
-        <div className="w-9 h-9 rounded-xl bg-emerald-600/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Repeat2 size={16} className="text-emerald-500" />
+        <div className="w-9 h-9 rounded-xl bg-live/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Repeat2 size={16} className="text-live-text" />
         </div>
         <div>
-          <p className="text-xs tracking-[0.2em] uppercase text-emerald-500 font-body mb-0.5">Consider Renting</p>
+          <p className="eyebrow text-live-text mb-0.5">Consider Renting</p>
           <p className="text-sm font-body text-foreground leading-snug">
             You have {events.length > 1 ? `${events.length} formal events` : "a formal event"}
             {eventNames ? ` (${eventNames})` : ""} — renting saves money and luggage space.
@@ -434,7 +434,7 @@ const RentalOpportunitiesCard = ({
                 href={product.affiliate_url ?? "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block rounded-xl overflow-hidden bg-secondary hover:ring-1 hover:ring-emerald-600/40 transition-all"
+                className="group block rounded-xl overflow-hidden bg-secondary hover:ring-1 hover:ring-live-dim transition-all"
               >
                 <div className="aspect-[3/4] bg-muted relative overflow-hidden">
                   {product.image_url ? (
@@ -450,7 +450,7 @@ const RentalOpportunitiesCard = ({
                     </div>
                   )}
                   <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                    <span className="text-[9px] tracking-wide uppercase font-body text-emerald-400">
+                    <span className="text-[9px] tracking-wide uppercase font-body text-live-text">
                       {sourceName}
                     </span>
                   </div>
@@ -458,15 +458,15 @@ const RentalOpportunitiesCard = ({
                 <div className="p-2.5">
                   <p className="text-xs font-body text-foreground leading-snug line-clamp-2">{product.name}</p>
                   {product.brand && (
-                    <p className="text-[10px] text-muted-foreground font-body mt-0.5">{product.brand}</p>
+                    <p className="text-xs text-muted-foreground font-body mt-0.5">{product.brand}</p>
                   )}
                   <div className="flex items-center justify-between mt-1.5">
                     {product.price ? (
-                      <span className="text-xs font-body text-emerald-500 font-medium">
+                      <span className="text-xs font-body text-live-text font-medium">
                         {symbol}{product.price.toLocaleString()} / 4 days
                       </span>
                     ) : (
-                      <span className="text-[10px] text-muted-foreground font-body">See price</span>
+                      <span className="text-xs text-muted-foreground font-body">See price</span>
                     )}
                   </div>
                 </div>

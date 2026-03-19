@@ -18,7 +18,7 @@ const Terms = () => (
         animate={{ opacity: 1, y: 0 }}
         className="max-w-2xl mx-auto"
       >
-        <p className="text-[11px] tracking-[0.3em] uppercase text-primary mb-3 font-body">Legal</p>
+        <p className="eyebrow text-primary mb-3">Legal</p>
         <h1 className="text-4xl font-heading mb-3">Terms of Service</h1>
         <p className="text-xs text-muted-foreground font-body mb-12">Last updated: March 2026</p>
 

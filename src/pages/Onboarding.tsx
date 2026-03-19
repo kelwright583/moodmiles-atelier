@@ -11,14 +11,14 @@ import PlacesAutocomplete from "@/components/trip/PlacesAutocomplete";
 import { toast } from "@/hooks/use-toast";
 
 const STYLE_VIBES = [
-  { id: "classic", label: "Classic", desc: "Timeless, tailored, neutral", accent: "from-stone-700 to-stone-500" },
-  { id: "minimalist", label: "Minimalist", desc: "Clean lines, monochrome, less is more", accent: "from-zinc-700 to-zinc-400" },
-  { id: "bohemian", label: "Bohemian", desc: "Flowing, earthy, free-spirited", accent: "from-amber-800 to-amber-500" },
-  { id: "streetwear", label: "Streetwear", desc: "Urban, bold, statement pieces", accent: "from-slate-800 to-slate-500" },
-  { id: "resort", label: "Resort", desc: "Relaxed luxury, linen, sun-ready", accent: "from-sky-700 to-sky-400" },
-  { id: "eclectic", label: "Eclectic", desc: "Mixed, unexpected, maximalist", accent: "from-violet-700 to-fuchsia-500" },
-  { id: "preppy", label: "Preppy", desc: "Structured, collegiate, polished", accent: "from-emerald-700 to-emerald-500" },
-  { id: "avant-garde", label: "Avant-garde", desc: "Fashion-forward, experimental", accent: "from-rose-700 to-pink-500" },
+  { id: "classic", label: "Classic", desc: "Timeless, tailored, neutral" },
+  { id: "minimalist", label: "Minimalist", desc: "Clean lines, monochrome, less is more" },
+  { id: "bohemian", label: "Bohemian", desc: "Flowing, earthy, free-spirited" },
+  { id: "streetwear", label: "Streetwear", desc: "Urban, bold, statement pieces" },
+  { id: "resort", label: "Resort", desc: "Relaxed luxury, linen, sun-ready" },
+  { id: "eclectic", label: "Eclectic", desc: "Mixed, unexpected, maximalist" },
+  { id: "preppy", label: "Preppy", desc: "Structured, collegiate, polished" },
+  { id: "avant-garde", label: "Avant-garde", desc: "Fashion-forward, experimental" },
 ] as const;
 
 type StyleVibe = (typeof STYLE_VIBES)[number]["id"];
@@ -63,7 +63,7 @@ const Onboarding = () => {
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full bg-gradient-champagne animate-pulse" />
+        <div className="w-1 h-8 bg-gold animate-pulse mx-auto" />
       </div>
     );
   }
@@ -203,8 +203,12 @@ const Onboarding = () => {
         {[1, 2, 3, 4].map((s) => (
           <div
             key={s}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              s === step ? "w-8 bg-primary" : s < step ? "w-3 bg-primary/50" : "w-3 bg-secondary"
+            className={`transition-all duration-300 ${
+              s < step
+                ? "w-2 h-2 rounded-full bg-gold"
+                : s === step
+                  ? "w-2 h-2 rounded-full border border-gold"
+                  : "w-2 h-2 rounded-full bg-ink-border"
             }`}
           />
         ))}
@@ -278,13 +282,13 @@ const Onboarding = () => {
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   {handleStatus === "checking" && <Loader2 size={16} className="text-muted-foreground animate-spin" />}
-                  {handleStatus === "available" && <Check size={16} className="text-emerald-400" />}
+                  {handleStatus === "available" && <Check size={16} className="text-live-text" />}
                   {(handleStatus === "taken" || handleStatus === "invalid") && <X size={16} className="text-red-400" />}
                 </div>
               </div>
 
               {handleStatus === "available" && (
-                <p className="text-xs text-emerald-400 font-body mb-4">@{handle} is available</p>
+                <p className="text-xs text-live-text font-body mb-4">@{handle} is available</p>
               )}
               {handleStatus === "taken" && (
                 <div className="mb-4">
@@ -346,17 +350,16 @@ const Onboarding = () => {
                     key={vibe.id}
                     type="button"
                     onClick={() => setStyleVibe(prev => prev.includes(vibe.id) ? prev.filter(v => v !== vibe.id) : [...prev, vibe.id])}
-                    className={`relative rounded-2xl p-4 text-left transition-all duration-200 border-2 ${
+                    className={`surface p-4 cursor-pointer transition-all duration-200 text-left relative ${
                       styleVibe.includes(vibe.id)
-                        ? "border-primary bg-primary/5 shadow-champagne"
-                        : "border-border bg-secondary/60 hover:border-border/80"
+                        ? "border-l-2 border-gold"
+                        : ""
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${vibe.accent} mb-3`} />
-                    <p className="text-sm font-body font-medium text-foreground">{vibe.label}</p>
-                    <p className="text-[11px] text-muted-foreground font-body mt-0.5 leading-snug">{vibe.desc}</p>
+                    <p className="font-heading text-lg font-normal text-foreground">{vibe.label}</p>
+                    <p className="text-xs font-body font-light text-parchment-dim mt-0.5 leading-snug">{vibe.desc}</p>
                     {styleVibe.includes(vibe.id) && (
-                      <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-gradient-champagne flex items-center justify-center">
+                      <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-gold flex items-center justify-center">
                         <Check size={9} className="text-primary-foreground" />
                       </div>
                     )}
@@ -406,7 +409,7 @@ const Onboarding = () => {
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                       <User size={32} className="text-muted-foreground/40" />
-                      <span className="text-[10px] text-muted-foreground/60 font-body">Upload</span>
+                      <span className="text-xs text-muted-foreground/60 font-body">Upload</span>
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">

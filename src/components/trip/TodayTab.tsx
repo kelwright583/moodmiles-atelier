@@ -36,7 +36,7 @@ function getFlightStatusColour(status: string | null) {
     case "boarding": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
     case "departed":
     case "en_route": return "bg-sky-500/20 text-sky-400 border-sky-500/30";
-    case "landed": return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+    case "landed": return "bg-live/15 text-live-text border-live-dim";
     case "delayed": return "bg-amber-500/20 text-amber-400 border-amber-500/30";
     case "cancelled": return "bg-red-500/20 text-red-400 border-red-500/30";
     default: return "bg-secondary text-muted-foreground border-border";
@@ -209,7 +209,7 @@ const TodayTab = ({ tripId, trip }: TodayTabProps) => {
   if (todayEvents.length === 0 && tomorrowEvents.length === 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-        <div className="glass-card rounded-2xl p-10 text-center">
+        <div className="glass rounded-2xl p-10 text-center">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
             <Sun size={28} className="text-primary" />
           </div>
@@ -229,7 +229,7 @@ const TodayTab = ({ tripId, trip }: TodayTabProps) => {
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-card rounded-2xl p-5 border border-amber-500/30 bg-amber-500/5"
+          className="glass rounded-2xl p-5 border border-amber-500/30 bg-amber-500/5"
         >
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
@@ -262,14 +262,14 @@ const TodayTab = ({ tripId, trip }: TodayTabProps) => {
           key={flight.id}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card rounded-2xl p-5"
+          className="glass rounded-2xl p-5"
         >
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
               <Plane size={16} className="text-primary" />
               <span className="font-heading text-base">{flight.flight_number || flight.event_name}</span>
             </div>
-            <span className={`text-[10px] tracking-[0.2em] uppercase font-body px-2.5 py-1 rounded-full border ${getFlightStatusColour(flight.flight_status)}`}>
+            <span className={`eyebrow px-2.5 py-1 rounded-full border ${getFlightStatusColour(flight.flight_status)}`}>
               {flight.flight_status || "scheduled"}
             </span>
           </div>
@@ -321,7 +321,7 @@ const TodayTab = ({ tripId, trip }: TodayTabProps) => {
           </Button>
 
           {flight.flight_status_updated_at && (
-            <p className="text-[10px] text-muted-foreground/50 font-body mt-1">
+            <p className="text-xs text-muted-foreground/50 font-body mt-1">
               Last checked {new Date(flight.flight_status_updated_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
             </p>
           )}
@@ -333,7 +333,7 @@ const TodayTab = ({ tripId, trip }: TodayTabProps) => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card rounded-2xl p-5"
+          className="glass rounded-2xl p-5"
         >
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -355,7 +355,7 @@ const TodayTab = ({ tripId, trip }: TodayTabProps) => {
                 )}
               </div>
               {nextEvent.dress_code && (
-                <span className="inline-flex items-center gap-1 mt-2 text-[10px] tracking-[0.2em] uppercase font-body text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 mt-2 eyebrow text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                   <Shirt size={10} /> {nextEvent.dress_code}
                 </span>
               )}
@@ -367,13 +367,13 @@ const TodayTab = ({ tripId, trip }: TodayTabProps) => {
       {/* ── Today's Full Schedule ────────────────────────────────────────── */}
       {nonFlightEvents.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body px-1">
+          <h3 className="eyebrow text-muted-foreground px-1">
             Today's Schedule
           </h3>
           {nonFlightEvents.map((event) => (
             <div
               key={event.id}
-              className="glass-card rounded-xl p-4 flex items-center gap-3"
+              className="glass rounded-xl p-4 flex items-center gap-3"
             >
               <div className="text-center min-w-[44px]">
                 <p className="text-sm font-heading">{event.event_time?.slice(0, 5) || "TBD"}</p>
@@ -396,8 +396,8 @@ const TodayTab = ({ tripId, trip }: TodayTabProps) => {
       )}
 
       {/* ── Rendezvous Share ──────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-5">
-        <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-3">
+      <div className="glass rounded-2xl p-5">
+        <h3 className="eyebrow text-muted-foreground mb-3">
           Share Meeting Point
         </h3>
         <div className="flex gap-2 mb-3">
@@ -422,12 +422,12 @@ const TodayTab = ({ tripId, trip }: TodayTabProps) => {
 
       {/* ── Tomorrow Preview ─────────────────────────────────────────────── */}
       {tomorrowEvents.length > 0 && (
-        <div className="glass-card rounded-2xl overflow-hidden">
+        <div className="glass rounded-2xl overflow-hidden">
           <button
             onClick={() => setTomorrowOpen(!tomorrowOpen)}
             className="w-full flex items-center justify-between p-5 text-left"
           >
-            <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body">
+            <h3 className="eyebrow text-muted-foreground">
               Tomorrow ({tomorrowEvents.length} event{tomorrowEvents.length > 1 ? "s" : ""})
             </h3>
             {tomorrowOpen ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}

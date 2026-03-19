@@ -120,7 +120,7 @@ const PollCard = ({ poll, options, creatorProfile, isNew }: PollCardProps) => {
   };
 
   return (
-    <div className="glass-card rounded-2xl overflow-hidden">
+    <div className="glass rounded-2xl overflow-hidden">
       {/* New poll indicator */}
       {isNew && <div className="h-1 w-full bg-blue-500" />}
 
@@ -153,7 +153,7 @@ const PollCard = ({ poll, options, creatorProfile, isNew }: PollCardProps) => {
                   </span>
                 )}
               </div>
-              <span className="text-[11px] text-muted-foreground font-body">
+              <span className="text-xs text-muted-foreground font-body">
                 {timeAgo(poll.created_at)}
               </span>
             </div>
@@ -161,11 +161,11 @@ const PollCard = ({ poll, options, creatorProfile, isNew }: PollCardProps) => {
 
           {/* Closed badge or countdown */}
           {isClosed ? (
-            <span className="text-[10px] tracking-[0.1em] uppercase font-body bg-secondary text-muted-foreground px-2.5 py-1 rounded-full">
+            <span className="text-xs tracking-[0.1em] uppercase font-body bg-secondary text-muted-foreground px-2.5 py-1 rounded-full">
               Closed
             </span>
           ) : timeLeft ? (
-            <span className="text-[10px] tracking-[0.1em] uppercase font-body text-primary/70 border border-primary/20 px-2.5 py-1 rounded-full">
+            <span className="text-xs tracking-[0.1em] uppercase font-body text-primary/70 border border-primary/20 px-2.5 py-1 rounded-full">
               {timeLeft}
             </span>
           ) : null}
