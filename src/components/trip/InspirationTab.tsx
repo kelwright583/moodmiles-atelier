@@ -359,7 +359,7 @@ const PinToSheet = ({
 }) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [showEventSelector, setShowEventSelector] = useState(false);
+  const [showEventSelector, setShowEventSelector] = useState(!!preSelectedEventId);
   const [selectedEventId, setSelectedEventId] = useState(preSelectedEventId || "");
   const [assigning, setAssigning] = useState(false);
 
@@ -374,7 +374,7 @@ const PinToSheet = ({
       if (error) throw error;
       return data as TripEvent[];
     },
-    enabled: showEventSelector,
+    enabled: showEventSelector || !!preSelectedEventId,
   });
 
   // Pre-select event if provided
@@ -710,13 +710,8 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEv
     queryClient.invalidateQueries({ queryKey: ["event-looks", tripId] });
   };
 
-  const handlePinOutfit = async (outfit: OutfitSuggestion) => {
-    if (initialEventId) {
-      await assignLookToEvent(outfit, initialEventId);
-      toast({ title: "Look saved to event" });
-    } else {
-      setPinTarget(outfit);
-    }
+  const handlePinOutfit = (outfit: OutfitSuggestion) => {
+    setPinTarget(outfit);
   };
 
   const pinToBoard = async (outfit: OutfitSuggestion) => {
