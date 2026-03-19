@@ -763,6 +763,7 @@ const TripDetail = () => {
                 initialSearch={inspireSearch}
                 initialEventId={inspireEventId}
                 onClearEventContext={() => { setInspireEventId(""); setInspireSearch(""); }}
+                onBackToEvents={() => { setInspireEventId(""); setInspireSearch(""); setActiveTab("Events"); }}
               />
             )}
             {activeTab === "Chat" && (

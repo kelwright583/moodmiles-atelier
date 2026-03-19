@@ -34,6 +34,7 @@ interface InspirationTabProps {
   initialSearch?: string;
   initialEventId?: string;
   onClearEventContext?: () => void;
+  onBackToEvents?: () => void;
 }
 
 type Mode = "editorial" | "shop" | "coordinate";
@@ -521,7 +522,7 @@ const PinToSheet = ({
 };
 
 /* ── InspirationTab ── */
-const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEventContext }: InspirationTabProps) => {
+const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEventContext, onBackToEvents }: InspirationTabProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [mode, setMode] = useState<Mode>("editorial");
@@ -589,6 +590,25 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEv
     },
     enabled: !!initialEventId,
   });
+
+  // Track which outfits have been pinned to the current event
+  const { data: currentEventLooks = [] } = useQuery({
+    queryKey: ["event-looks", tripId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("event_looks")
+        .select("*")
+        .eq("trip_id", tripId);
+      if (error) throw error;
+      return data as EventLook[];
+    },
+  });
+  const pinnedToEventIds = new Set(
+    currentEventLooks
+      .filter((l) => l.event_id === initialEventId && l.user_id === user?.id)
+      .map((l) => (l as any).outfit_suggestion_id)
+      .filter(Boolean)
+  );
 
   const getInvokeErrorMessage = async (err: any, fallback = "Request failed") => {
     if (err?.context && typeof err.context.json === "function") {
@@ -759,25 +779,41 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEv
     <div className="space-y-6">
       {/* Event context banner */}
       {contextEvent && (
-        <div className="flex items-center justify-between px-4 py-3 bg-ink-raised border border-gold/20 rounded-sm mb-4">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Sparkles size={13} className="text-gold flex-shrink-0" />
-            <div className="min-w-0">
+        <div className="px-4 py-3 bg-ink-raised border border-gold/20 rounded-sm mb-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <Sparkles size={11} className="text-gold flex-shrink-0" />
               <p className="text-[10px] eyebrow text-parchment-faint">Styling for</p>
-              <p className="text-sm font-heading truncate">{contextEvent.event_name}</p>
-              {contextEvent.style_notes && (
-                <p className="text-xs text-parchment-faint font-body italic leading-relaxed mt-0.5 line-clamp-2">
-                  {contextEvent.style_notes}
-                </p>
+            </div>
+            <div className="flex items-center gap-1">
+              {onBackToEvents && (
+                <button
+                  onClick={() => { onClearEventContext?.(); onBackToEvents(); }}
+                  className="flex items-center gap-1 px-2 py-1 rounded text-[10px] eyebrow text-gold hover:text-gold/80 bg-gold/10 hover:bg-gold/20 transition-colors"
+                >
+                  ← Events
+                </button>
               )}
+              <button
+                onClick={onClearEventContext}
+                className="p-1.5 text-parchment-faint hover:text-parchment transition-colors"
+                title="Clear event context"
+              >
+                <X size={14} />
+              </button>
             </div>
           </div>
-          <button
-            onClick={onClearEventContext}
-            className="p-1.5 text-parchment-faint hover:text-parchment transition-colors flex-shrink-0"
-          >
-            <X size={14} />
-          </button>
+          <p className="text-sm font-heading">{contextEvent.event_name}</p>
+          {contextEvent.style_notes && (
+            <p className="text-xs text-parchment-faint font-body italic leading-relaxed mt-0.5 line-clamp-2">
+              {contextEvent.style_notes}
+            </p>
+          )}
+          {pinnedToEventIds.size > 0 && (
+            <p className="text-[10px] eyebrow text-gold mt-2">
+              {pinnedToEventIds.size} {pinnedToEventIds.size === 1 ? "look" : "looks"} pinned
+            </p>
+          )}
         </div>
       )}
 
@@ -948,6 +984,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEv
                     onPinToBoard={handlePinOutfit}
                     onSaveToOtherBoard={() => setSaveToOtherOutfit(outfit)}
                     pinLabel={initialEventId ? "Pin to Event" : undefined}
+                    isPinnedToEvent={!!initialEventId && pinnedToEventIds.has(outfit.id)}
                   />
                 ))}
               </div>
@@ -1103,12 +1140,14 @@ const MasonryCard = ({
   onPinToBoard,
   onSaveToOtherBoard,
   pinLabel,
+  isPinnedToEvent,
 }: {
   outfit: OutfitSuggestion;
   onTogglePin: (o: OutfitSuggestion) => void;
   onPinToBoard: (o: OutfitSuggestion) => void;
   onSaveToOtherBoard: () => void;
   pinLabel?: string;
+  isPinnedToEvent?: boolean;
 }) => {
   return (
     <div className="break-inside-avoid mb-3">
@@ -1135,6 +1174,12 @@ const MasonryCard = ({
           el.parentElement?.insertBefore(fallback, el.nextSibling);
         }}
       />
+      {/* Persistent "pinned to event" badge */}
+      {isPinnedToEvent && (
+        <div className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-gold/90 text-ink text-[9px] tracking-widest uppercase font-body font-semibold pointer-events-none">
+          <Pin size={9} className="fill-ink" /> Pinned
+        </div>
+      )}
 
       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-3">
         <div className="flex items-start justify-between">
@@ -1172,9 +1217,14 @@ const MasonryCard = ({
           <div className="flex items-center gap-2">
             <button
               onClick={(e) => { e.stopPropagation(); onPinToBoard(outfit); }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-body transition-colors"
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-body transition-colors ${
+                isPinnedToEvent
+                  ? "bg-gold text-ink font-semibold hover:bg-gold/80"
+                  : "bg-white/10 hover:bg-white/20 text-white"
+              }`}
             >
-              <Pin size={11} /> {pinLabel ?? "Pin to Board"}
+              <Pin size={11} className={isPinnedToEvent ? "fill-ink" : ""} />
+              {isPinnedToEvent ? "Pinned ✓" : (pinLabel ?? "Pin to Board")}
             </button>
             {outfit.product_url && (
               <a

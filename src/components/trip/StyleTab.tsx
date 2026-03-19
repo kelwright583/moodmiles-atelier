@@ -16,15 +16,17 @@ interface StyleTabProps {
   initialSearch?: string;
   initialEventId?: string;
   onClearEventContext?: () => void;
+  onBackToEvents?: () => void;
 }
 
-const StyleTab = ({ tripId, trip, initialSearch, initialEventId, onClearEventContext }: StyleTabProps) => (
+const StyleTab = ({ tripId, trip, initialSearch, initialEventId, onClearEventContext, onBackToEvents }: StyleTabProps) => (
   <InspirationTab
     tripId={tripId}
     trip={trip}
     initialSearch={initialSearch}
     initialEventId={initialEventId}
     onClearEventContext={onClearEventContext}
+    onBackToEvents={onBackToEvents}
   />
 );
 
