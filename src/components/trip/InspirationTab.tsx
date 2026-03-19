@@ -528,7 +528,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEv
   const [shopFilter, setShopFilter] = useState<ShopFilter>("all");
   const [searchingWeb, setSearchingWeb] = useState(false);
   const [loadingShop, setLoadingShop] = useState(false);
-  const [userSearchQuery, setUserSearchQuery] = useState(initialSearch || "");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
   const [saveToOtherOutfit, setSaveToOtherOutfit] = useState<OutfitSuggestion | null>(null);
   const [pinTarget, setPinTarget] = useState<OutfitSuggestion | null>(null);
   const [preSelectedEventId, setPreSelectedEventId] = useState(initialEventId || "");
@@ -761,7 +761,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEv
   );
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+    <div className="space-y-6">
       {/* Event context banner */}
       {contextEvent && (
         <div className="flex items-center justify-between px-4 py-3 bg-ink-raised border border-gold/20 rounded-sm mb-4">
@@ -890,14 +890,17 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEv
               type="text"
               value={userSearchQuery}
               onChange={(e) => handleSearchInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && userSearchQuery.trim().length >= 2) { if (debounceRef.current) clearTimeout(debounceRef.current); searchWebFashion(undefined, userSearchQuery.trim()); } }}
               placeholder="Refine your style… (e.g. minimal linen, old money, coastal grandmother)"
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
+              className="w-full pl-9 pr-24 py-2.5 rounded-xl bg-secondary/60 border border-border text-sm font-body text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
             />
-            {searchingWeb && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-primary/70 font-body animate-pulse">
-                searching…
-              </span>
-            )}
+            <button
+              onClick={() => { if (userSearchQuery.trim().length >= 2) { if (debounceRef.current) clearTimeout(debounceRef.current); searchWebFashion(undefined, userSearchQuery.trim()); } }}
+              disabled={searchingWeb || userSearchQuery.trim().length < 2}
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-gold text-ink text-xs font-body font-medium disabled:opacity-40 transition-opacity"
+            >
+              {searchingWeb ? "…" : "Search"}
+            </button>
           </div>
 
           {/* Group theme search button */}
@@ -949,6 +952,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEv
                     onTogglePin={togglePin}
                     onPinToBoard={handlePinOutfit}
                     onSaveToOtherBoard={() => setSaveToOtherOutfit(outfit)}
+                    pinLabel={initialEventId ? "Pin to Event" : undefined}
                   />
                 ))}
               </div>
@@ -1092,7 +1096,7 @@ const InspirationTab = ({ tripId, trip, initialSearch, initialEventId, onClearEv
         onPinToBoard={pinToBoard}
         preSelectedEventId={preSelectedEventId}
       />
-    </motion.div>
+    </div>
   );
 };
 
@@ -1103,11 +1107,13 @@ const MasonryCard = ({
   onTogglePin,
   onPinToBoard,
   onSaveToOtherBoard,
+  pinLabel,
 }: {
   outfit: OutfitSuggestion;
   onTogglePin: (o: OutfitSuggestion) => void;
   onPinToBoard: (o: OutfitSuggestion) => void;
   onSaveToOtherBoard: () => void;
+  pinLabel?: string;
 }) => {
   return (
     <div className="break-inside-avoid mb-3">
@@ -1173,7 +1179,7 @@ const MasonryCard = ({
               onClick={(e) => { e.stopPropagation(); onPinToBoard(outfit); }}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-body transition-colors"
             >
-              <Pin size={11} /> Pin to Board
+              <Pin size={11} /> {pinLabel ?? "Pin to Board"}
             </button>
             {outfit.product_url && (
               <a

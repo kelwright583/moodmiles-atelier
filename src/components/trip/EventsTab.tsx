@@ -557,6 +557,8 @@ const EventCard = ({
   onDelete,
   onStyleEvent,
   myLook,
+  allLooks,
+  sourceActivityImageUrl,
   generatingStyleNotes,
   onGenerateStyleNotes,
 }: {
@@ -571,6 +573,8 @@ const EventCard = ({
   onDelete: () => void;
   onStyleEvent: (query: string, eventId?: string) => void;
   myLook?: EventLook | undefined;
+  allLooks?: EventLook[];
+  sourceActivityImageUrl?: string | null;
   generatingStyleNotes?: string | null;
   onGenerateStyleNotes?: (event: TripEvent) => void;
 }) => {
@@ -588,6 +592,16 @@ const EventCard = ({
       exit={{ opacity: 0, y: -8 }}
       className={`glass rounded-2xl overflow-hidden transition-all duration-300 hover:glow-gold ${isCancelled ? "opacity-60" : ""}`}
     >
+      {sourceActivityImageUrl && (
+        <div className="relative h-32 overflow-hidden">
+          <img
+            src={sourceActivityImageUrl}
+            alt={event.event_name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+        </div>
+      )}
       {/* Card body */}
       <div className="p-5 space-y-4">
         {/* Header row */}
@@ -715,37 +729,46 @@ const EventCard = ({
           </div>
         )}
 
-        {/* Look display */}
-        {(() => {
-          const look = myLook;
-          return look ? (
-            <div className="flex items-center gap-2.5 pt-3 border-t border-ink-border">
-              <div className="w-10 h-10 rounded-sm overflow-hidden flex-shrink-0 bg-ink-raised">
-                {look.image_url && (
-                  <img src={look.image_url} className="w-full h-full object-cover" alt="Your look" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] eyebrow text-parchment-faint">Your look</p>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onStyleEvent(`${event.event_name} ${event.dress_code || ""} ${trip?.destination || ""}`.trim(), event.id); }}
-                  className="text-xs text-gold font-body hover:underline"
-                >
-                  Change look →
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="pt-3 border-t border-ink-border">
+        {/* Looks catalogue */}
+        {(allLooks ?? []).length > 0 ? (
+          <div className="pt-3 border-t border-ink-border">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] eyebrow text-parchment-faint">
+                {(allLooks ?? []).length === 1 ? "1 look" : `${(allLooks ?? []).length} looks`}
+              </p>
               <button
                 onClick={(e) => { e.stopPropagation(); onStyleEvent(`${event.event_name} ${trip?.destination || ""}`.trim(), event.id); }}
-                className="text-xs text-parchment-faint font-body hover:text-gold transition-colors flex items-center gap-1.5"
+                className="text-xs text-gold font-body hover:underline"
               >
-                <Sparkles size={11} /> Style this event
+                + Add / change
               </button>
             </div>
-          );
-        })()}
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+              {(allLooks ?? []).filter(l => l.image_url).map((look) => (
+                <div
+                  key={look.user_id}
+                  className="relative flex-shrink-0 w-12 rounded-sm overflow-hidden bg-ink-raised"
+                  style={{ height: 64 }}
+                >
+                  <img
+                    src={look.image_url!}
+                    alt="Look"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="pt-3 border-t border-ink-border">
+            <button
+              onClick={(e) => { e.stopPropagation(); onStyleEvent(`${event.event_name} ${trip?.destination || ""}`.trim(), event.id); }}
+              className="text-xs text-parchment-faint font-body hover:text-gold transition-colors flex items-center gap-1.5"
+            >
+              <Sparkles size={11} /> Style this event
+            </button>
+          </div>
+        )}
 
         {/* Style notes */}
         {event.event_date && (
@@ -927,6 +950,11 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
 
   const myLook = (eventId: string) =>
     eventLooks.find((l) => l.event_id === eventId && l.user_id === user?.id);
+
+  const allLooks = (eventId: string) =>
+    eventLooks.filter((l) => l.event_id === eventId);
+
+  const activityById = Object.fromEntries(activities.map((a) => [a.id, a]));
 
   const generateStyleNotes = async (event: TripEvent) => {
     setGeneratingStyleNotes(event.id);
@@ -1177,6 +1205,8 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                   onDelete={() => deleteEvent(e.id)}
                   onStyleEvent={handleStyleEvent}
                   myLook={myLook(e.id)}
+                  allLooks={allLooks(e.id)}
+                  sourceActivityImageUrl={e.source_activity_id ? (activityById[e.source_activity_id]?.image_url ?? null) : null}
                   generatingStyleNotes={generatingStyleNotes}
                   onGenerateStyleNotes={generateStyleNotes}
                 />
@@ -1215,6 +1245,8 @@ const EventsTab = ({ tripId, trip, onStyleEvent }: EventsTabProps) => {
                         onDelete={() => deleteEvent(e.id)}
                         onStyleEvent={handleStyleEvent}
                         myLook={myLook(e.id)}
+                        allLooks={allLooks(e.id)}
+                        sourceActivityImageUrl={e.source_activity_id ? (activityById[e.source_activity_id]?.image_url ?? null) : null}
                         generatingStyleNotes={generatingStyleNotes}
                         onGenerateStyleNotes={generateStyleNotes}
                       />
